@@ -1,8 +1,13 @@
-import { Context } from '@deepseek-ai/cordis'
+import { Context, Service } from '@deepseek-ai/cordis'
 import { TypertGatewayService } from '@deepseek-ai/dsh-api-gateway'
 import { HostConnectionService } from '@deepseek-ai/dsh-client-connection'
 import { TypertRegistry } from '@deepseek-ai/dsh-typert-registry'
 import { describe, expect, it, vi } from 'vitest'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import * as Mnemon from '../src/host/plugin.ts'
+import { memorySettings } from './helpers/account-settings.ts'
 import type {
   HostConnectionHandle,
   HostRpcHandler,
@@ -38,6 +43,46 @@ type BranchFreeConnectionConstructor = new (
 ) => BranchFreeConnection
 
 describe('released and source DSH Connection compatibility', () => {
+  it('registers account Web RPC from a mounted plugin with Cordis injection checks', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'mnemon-web-account-'))
+    const context = new Context()
+    const routes: RegisteredRoute[] = []
+    try {
+      class RouteRegistry extends Service {
+        constructor(ctx: Context) { super(ctx, 'webServer') }
+        register(route: RegisteredRoute) { routes.push(route); return () => { routes.splice(routes.indexOf(route), 1) } }
+        registerUpgrade() { return () => {} }
+      }
+      await context.plugin(RouteRegistry)
+      context.provide('settings', memorySettings() as never)
+      context.provide('tools', { register: () => () => {} } as never)
+      context.provide('commands', { register: () => () => {} } as never)
+      context.provide('agents', { get: () => undefined, roots: () => [] } as never)
+      context.provide('subagents', { list: () => [], start: vi.fn() } as never)
+      const principal = { source: 'dsh-passwords', id: '1', username: 'alice', role: 'user' }
+      context.provide('requestPrincipal', { authenticate: async () => principal } as never)
+      context.provide('principalAccess', { assertAuthenticated: () => {}, resolve: async () => ({ readableSessionIds: new Set(), readableWorkspaceIds: new Set() }) } as never)
+      new TypertRegistry(context)
+      const Connection = HostConnectionService as unknown as BranchFreeConnectionConstructor
+      const connection = new Connection(context, [], { isAuthenticated: () => true, authorizeIndex: () => true, authenticatedUrl: value => value }) as unknown as HostConnectionService
+      new TypertGatewayService(context, { websocketHeartbeatIntervalMs: 2_000 })
+      await context.plugin(Mnemon, { accountDataDir: root, cliPath: '/unused/mnemon', remoteAccess: 'trusted-host' })
+      for (const runtime of context.registry.values()) for (const fiber of runtime.fibers) await fiber.await()
+      const response = await connection.createSharedFetchHandler('/api').fetch(new Request('http://127.0.0.1/api/dshMnemon/settings', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+          type: 'client-request', rpcId: 'account-settings', method: 'dshMnemon/settings', payload: { args: { endpoint: 'get', payload: {} } },
+        }),
+      }))
+      expect(response.status).toBe(200)
+      expect(await response.json()).toMatchObject({ result: { ok: true, value: { ok: true, value: { value: { accountDataDir: root, defaultRecallLimit: 10 } } } } })
+      expect(routes.some(route => route.path === '/dsh-mnemon-settings')).toBe(true)
+    } finally {
+      await context.fiber.dispose()
+      expect(routes).toEqual([])
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+
   it('registers the same legacy-options call against the active real implementation', async () => {
     const routes: RegisteredRoute[] = []
     const context = new Context()

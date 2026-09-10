@@ -7,6 +7,8 @@
 
 本 fork 保留原作者的三层记忆、工具、工作台与数据格式，增加可选的登录账号隔离。配置与使用限制见 [账号部署](docs/zh-CN/guides/accounts.md)。未设置 `accountDataDir` 时仍使用原作者的单用户存储规则。
 
+Web RPC 依赖 Harness 的 Connection 路由修复：通过 `ctx.get` 解析可选 Web 服务器，避免 Cordis 将属性访问归到未声明该服务的提供者上下文。Headless 不要求 Web 服务。
+
 ## 同步与发布约束
 
 先 fetch 原作者和自有 fork，合并原作者分支到当前 `dev`，优先保留源实现并适配账号隔离。相关检查通过后 commit，枚举所有本地分支并上传未发布提交，再 fetch 核对源分支与各远端 SHA。保留远端独有分支，不使用 `--mirror` 或裸 `--force`。
