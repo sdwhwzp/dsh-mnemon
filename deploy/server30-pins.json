@@ -11,10 +11,10 @@
     },
     {
       "name": "dsh-context",
-      "version": "0.48.0-dsh.20260910.4",
-      "file": "dsh-context-0.48.0-dsh.20260910.4-9e05f645db.tgz",
-      "sha256": "14ebd69f1f0787f8a8e7744a578f3a84acb001e8361856b6a610e28374e53e2a",
-      "commit": "9e05f645db2c4db68e0fac5312351ff931f4d32c"
+      "version": "0.49.0-dsh.20260910.1",
+      "file": "dsh-context-0.49.0-dsh.20260910.1-afa5ae2fe8.tgz",
+      "sha256": "256a9275218392cb4ee4bcba30bc618d38a80bd9c1e1800c0e47fe4d27113939",
+      "commit": "afa5ae2fe802354902792e5a9f0a01277ef4515c"
     },
     {
       "name": "dsh-plugin-subscriptions",
@@ -32,6 +32,6 @@
   "preservePackages": [
     "@wxg-prc-cpg/dsh-weknora"
   ],
-  "sourceArtifactDirectory": "/home/tzwl3/apps/dsh-plugins/releases/20260910-151500-rc1-refresh/artifacts",
+  "sourceArtifactDirectory": "/home/tzwl3/apps/dsh-plugins/releases/20260910-154500-nas-rc1/artifacts",
   "handoff": "20260910-plugin-pinning-handoff.md"
 }
