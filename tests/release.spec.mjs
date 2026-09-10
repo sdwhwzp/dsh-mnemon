@@ -24,7 +24,7 @@ const revision = '1'.repeat(40)
 const baseRevision = '2'.repeat(40)
 
 function tag(version) {
-  return version.match(/-(alpha|beta|rc)\./)?.[1] ?? 'latest'
+  return version.match(/-(alpha|beta|rc|dsh)\./)?.[1] ?? 'latest'
 }
 
 function item(directory, name, version, extra = {}) {
@@ -70,7 +70,7 @@ describe('selective, channel-safe official release', () => {
     const packages = await readReleasePackages(root)
     const plan = createReleasePlan(packages)
     expect(plan.composition).toHaveLength(17)
-    expect(plan.distTag).toBe('latest')
+    expect(plan.distTag).toBe('dsh')
     expect(plan.composition.at(-1).manifest.name).toBe('dsh-mnemon')
     for (const { directory, manifest } of packages.filter(packageItem => packageItem.manifest.name.startsWith('dsh-mnemon-provider-'))) {
       const source = await readFile(join(directory, 'src/index.ts'), 'utf8')
@@ -118,6 +118,7 @@ describe('selective, channel-safe official release', () => {
     ['0.5.2', 'latest', false],
     ['0.5.2-beta.1', 'beta', true],
     ['0.5.2-rc.1', 'rc', true],
+    ['0.5.2-dsh.20260911.1', 'dsh', true],
   ])('selects the explicit Starter channel for %s', (version, channel, prerelease) => {
     const packages = fixture({ starterVersion: version, providerVersion: version })
     expect(createReleasePlan(packages, { tag: `v${version}`, prerelease }).distTag).toBe(channel)

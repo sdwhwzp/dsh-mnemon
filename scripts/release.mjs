@@ -14,12 +14,12 @@ const defaultRegistry = 'https://registry.npmjs.org'
 const manifestName = 'release-manifest.json'
 const starterName = 'dsh-mnemon'
 const internalName = /^dsh-mnemon-(?:source|strategy|provider)-[a-z0-9-]+$/u
-const releaseVersion = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(alpha|beta|rc)\.(?:0|[1-9]\d*))?$/u
+const releaseVersion = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(alpha|beta|rc)\.(?:0|[1-9]\d*)|(dsh)\.[1-9]\d{7}\.(?:0|[1-9]\d*)))?$/u
 
 function distTagForVersion(version) {
   const match = releaseVersion.exec(version)
-  assert(match, `${version}: expected a stable version or an alpha.N / beta.N / rc.N prerelease`)
-  return match[1] ?? 'latest'
+  assert(match, `${version}: expected a stable version or an alpha.N / beta.N / rc.N / dsh.YYYYMMDD.N prerelease`)
+  return match[1] ?? match[2] ?? 'latest'
 }
 
 function normalizedRange(range, version) {

@@ -1,6 +1,6 @@
-import { createAssistantMessage } from '@deepseek-ai/dsh-llm'
 import { Context } from '@deepseek-ai/cordis'
 import SessionStore, { SessionId, type Session, type SessionEvent } from '@deepseek-ai/dsh-session'
+import { createAssistantMessage } from '@deepseek-ai/dsh-llm'
 import SessionProjectionRegistry, {
   type ProjectionCheckpoint,
   type ProjectionDefinition,
@@ -113,12 +113,13 @@ function descriptor(session: Session) {
 }
 
 function usage(session: Session, step: number, inputTokens: number, outputTokens: number) {
-  const data = {
-    turn: 1, step, stream: [],
-    message: createAssistantMessage({ content: [{ type: 'text', text: 'Usage fixture' }], source: { provider: 'fixture', model: 'fixture' } }),
+  return session.append('assistant/message', {
+    turn: 1,
+    step,
+    message: createAssistantMessage({ content: [{ type: 'text', text: 'Synthetic result.' }], source: { provider: 'fixture', model: 'fixture' } }),
+    stream: [],
     usage: { inputTokens, outputTokens, cacheReadTokens: 3, cacheWriteTokens: 4 },
-  }
-  return session.append('assistant/message', data, { surfaceOp: 'append' })
+  }, { surfaceOp: 'append' })
 }
 
 const expectedUsage = {

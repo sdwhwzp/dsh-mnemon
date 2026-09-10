@@ -79,5 +79,15 @@
       "keys": 977,
       "sha256": "00725a3de722df41e269a43dca686c2cc0981762e36bcfdc05c73cc55936db4b"
     }
+  },
+  "documentArchivePlan": {
+    "en": {
+      "keys": 978,
+      "sha256": "d5c364a59e2be83d79d6c3fee5875065460986f6787d8420a2214baf822805d4"
+    },
+    "zh": {
+      "keys": 978,
+      "sha256": "d8cda14b22543a81729f5b280d148d381edef06f846a24eecd57187b1f40c606"
+    }
   }
 }

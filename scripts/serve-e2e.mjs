@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { documentProtectionModel } from './fixtures/document-protection-model.mjs'
+import { documentArchiveModel } from './fixtures/document-archive-model.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const flags = new Set(process.argv.slice(2))
@@ -16,6 +17,7 @@ let electronExecutable
 for (const flag of flags) {
   if (flag === '--strategy-extensions') continue
   if (flag === '--document-protection') continue
+  if (flag === '--document-archive') continue
   if (flag.startsWith('--electron=')) {
     const value = flag.slice('--electron='.length)
     if (value === '') throw new Error('--electron requires an Electron executable')
@@ -40,12 +42,13 @@ const workspace = join(fixture, 'workspace')
 await Promise.all([dshHome, dataDir, workspace].map(path => mkdir(path)))
 let modelRequests = 0
 const protectionModel = flags.has('--document-protection') ? documentProtectionModel(event => console.log('Document protection: ' + JSON.stringify(event))) : undefined
+const scriptedModel = flags.has('--document-archive') ? documentArchiveModel(event => console.log('Document archive: ' + JSON.stringify(event))) : protectionModel
 const model = createServer(async (request, response) => {
   let input = ''
-  for await (const chunk of request) { if (protectionModel !== undefined) input += chunk }
+  for await (const chunk of request) { if (scriptedModel !== undefined) input += chunk }
   console.log('Fixture model request: ' + ++modelRequests)
   let reply
-  try { reply = protectionModel?.(JSON.parse(input)) ?? 'Isolated Mnemon WebUI test response.' }
+  try { reply = scriptedModel?.(JSON.parse(input)) ?? 'Isolated Mnemon WebUI test response.' }
   catch (error) {
     console.error(error)
     response.writeHead(500, { 'content-type': 'application/json' })
@@ -131,10 +134,10 @@ try {
   const preset = join(dshHome, '.agent-presets/mnemon-e2e')
   await mkdir(preset, { recursive: true })
   await writeFile(join(preset, 'preset.yml'), 'name: Mnemon E2E\ndescription: Isolated memory UI test (no Shell).\norder: 0\n')
-  await writeFile(join(preset, 'agent.cordis.yml'), "- id: persona\n  name: '@deepseek-ai/dsh-persona'\n  config:\n    text: You are testing the Mnemon memory UI.\n")
+  await writeFile(join(preset, 'agent.cordis.yml'), "- id: persona\n  name: '@deepseek-ai/dsh-persona'\n  config:\n    prefix: You are testing the Mnemon memory UI.\n")
   // Leave the entire real WebUI/plugin stack enabled. Only unrelated native
   // PTY/search tools are disabled so a test cannot launch workspace commands.
-  const disabled = ['subprocess', 'bash-sandbox', 'pwsh-sandbox', 'tool-bash', 'tool-pwsh', 'permission', 'tool-fs-search', 'directory-picker']
+  const disabled = ['subprocess', 'open-in-app', 'bash-sandbox', 'pwsh-sandbox', 'tool-bash', 'tool-pwsh', 'permission', 'tool-fs-search', 'directory-picker']
   const browsePicker = `- id: agent-presets
   config:
     default: mnemon-e2e

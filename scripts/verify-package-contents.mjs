@@ -18,13 +18,14 @@ const parsedPack = JSON.parse(result.stdout)
 const pack = Array.isArray(parsedPack) ? parsedPack[0] : Object.values(parsedPack)[0]
 const paths = pack.files.map(file => file.path)
 const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-const required = ['package.json', 'cordis.patch.yml', 'lib/client.js', ...Object.entries(manifest.exports)
+const executables = Object.values(manifest.bin ?? {})
+const required = [...executables, 'package.json', 'cordis.patch.yml', 'lib/client.js', ...Object.entries(manifest.exports)
   .filter(([name]) => name !== './package.json')
   .flatMap(([, value]) => [value.default.slice(2), value.types.slice(2)])]
 
 const allowedRootFiles = new Set(['package.json', 'cordis.patch.yml', 'LICENSE', 'README.md', 'README.zh-CN.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'FORK.md'])
 const missing = required.filter(path => !paths.includes(path))
-const unexpected = paths.filter(path => !allowedRootFiles.has(path) && !(/^lib\/.+\.(?:js|d\.ts)$/.test(path)))
+const unexpected = paths.filter(path => !allowedRootFiles.has(path) && !executables.includes(path) && !(/^lib\/.+\.(?:js|d\.ts)$/.test(path)))
 const clientBundle = readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8')
 const hostLeaks = ['require("node:', "require('node:", '#region src/host/version-updates.ts', '#region src/host/rpc.ts']
   .filter(pattern => clientBundle.includes(pattern))
@@ -41,8 +42,7 @@ const relativeReadmeImages = readmeFiles.flatMap((path) => {
 
 // Core/Host and the shared page kit only; Source/Provider implementations must
 // ship in their own artifacts. Keep a bounded budget, not the old monolith size.
-// Account authorization, scoped lifecycle adapters and fork deployment notes
-// belong to the Host artifact; Source implementations remain separate.
+// Includes account isolation and the legacy Session repair executable.
 const maximumUnpackedBytes = 1_300_000
 
 if (missing.length > 0 || unexpected.length > 0 || hostLeaks.length > 0 || relativeReadmeImages.length > 0 || pack.unpackedSize > maximumUnpackedBytes) {
