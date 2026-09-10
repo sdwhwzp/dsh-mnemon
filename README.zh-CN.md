@@ -30,6 +30,8 @@
 
 运行时上下文、可检索档案和长期证据，使用同一个熟悉的侧栏（Sidebar）。默认安装包（Starter）安装经过验证的插件组合；贡献者可以独立替换或扩展其中的部分。
 
+本 fork 增加按登录账号隔离的记忆功能，适用于带 principal 扩展的 Harness 部署。见[账号部署](https://github.com/sdwhwzp/dsh-mnemon/blob/dev/docs/zh-CN/guides/accounts.md)和 [fork 同步约束](https://github.com/sdwhwzp/dsh-mnemon/blob/dev/FORK.md)。
+
 ## 三层记忆，三种用途
 
 | 记忆 | 适合保存 | 如何进入 Agent 上下文 |

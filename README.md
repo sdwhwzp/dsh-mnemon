@@ -30,6 +30,8 @@
 
 Runtime context, searchable documents and long-term evidence share a familiar Sidebar. The default Starter installs a tested plugin combination; contributors can replace or extend its parts without rebuilding the memory system.
 
+This fork adds optional per-account memory for the principal-enabled Harness deployment. See [account deployment](https://github.com/sdwhwzp/dsh-mnemon/blob/dev/docs/en/guides/accounts.md) and [fork synchronization](https://github.com/sdwhwzp/dsh-mnemon/blob/dev/FORK.md).
+
 ## Use three tiers, not three copies
 
 | Memory | Keep here | How it reaches the Agent |

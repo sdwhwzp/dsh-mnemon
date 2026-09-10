@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 function releaseTag(version) {
+  if (/^\d+\.\d+\.\d+-dsh\.\d{8}\.[1-9]\d*$/u.test(version)) return 'dsh'
   const match = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(alpha|beta|rc)\.(?:0|[1-9]\d*))?$/u.exec(version)
   assert(match, `Unsupported release version: ${version}`)
   return match[1] ?? 'latest'

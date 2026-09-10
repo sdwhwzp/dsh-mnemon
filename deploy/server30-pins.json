@@ -1,0 +1,37 @@
+{
+  "server": "30",
+  "profile": "/home/tzwl3/.dsh/profiles/web",
+  "artifacts": [
+    {
+      "name": "dsh-spend",
+      "version": "0.6.26",
+      "file": "dsh-spend-0.6.26-7506e48.tgz",
+      "sha256": "12814d8085a13fe262190f58261e3204462b8df7a46d219a065be4d9a657bf6f",
+      "commit": "7506e48b16d528ac8f314683fd0b879984aec1be"
+    },
+    {
+      "name": "dsh-context",
+      "version": "0.48.0-dsh.20260910.3",
+      "file": "dsh-context-0.48.0-dsh.20260910.3-53c05bc.tgz",
+      "sha256": "227e9b9dc663e4b7f9fbb53cdc9f79727b421b88d459965a67ffeb190cec6953",
+      "commit": "53c05bc5762f48434354af67adda833a3d4a92fc"
+    },
+    {
+      "name": "dsh-plugin-subscriptions",
+      "version": "0.8.0-dsh.20260910.1",
+      "file": "dsh-plugin-subscriptions-0.8.0-dsh.20260910.1-8325569.tgz",
+      "sha256": "563c1b1d7b0d089a30a21fe47a48f4d761b7071bcdd4f3fb8d205a16e4e749e3",
+      "commit": "83255698967a3f3f2fa4e12208d59c2128ee2dc7"
+    }
+  ],
+  "requiredConfig": {
+    "llm-subscriptions": {
+      "fastTier": false
+    }
+  },
+  "preservePackages": [
+    "@wxg-prc-cpg/dsh-weknora"
+  ],
+  "sourceArtifactDirectory": "/home/tzwl3/apps/dsh-plugins/releases/20260910-071200-bf3afe-alpha2/artifacts",
+  "handoff": "20260910-plugin-pinning-handoff.md"
+}

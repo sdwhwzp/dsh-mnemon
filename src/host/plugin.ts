@@ -15,6 +15,8 @@ import { MemoryPluginManagement } from './plugin-management.ts'
 import { registerViewRpc } from './view-rpc.ts'
 import { MemoryPluginInstallation } from './plugin-installation.ts'
 import { MnemonRemoteService } from './remote-rpc.ts'
+import { MnemonAccounts } from './account-access.ts'
+import { join } from 'node:path'
 
 export const name = 'dsh-mnemon'
 export const provide = ['mnemonMemory']
@@ -33,12 +35,17 @@ function optionalWorkspaceRegistry(ctx: HostContextShape): HostWorkspaceRegistry
 
 /** DSH owns assembly; this Host only wires scope, phases and user preferences. */
 export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
-  const ctx = rawContext as unknown as HostContextShape
+  const original = rawContext as unknown as HostContextShape
+  const accountDataDir = resolveConfig(config).accountDataDir
+  const accounts = accountDataDir === undefined ? undefined : new MnemonAccounts(original, accountDataDir, config)
+  const ctx = accounts?.wrapContext() ?? original
   registerMnemonSubagentTokenUsageProjection(ctx)
   const extensions = provideMemoryRuntime(ctx)
   const memoryPlugins = new MemoryPluginManagement(ctx, extensions)
   const pluginInstallation = new MemoryPluginInstallation(ctx)
-  const effectiveConfig = (value: Config) => memoryPlugins.resolveConfig(resolveConfig(value))
+  const effectiveConfig = (value: Config) => memoryPlugins.resolveConfig(resolveConfig(accountDataDir === undefined ? value : {
+    ...value, storageScope: 'custom', runtimeUserScope: 'storage', customPacks: [], dataDir: join(accountDataDir, '_host-control'),
+  }))
   const prepared = new Map<object, { graph: MnemonRuntimeGraph; token: symbol }>()
   const disposePrepared = (): void => {
     for (const candidate of prepared.values()) candidate.graph.dispose()
@@ -63,7 +70,7 @@ export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
   const initialSettings = settings.get()
   const initialCandidate = prepared.get(initialSettings)
   if (initialCandidate !== undefined) prepared.delete(initialSettings)
-  const runtime = new LiveMnemonRuntime(initialCandidate?.graph ?? createRuntimeGraph(effectiveConfig(initialSettings), undefined, extensions), optionalWorkspaceRegistry(ctx), ctx.agents, extensions)
+  const runtime = new LiveMnemonRuntime(initialCandidate?.graph ?? createRuntimeGraph(effectiveConfig(initialSettings), undefined, extensions), optionalWorkspaceRegistry(ctx), ctx.agents, extensions, accounts)
   const resolved = runtime.config
   ctx.on('settings/updated', ((namespace: string, next: Config) => {
     if (namespace === memoryPlugins.settingsNamespace) {
@@ -103,8 +110,8 @@ export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
     if (provider === undefined || provider === '' || model === undefined || model === '') return undefined
     return { provider, model }
   }, () => runtime.config.runtimeMemory.maintenanceMaxTokens,
-  (scope, signal, operation) => lifecycle.runRuntimeMaintenanceTask(scope, signal, operation))
-  const lifecycle = new MnemonLifecycle(ctx, coordinator, runtime.config, runtime)
+  (scope, signal, operation) => lifecycle.runRuntimeMaintenanceTask(scope, signal, operation), accounts)
+  const lifecycle = new MnemonLifecycle(ctx, coordinator, runtime.config, runtime, accounts)
   ctx.effect(() => {
     const stop = lifecycle.start()
     return () => {
@@ -124,15 +131,19 @@ export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
     // rc.2 enforces this legacy channel authority, while 0.1.2-alpha.1 ignores
     // the extra JavaScript argument and authenticates every Host API uniformly.
     const managementAuthority = resolved.remoteAccess === 'trusted-host' ? 'trusted-host' : 'loopback'
-    const rpc = registerRpc(webContext.connection, runtime, lifecycle, undefined, managementAuthority)
-    const settings = registerSettingsRpc(webContext.connection, ctx.settings, managementAuthority)
-    const view = registerViewRpc(webContext.connection, runtime, extensions, memoryPlugins, lifecycle, managementAuthority, pluginInstallation)
+    const connection = accounts === undefined ? webContext.connection : { rpc: {
+      handle: (channel: string, handler: import('./dsh.ts').HostRpcHandler, options: import('./dsh.ts').HostRpcRegistrationOptions) =>
+        webContext.connection!.rpc.handle(channel, accounts.handler(handler, channel), options),
+    } }
+    const rpc = registerRpc(connection, runtime, lifecycle, undefined, managementAuthority)
+    const settings = registerSettingsRpc(connection, accounts?.settingsService(principal => runtime.reloadAccount(principal)) ?? ctx.settings, managementAuthority)
+    const view = registerViewRpc(connection, runtime, extensions, memoryPlugins, lifecycle, managementAuthority, pluginInstallation)
     if (Context.is(webContext)) {
       new MnemonRemoteService(webContext, {
-        ...rpc,
-        settings,
-        view: view.read,
-        viewWrite: view.write,
+        ...Object.fromEntries(Object.entries(rpc).map(([key, handler]) => [key, accounts?.handler(handler, key) ?? handler])) as typeof rpc,
+        settings: accounts?.handler(settings, 'settings') ?? settings,
+        view: accounts?.handler(view.read, 'view') ?? view.read,
+        viewWrite: accounts?.handler(view.write, 'viewWrite') ?? view.write,
         management: managementAuthority === 'trusted-host',
       })
     }

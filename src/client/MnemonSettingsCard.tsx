@@ -421,6 +421,7 @@ export function MnemonSettingsCard({ scope, interactionScope: suppliedInteractio
     }
   }
 
+  const accountIsolated = Boolean((coreSnapshot.value as Config | undefined)?.accountDataDir)
   const coreDisabled = loading || saving || !coreSnapshot.writable
   const interactionDisabled = loading || saving || !interactionSnapshot.writable
   const scopeChanging = dirty.has('storageScope') || dirty.has('runtimeUserScope') || dirty.has('dataDir')
@@ -452,7 +453,8 @@ export function MnemonSettingsCard({ scope, interactionScope: suppliedInteractio
           </div>
         </section>
 
-        <section className={css.section} aria-labelledby="mnemon-storage-heading">
+        {accountIsolated && <p className={css.description}>{t('config.accountIsolation')}</p>}
+        {!accountIsolated && <section className={css.section} aria-labelledby="mnemon-storage-heading">
           <div className={css.sectionHeading}>
             <div><h2 id="mnemon-storage-heading">{t('config.storageTitle')}</h2><p>{t('config.storageDescription')}</p></div>
           </div>
@@ -473,9 +475,9 @@ export function MnemonSettingsCard({ scope, interactionScope: suppliedInteractio
             </div>
             <p className={css.description}>{t('config.workspacesIdentityHint')}</p>
           </div>}
-        </section>
+        </section>}
 
-        <section className={css.section} aria-labelledby="mnemon-runtime-user-scope-heading">
+        {!accountIsolated && <section className={css.section} aria-labelledby="mnemon-runtime-user-scope-heading">
           <div className={css.sectionHeading}>
             <div><h2 id="mnemon-runtime-user-scope-heading">{t('config.runtimeUserScopeTitle')}</h2><p>{t('config.runtimeUserScopeDescription')}</p></div>
           </div>
@@ -483,7 +485,7 @@ export function MnemonSettingsCard({ scope, interactionScope: suppliedInteractio
             <ChoiceCard id="mnemon-runtime-user-storage" name="mnemon-runtime-user-scope" label={t('config.runtimeUserScopeStorage')} detail={t('config.runtimeUserScopeStorageHint')} checked={draft.runtimeUserScope === 'storage'} disabled={coreDisabled} onChange={() => edit('runtimeUserScope', 'storage')} />
             <ChoiceCard id="mnemon-runtime-user-global" name="mnemon-runtime-user-scope" label={t('config.runtimeUserScopeGlobal')} detail={t('config.runtimeUserScopeGlobalHint')} checked={draft.runtimeUserScope === 'global'} disabled={coreDisabled} onChange={() => edit('runtimeUserScope', 'global')} />
           </div>
-        </section>
+        </section>}
 
         <MemoryTopologySection
           descriptor={memorySystem}
@@ -512,7 +514,7 @@ export function MnemonSettingsCard({ scope, interactionScope: suppliedInteractio
               <span className={css.providerHeaderMeta}><span className={css.providerScopeTag} data-scope={activeScope}>{t(`config.${activeScope}`)}</span><span className={css.providerState}>{t('config.officialNative')}</span></span>
             </summary>
             <div className={css.providerPanelBody}>
-              {draft.storageScope !== 'workspaces' && <GlobalLocationSetting
+              {!accountIsolated && draft.storageScope !== 'workspaces' && <GlobalLocationSetting
                 name="mnemon-native-location"
                 ariaLabel={t('config.nativeGlobalLocation')}
                 label={t('config.nativeGlobalLocation')}
@@ -546,7 +548,7 @@ export function MnemonSettingsCard({ scope, interactionScope: suppliedInteractio
                   </div>
                 </div>
               </GlobalLocationSetting>}
-              <EmbeddingSettingsSection
+              {!accountIsolated && <EmbeddingSettingsSection
                 draft={draft}
                 disabled={coreDisabled}
                 connectionAvailable={connection !== undefined}
@@ -557,11 +559,11 @@ export function MnemonSettingsCard({ scope, interactionScope: suppliedInteractio
                 onEdit={edit}
                 onTest={testEmbedding}
                 t={t}
-              />
+              />}
               <MnemonPackSection {...(connection === undefined ? {} : { connection })} {...(sessionId === undefined ? {} : { sessionId })} {...(workspaceId === undefined ? {} : { workspaceId })} refreshKey={targetRevision} t={t} embedded />
             </div>
           </details>
-          <ProviderSettingsSection
+          {!accountIsolated && <ProviderSettingsSection
             {...(connection === undefined ? {} : { connection })}
             {...(sessionId === undefined ? {} : { sessionId })}
             {...(workspaceId === undefined ? {} : { workspaceId })}
@@ -571,7 +573,7 @@ export function MnemonSettingsCard({ scope, interactionScope: suppliedInteractio
             disabled={coreDisabled}
             scopeChanging={scopeChanging}
             t={t}
-          />
+          />}
         </section>
 
         <TaskAgentModelSection

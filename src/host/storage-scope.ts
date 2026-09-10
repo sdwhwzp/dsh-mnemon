@@ -150,10 +150,11 @@ function inspect(kind: StorageScopeKind, rawRoot: string | undefined, activeRoot
 
 /** Read-only storage catalog. It never creates, moves, or repairs files. */
 export class StorageScopeInspector {
-  constructor(private readonly runner: Pick<StorageRoot, 'effectiveDataDir'>, private readonly config: Pick<ResolvedConfig, 'dataDir' | 'storageScope'>) {}
+  constructor(private readonly runner: Pick<StorageRoot, 'effectiveDataDir'>, private readonly config: Pick<ResolvedConfig, 'dataDir' | 'storageScope' | 'accountDataDir'>) {}
 
   catalog(workspaceRoot?: string): StorageScopeCatalog {
     const activeRoot = canonical(this.runner.effectiveDataDir())
+    if (this.config.accountDataDir !== undefined) return { activeKind: 'custom', activeRoot, scopes: [inspect('custom', activeRoot, activeRoot)], generatedAt: new Date().toISOString() }
     const global = globalRoot()
     const workspace = workspaceRoot === undefined || workspaceRoot.trim() === '' ? undefined : join(canonical(workspaceRoot), '.mnemon')
     const configuredDataDir = this.config.dataDir === undefined ? undefined : canonical(this.config.dataDir)

@@ -345,7 +345,8 @@ export function createMemorySpacesSource(providerSnapshot: MemorySpaceProviderSn
     },
   },
   create(context) {
-    const resolved = resolveMemorySpacesConfig({ ...context.configuration, ...capturedConfig }, context.sourceInstanceKey)
+    if (context.configuration?.accountIsolated === true && providerSnapshot.entries.some(entry => entry.definition.manifest.typeId !== 'mnemon-native')) throw new Error('Account memory requires only the Native provider')
+    const resolved = resolveMemorySpacesConfig(context.configuration?.accountIsolated === true ? { ...capturedConfig, ...context.configuration } : { ...context.configuration, ...capturedConfig }, context.sourceInstanceKey)
     const service = new MemorySpacesService(createRunner(resolved), resolved, undefined, undefined, providerSnapshot.adapterRegistry(), new MemoryProviderCatalog(providerSnapshot.descriptors()))
     const canRemember = providerSnapshot.entries.some(entry => entry.definition.manifest.capabilities.remember)
     const prepared = new WeakMap<object, ReturnType<typeof service.memoryState>>()

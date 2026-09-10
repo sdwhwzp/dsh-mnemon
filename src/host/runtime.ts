@@ -14,6 +14,8 @@ import { MEMORY_CAPABILITIES, type MemoryOperationScope } from '../core/contract
 import { allowsParticipation } from './access.ts'
 import type { CompileMemoryGenerationOptions } from '../core/composition.ts'
 import { MemoryExecutions } from './memory-executions.ts'
+import type { MnemonAccounts } from './account-access.ts'
+import type { HostPrincipal } from './dsh.ts'
 
 export interface MnemonRuntimeGraph {
   readonly config: ResolvedConfig
@@ -51,11 +53,13 @@ export function memoryGenerationOptions(config: ResolvedConfig, workspaceRoot: s
       && allowsParticipation(config, installed.definition.manifest.typeId, capability, 'automatic')),
     sourceConfiguration: installed => {
       const type = installed.definition.manifest.typeId
+      if (config.accountDataDir !== undefined && (!['runtime', 'documents', 'memory-spaces'].includes(type) || !isDefaultSourceInstance(installed.instanceKey, type))) throw new Error('Account memory supports only the bundled default Sources')
       if (!isDefaultSourceInstance(installed.instanceKey, type)) return {}
-      if (type === 'runtime') return { dataDir: directory, userDataDir: userDirectory, memoryLimitBytes: config.runtimeMemory.memoryLimitBytes, userLimitBytes: config.runtimeMemory.userLimitBytes }
-      if (type === 'documents') return { dataDir: directory }
+      const account = config.accountDataDir === undefined ? {} : { accountIsolated: true }
+      if (type === 'runtime') return { ...account, dataDir: directory, userDataDir: userDirectory, memoryLimitBytes: config.runtimeMemory.memoryLimitBytes, userLimitBytes: config.runtimeMemory.userLimitBytes }
+      if (type === 'documents') return { ...account, dataDir: directory }
       if (type === 'memory-spaces') return JSON.parse(JSON.stringify({
-        dataDir: directory, cliPath: config.cliPath, store: config.store, timeoutMs: config.timeoutMs,
+        ...account, dataDir: directory, cliPath: config.cliPath, store: config.store, timeoutMs: config.timeoutMs,
         defaultRecallLimit: config.defaultRecallLimit, writeEnabled: config.writeEnabled,
         embedding: config.embedding, recallQuality: config.recallQuality, persistenceStrategy: config.persistenceStrategy,
       }))
@@ -121,6 +125,7 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
   readonly executions = new MemoryExecutions(this)
   private current: MnemonRuntimeGraph
   private readonly workspaceGraphs = new Map<string, MnemonRuntimeGraph>()
+  private readonly accountGraphs = new Map<string, MnemonRuntimeGraph>()
   private readonly agentGraphs = new Map<string, { token: symbol; graph: MnemonRuntimeGraph }>()
   private readonly retiredGraphs = new Set<MnemonRuntimeGraph>()
   private closed = false
@@ -129,11 +134,36 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
   readonly storage: StorageScopeInspector
   readonly packs: MnemonPackManager
 
-  constructor(initial: MnemonRuntimeGraph, private readonly workspaceRegistry: HostWorkspaceRegistry | undefined, private readonly agents: HostAgentsService | undefined, private readonly extensions: MemoryRuntime) {
+  constructor(initial: MnemonRuntimeGraph, private readonly workspaceRegistry: HostWorkspaceRegistry | undefined, private readonly agents: HostAgentsService | undefined, private readonly extensions: MemoryRuntime, private readonly accounts?: MnemonAccounts) {
     this.current = initial
-    this.config = liveProxy(() => this.current.config)
-    this.storage = liveProxy(() => this.current.storage)
-    this.packs = liveProxy(() => this.current.packs)
+    this.config = liveProxy(() => this.active().config)
+    this.storage = liveProxy(() => this.active().storage)
+    this.packs = liveProxy(() => this.active().packs)
+  }
+
+  private active(): MnemonRuntimeGraph {
+    const principal = this.accounts?.current()
+    return principal === undefined ? this.current : this.forAccount(principal)
+  }
+
+  private forAccount(principal: HostPrincipal): MnemonRuntimeGraph {
+    this.assertOpen()
+    const key = this.accounts!.key(principal)
+    let graph = this.accountGraphs.get(key)
+    if (graph === undefined) {
+      graph = createRuntimeGraph(this.accounts!.config(principal), undefined, this.extensions)
+      this.accountGraphs.set(key, graph)
+    }
+    return graph
+  }
+
+  /** Retain active turn pins while later operations see the account's saved preferences. */
+  reloadAccount(principal: HostPrincipal): void {
+    const key = this.accounts!.key(principal)
+    const graph = createRuntimeGraph(this.accounts!.config(principal), undefined, this.extensions)
+    const old = this.accountGraphs.get(key)
+    this.accountGraphs.set(key, graph)
+    if (old !== undefined) this.retireGraph(old)
   }
 
   swap(next: MnemonRuntimeGraph): void {
@@ -150,7 +180,8 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
 
   snapshot(): MnemonRuntimeGraph {
     this.assertOpen()
-    return this.current
+    if (this.accounts !== undefined) return this.forAccount(this.accounts.require())
+    return this.active()
   }
 
   bindAgentRuntime(agentId: string, graph: MnemonRuntimeGraph): () => void {
@@ -174,11 +205,13 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
     const graphs = new Set<MnemonRuntimeGraph>([
       this.current,
       ...this.workspaceGraphs.values(),
+      ...this.accountGraphs.values(),
       ...[...this.agentGraphs.values()].map(binding => binding.graph),
       ...this.retiredGraphs,
     ])
     this.agentGraphs.clear()
     this.workspaceGraphs.clear()
+    this.accountGraphs.clear()
     this.retiredGraphs.clear()
     for (const graph of graphs) graph.dispose()
   }
@@ -186,11 +219,21 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
   /** Resolve the runtime that must serve one Agent execution. */
   forAgent(agent: HostAgent): MnemonRuntimeGraph {
     this.assertOpen()
+    const principal = this.accounts?.principal(agent) ?? this.accounts?.current()
+    if (this.accounts !== undefined && principal === undefined) throw new Error('Mnemon Agent has no account identity')
+    const owned = principal === undefined ? undefined : this.forAccount(principal)
     const pinned = this.agentGraphs.get(agent.id)
-    if (pinned !== undefined) return pinned.graph
+    if (pinned !== undefined) {
+      if (owned !== undefined && pinned.graph.directory !== owned.directory) throw new Error('Mnemon turn belongs to another account')
+      return pinned.graph
+    }
     const parentSession = agent.session.header?.origin === 'subagent' ? agent.session.header.parentSession?.trim() : undefined
     const inherited = parentSession === undefined || parentSession === '' ? undefined : this.agentGraphs.get(parentSession)
-    if (inherited !== undefined) return inherited.graph
+    if (inherited !== undefined) {
+      if (owned !== undefined && inherited.graph.directory !== owned.directory) throw new Error('Mnemon parent belongs to another account')
+      return inherited.graph
+    }
+    if (owned !== undefined) return owned
     if (!isWorkspaceStorageScope(this.current.config.storageScope)) return this.current
     const cwd = agent.session.header?.cwd?.trim()
     if (cwd === undefined || cwd === '') throw new Error('the current DSH session has no workspace for Mnemon')
@@ -201,6 +244,7 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
   forWorkspaceId(workspaceId: string): MnemonRuntimeGraph {
     this.assertOpen()
     const workspace = this.requireWorkspace(workspaceId)
+    if (this.accounts !== undefined) return this.forAccount(this.accounts.require())
     return isWorkspaceStorageScope(this.current.config.storageScope) ? this.forWorkspacePath(workspace.path) : this.current
   }
 
@@ -214,15 +258,16 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
     aligned: boolean
   } {
     this.assertOpen()
+    const current = this.accounts === undefined ? this.current : this.forAccount(this.accounts.require())
     const effectiveAgent = this.agent(request.sessionId)
     const effectiveWorkspace = effectiveAgent === undefined ? undefined : this.workspaceForPath(effectiveAgent.session.header?.cwd)
     const selectedWorkspace = request.workspaceId === undefined || request.workspaceId.trim() === ''
       ? effectiveWorkspace
       : this.requireWorkspace(request.workspaceId)
     const graph = selectedWorkspace === undefined
-      ? effectiveAgent === undefined ? this.current : this.forAgent(effectiveAgent)
-      : isWorkspaceStorageScope(this.current.config.storageScope) ? this.forWorkspacePath(selectedWorkspace.path) : this.current
-    const effectiveGraph = effectiveAgent === undefined ? this.current : this.forAgent(effectiveAgent)
+      ? effectiveAgent === undefined ? current : this.forAgent(effectiveAgent)
+      : isWorkspaceStorageScope(current.config.storageScope) ? this.forWorkspacePath(selectedWorkspace.path) : current
+    const effectiveGraph = effectiveAgent === undefined ? current : this.forAgent(effectiveAgent)
     const selectedRoot = resolve(graph.directory)
     const effectiveRoot = resolve(effectiveGraph.directory)
     return {

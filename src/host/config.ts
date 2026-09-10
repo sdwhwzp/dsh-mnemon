@@ -132,6 +132,7 @@ const MemoryTopologySchema: z<MemoryTopologyConfig> = z.object({
 })
 
 export const Config: z<Config> = z.object({
+  accountDataDir: z.string(),
   // Bundle wiring, not an end-user memory setting. Keep the legacy root
   // behavior by default while allowing cordis.patch.yml to compose the public
   // Source/Strategy Entries without double registration.
@@ -304,6 +305,8 @@ function resolveMemoryTopology(value: MemoryTopologyConfig | undefined): SharedR
 }
 
 export function resolveConfig(config: Config = {}): ResolvedConfig {
+  const accountDataDir = optionalText(config.accountDataDir)
+  if (accountDataDir !== undefined && !isAbsolute(accountDataDir)) throw new Error('dsh-mnemon: accountDataDir must be absolute')
   const cliPath = optionalText(config.cliPath)
   const legacyDataDir = optionalText(config.dataDir)
   const legacyPacks = resolveCustomPacks(config.customPacks, legacyDataDir)
@@ -324,6 +327,7 @@ export function resolveConfig(config: Config = {}): ResolvedConfig {
     throw new Error('dsh-mnemon: store must match [a-zA-Z0-9][a-zA-Z0-9_-]*')
   }
   return {
+    ...(accountDataDir === undefined ? {} : { accountDataDir }),
     storageScope,
     runtimeUserScope,
     ...(cliPath === undefined ? {} : { cliPath }),

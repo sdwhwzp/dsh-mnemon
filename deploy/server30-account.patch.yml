@@ -1,0 +1,21 @@
+# Apply after the Mnemon bundle. DSH patch rows replace config objects.
+- id: mnemon
+  config:
+    accountDataDir: /home/tzwl3/.dsh/mnemon-accounts
+    cliPath: /home/tzwl3/.local/opt/mnemon-0.2.5/mnemon
+    remoteAccess: trusted-host
+    routingGuidance: true
+    lifecycleEnabled: true
+    recallMode: guided
+    writebackMode: guided
+    idleReviewMs: 30000
+    tabEnabled: true
+    writeEnabled: true
+- id: mnemon-source-memory-spaces
+  config:
+    providers:
+      - use: dsh-mnemon-provider-mnemon-native
+        instanceId: mnemon-native
+- id: llm-subscriptions
+  config:
+    fastTier: false

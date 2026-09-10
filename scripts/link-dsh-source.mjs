@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const restore = process.argv[2] === '--restore'
 const sourceInput = process.env.DSH_SOURCE_ROOT ?? (restore ? undefined : process.argv[2])
-const expectedVersion = process.env.DSH_SOURCE_VERSION ?? '0.1.2-alpha.5'
+const expectedVersion = process.env.DSH_SOURCE_VERSION ?? '0.1.5-alpha.2'
 
 if (!restore && sourceInput === undefined) {
   throw new Error('Set DSH_SOURCE_ROOT or pass the DeepSeek Harness source checkout path.')
@@ -14,6 +14,9 @@ if (!restore && sourceInput === undefined) {
 const links = new Map([
   ['@deepseek-ai/cordis', 'vendor/cordis'],
   ['@deepseek-ai/dsh', 'apps/cli'],
+  ['@deepseek-ai/dsh-api-gateway', 'packages/api/gateway'],
+  ['@deepseek-ai/dsh-typert-protocol', 'packages/typert/protocol'],
+  ['@deepseek-ai/dsh-typert-registry', 'packages/typert/registry'],
   ['@deepseek-ai/dsh-agent', 'packages/core/agent'],
   ['@deepseek-ai/dsh-agent-loop', 'packages/core/agent-loop'],
   ['@deepseek-ai/dsh-client-connection', 'packages/client/connection'],

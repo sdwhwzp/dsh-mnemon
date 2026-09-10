@@ -17,6 +17,20 @@ function deferred<T>() {
 }
 
 describe('MnemonSettingsCard', () => {
+  it('shows private account storage and omits controls for shared directories and provider credentials', () => {
+    const snapshot = {
+      status: 'ready' as const, value: { accountDataDir: '/private/accounts', storageScope: 'custom' as const, dataDir: '/private/accounts/user' },
+      base: {}, user: {}, revision: 0, writable: true, mode: 'host' as const,
+    }
+    const scope = { getSnapshot: () => snapshot, subscribe: () => () => {}, set: vi.fn(), unset: vi.fn(), setPath: vi.fn(), unsetPath: vi.fn(), mutate: vi.fn() } satisfies ClientSettingsScope<Config>
+    render(<MnemonSettingsCard scope={scope} />)
+    expect(screen.getByText(/记忆按登录账号独立保存/)).toBeTruthy()
+    expect(screen.queryByLabelText('记忆范围')).toBeNull()
+    expect(screen.queryByRole('textbox', { name: '嵌入 Endpoint' })).toBeNull()
+    expect(screen.queryByLabelText('API Key（可选，OpenAI 兼容服务）')).toBeNull()
+    expect(screen.getByRole('button', { name: '保存' })).toBeTruthy()
+  })
+
   it('persists a validated DSH-managed Mnemon embedding override as one live setting', async () => {
     const mutate = vi.fn(async () => {})
     const snapshot = {

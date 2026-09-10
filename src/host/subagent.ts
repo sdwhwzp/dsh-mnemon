@@ -14,6 +14,7 @@ import type { MemoryCompositionGeneration } from '../core/composition.ts'
 import { agentScope, type MnemonAgentRuntimeSource, type MnemonRuntimeGraph } from './runtime.ts'
 import type { ComposableMemoryTurn } from '../core/turns.ts'
 import { hostSessionEvents } from './session-events.ts'
+import type { MnemonAccounts } from './account-access.ts'
 
 export type { SubagentCounters } from "./protocol.ts"
 
@@ -844,7 +845,7 @@ export function isSubagent(agent: HostAgent | undefined): boolean {
 
 /** Delegates memory judgment and execution to a fresh, tool-scoped DSH child. */
 export class MnemonSubagentCoordinator {
-  private readonly counters: SubagentCounters = { recalls: 0, writes: 0, answers: 0, reviews: 0, placements: 0, migrations: 0, compactions: 0, documentArchives: 0, metadataMaintenances: 0, failures: 0 }
+  private readonly counters: SubagentCounters
   private runtimeQueue: Promise<unknown> = Promise.resolve()
   private documentQueue: Promise<unknown> = Promise.resolve()
   private readonly observedReads = new WeakMap<ComposableMemoryTurn, Set<string>>()
@@ -856,7 +857,11 @@ export class MnemonSubagentCoordinator {
     private readonly taskAgentModelResolver?: () => { provider: string; model: string } | undefined,
     private readonly runtimeMaintenanceMaxTokensResolver?: () => number,
     private readonly runtimeMaintenanceTaskRunner?: RuntimeMaintenanceTaskRunner,
-  ) {}
+    accounts?: MnemonAccounts,
+  ) {
+    const initial: SubagentCounters = { recalls: 0, writes: 0, answers: 0, reviews: 0, placements: 0, migrations: 0, compactions: 0, documentArchives: 0, metadataMaintenances: 0, failures: 0 }
+    this.counters = accounts?.state(initial) ?? initial
+  }
 
   snapshot(): SubagentCounters {
     return { ...this.counters }

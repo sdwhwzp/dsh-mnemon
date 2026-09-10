@@ -22,7 +22,7 @@ const required = ['package.json', 'cordis.patch.yml', 'lib/client.js', ...Object
   .filter(([name]) => name !== './package.json')
   .flatMap(([, value]) => [value.default.slice(2), value.types.slice(2)])]
 
-const allowedRootFiles = new Set(['package.json', 'cordis.patch.yml', 'LICENSE', 'README.md', 'README.zh-CN.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md'])
+const allowedRootFiles = new Set(['package.json', 'cordis.patch.yml', 'LICENSE', 'README.md', 'README.zh-CN.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'FORK.md'])
 const missing = required.filter(path => !paths.includes(path))
 const unexpected = paths.filter(path => !allowedRootFiles.has(path) && !(/^lib\/.+\.(?:js|d\.ts)$/.test(path)))
 const clientBundle = readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8')
@@ -41,9 +41,9 @@ const relativeReadmeImages = readmeFiles.flatMap((path) => {
 
 // Core/Host and the shared page kit only; Source/Provider implementations must
 // ship in their own artifacts. Keep a bounded budget, not the old monolith size.
-// Built-in workspace routing and bilingual settings add about 7 KB to main's
-// 1,249,360-byte baseline, without adding package files or bundled Sources.
-const maximumUnpackedBytes = 1_260_000
+// Account authorization, scoped lifecycle adapters and fork deployment notes
+// belong to the Host artifact; Source implementations remain separate.
+const maximumUnpackedBytes = 1_300_000
 
 if (missing.length > 0 || unexpected.length > 0 || hostLeaks.length > 0 || relativeReadmeImages.length > 0 || pack.unpackedSize > maximumUnpackedBytes) {
   if (missing.length > 0) console.error(`Missing package files:\n${missing.map(path => `- ${path}`).join('\n')}`)

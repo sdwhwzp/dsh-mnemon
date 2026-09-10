@@ -173,6 +173,8 @@ export { normalizeDisplayMode } from './display-mode.ts'
 export type MnemonDisplayMode = 'sidebar' | 'builtin'
 
 export interface Config {
+  /** Host-owned root for private account memory; cannot be changed through Web settings. */
+  accountDataDir?: string
   storageScope?: StorageScopeKind
   /** Whether USER.md follows the selected storage root or stays in the global root. */
   runtimeUserScope?: 'storage' | 'global'
@@ -255,6 +257,7 @@ export interface InteractionConfig {
 }
 
 export interface ResolvedConfig {
+  accountDataDir?: string
   storageScope: StorageScopeKind
   runtimeUserScope: 'storage' | 'global'
   cliPath?: string

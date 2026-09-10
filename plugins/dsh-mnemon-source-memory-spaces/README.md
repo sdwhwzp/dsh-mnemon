@@ -32,3 +32,5 @@ The optional `./client` entry owns the Source's pages and `presentation/` resour
 `pnpm verify` checks Host behavior, real Source-backed page interactions, and Host/browser artifacts. Client tests consume the installed Core's public testing entry.
 
 [Plugin development](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/en/development/extensions.md) · [中文指南](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/development/extensions.md)
+
+In this fork, a Host generation marked `accountIsolated` makes its account storage configuration authoritative over Source entry settings. Memory Spaces additionally requires the Native provider exclusively. See [account deployment](https://github.com/sdwhwzp/dsh-mnemon/blob/dev/docs/en/guides/accounts.md).

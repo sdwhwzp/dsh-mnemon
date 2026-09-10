@@ -24,6 +24,7 @@ import type { AssistantMessageText, LifecycleAgentSnapshot, LifecycleCounters, L
 import type { PreparedMemoryPlacement } from 'dsh-mnemon-source-memory-spaces/contracts'
 import type { MemoryWake } from "../core/contracts/index.ts"
 import { agentScope, type MnemonAgentRuntimeSource } from './runtime.ts'
+import type { MnemonAccounts } from './account-access.ts'
 import { hostSessionEventAt, hostSessionEvents } from './session-events.ts'
 
 type AgentRuntimeSource = Pick<MnemonAgentRuntimeSource, 'forAgent' | 'executions'>
@@ -587,7 +588,7 @@ export class MnemonLifecycle {
   private readonly owners = new Map<HostAgent, { lifecycle: MnemonAgentLifecycle; dispose: () => unknown }>()
   private readonly children = new Map<HostAgent, () => unknown>()
   private readonly memoryTurns = new Map<HostAgent, AgentMemoryTurn>()
-  private readonly counters: LifecycleCounters = { primes: 0, recallCues: 0, writebackCues: 0, supervisedRequests: 0, failures: 0 }
+  private readonly counters: LifecycleCounters
   /** Creation ids reserved before DSH publishes clean task-root Agents. */
   private readonly taskAgentIds = new Set<string>()
   /** Bounded process-local replay fence for finalized-message write actions. */
@@ -598,7 +599,11 @@ export class MnemonLifecycle {
     private readonly coordinator: MnemonSubagentCoordinator,
     private readonly config: ResolvedConfig,
     private readonly runtimeSource?: AgentRuntimeSource,
-  ) {}
+    private readonly accounts?: MnemonAccounts,
+  ) {
+    const initial = { primes: 0, recallCues: 0, writebackCues: 0, supervisedRequests: 0, failures: 0 }
+    this.counters = accounts?.state(initial) ?? initial
+  }
 
   start(): () => void {
     const stopCreated = this.ctx.on('agent/created', (({ agent }: AgentEventPayload) => { this.install(agent, 'startup') }) as never)
@@ -623,7 +628,7 @@ export class MnemonLifecycle {
       recallMode: this.config.recallMode,
       writebackMode: this.config.writebackMode,
       idleReviewMs: this.config.idleReviewMs,
-      activeAgents: this.owners.size,
+      activeAgents: [...this.owners.keys()].filter(agent => this.accounts?.owns(agent) ?? true).length,
       sessionAvailable: agent !== undefined,
       taskAgentAvailable: this.ctx.agents.create === undefined
         ? agent !== undefined
@@ -693,7 +698,7 @@ export class MnemonLifecycle {
   }
 
   private availableAgent(workspaceRoot?: string): HostAgent | undefined {
-    const agents = [...this.owners.keys()]
+    const agents = [...this.owners.keys()].filter(agent => this.accounts?.owns(agent) ?? true)
     const normalizedRoot = workspaceRoot?.trim()
     if (normalizedRoot === undefined || normalizedRoot === '') return agents.find(agent => agent.status === 'idle') ?? agents[0]
     const expected = resolve(normalizedRoot)
@@ -854,7 +859,7 @@ export class MnemonLifecycle {
     }
 
     if (normalizedKey === undefined || normalizedKey === '') return execute()
-    const replayKey = `${replayScope}\u0000${normalizedKey}`
+    const replayKey = `${this.config.dataDir ?? ''}\u0000${replayScope}\u0000${normalizedKey}`
     const existing = this.supervisedWritebacks.get(replayKey)
     if (existing !== undefined) {
       if (existing.content !== normalizedContent) throw new Error('idempotency key was already used for different content')

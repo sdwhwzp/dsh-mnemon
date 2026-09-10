@@ -11,7 +11,15 @@ export type {
   SettingsOperation,
 } from "./protocol.ts"
 
-export type HostRpcHandler = (endpoint: string, payload: unknown, signal?: AbortSignal) => Promise<RpcResult<unknown>>
+export type HostRpcHandler = (endpoint: string, payload: unknown, signal?: AbortSignal, principal?: HostPrincipal) => Promise<RpcResult<unknown>>
+
+/** Identity authenticated by the deployment, never taken from browser payload fields. */
+export interface HostPrincipal {
+  readonly source: string
+  readonly id: string
+  readonly username: string
+  readonly role: 'admin' | 'user'
+}
 export type HostRpcAuthority = 'trusted-host' | 'loopback'
 
 /**
@@ -52,6 +60,7 @@ export interface HostSettingsService {
 }
 
 export interface ToolExecution {
+  principal?: HostPrincipal
   signal: AbortSignal
   agent?: HostAgent
   name?: string
@@ -135,6 +144,7 @@ export interface HostImageContentBlock extends HostOpaqueContentBlock {
 export type HostUserContentBlock = HostTextContentBlock | HostImageContentBlock | HostOpaqueContentBlock
 
 export interface HostUserMessage {
+  principal?: HostPrincipal
   id: string
   role: 'user'
   content: HostUserContentBlock[]
@@ -249,6 +259,7 @@ export interface HostSubagentsService {
   list(): string[]
   getProvider(name: string): HostSubagentProvider | undefined
   start(name: string, request: {
+    principal?: HostPrincipal
     label?: string
     prompt: Array<{ type: 'text'; text: string }>
     parent: HostAgent

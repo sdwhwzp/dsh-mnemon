@@ -63,7 +63,7 @@ export function createRuntimeMemorySource(config: Config = {}): MemorySourceDefi
     },
   },
   create(context) {
-    const effective = runtimeSourceConfig({ ...context.configuration, ...configured }, context.sourceInstanceKey)
+    const effective = runtimeSourceConfig(context.configuration?.accountIsolated === true ? { ...configured, ...context.configuration } : { ...context.configuration, ...configured }, context.sourceInstanceKey)
     const controller = new RuntimeMemoryController(
       { effectiveDataDir: () => effective.dataDir }, undefined,
       { memory: effective.memoryLimitBytes, user: effective.userLimitBytes },

@@ -26,3 +26,5 @@ The optional `./client` entry is an ordinary DSH Client plugin. This package own
 From a source checkout, install the declared dependencies and run `pnpm verify` to check Host behavior, Source-backed page interactions and Host/browser artifacts. Unreleased SDK work consumes a packed `dsh-mnemon` peer, not repository aliases or copied root tests.
 
 [Plugin development](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/en/development/extensions.md) · [中文指南](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/development/extensions.md)
+
+In this fork, a Host generation marked `accountIsolated` makes its account storage configuration authoritative over Source entry settings. Memory Spaces additionally requires the Native provider exclusively. See [account deployment](https://github.com/sdwhwzp/dsh-mnemon/blob/dev/docs/en/guides/accounts.md).

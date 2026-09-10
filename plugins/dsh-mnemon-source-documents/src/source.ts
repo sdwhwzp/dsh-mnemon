@@ -116,7 +116,7 @@ export function createDocumentsMemorySource(config: Config = {}): MemorySourceDe
     },
   },
   create(context) {
-    const effective = documentsSourceConfig({ ...context.configuration, ...configured }, context.sourceInstanceKey)
+    const effective = documentsSourceConfig(context.configuration?.accountIsolated === true ? { ...configured, ...context.configuration } : { ...context.configuration, ...configured }, context.sourceInstanceKey)
     const documents = new DocumentManager(effective.limitBytes, undefined, () => effective.dataDir)
     const snapshot = (workspaceId: string | undefined) => workspaceId === undefined ? undefined : documents.forWorkspace(workspaceId).catalog()
     const prepared = new WeakMap<object, NonNullable<ReturnType<typeof snapshot>>>()
