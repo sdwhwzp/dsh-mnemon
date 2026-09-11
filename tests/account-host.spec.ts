@@ -96,6 +96,11 @@ it('logs and projects each account memory through the real Harness Agent loop an
       prompts.push({ sessionId: String(options.sessionId), text: JSON.stringify(options.messages) })
       const count = calls.get(String(options.sessionId)) ?? 0
       calls.set(String(options.sessionId), count + 1)
+      const resultTool = options.tools?.find(tool => tool.name.startsWith('mnemon_subagent_result_'))
+      if (resultTool !== undefined) {
+        if (count > 0) throw new Error('The completed memory task requested another model step')
+        return { name: resultTool.name, args: { action: 'skipped', summary: 'No durable facts in this setup task.', memoryBodyIds: [], documentIds: [] } }
+      }
       return count === 0 ? { name: 'mnemon_document_search', args: { query: 'private-token' } } : 'Done.'
     }))
     const principals = ['1', '2'].map(id => ({ source: 'dsh-passwords', id, username: 'user-' + id, role: 'user' as const }))
@@ -120,6 +125,11 @@ it('logs and projects each account memory through the real Harness Agent loop an
       expect(text).toContain('document-account-' + owner)
       expect(text).not.toContain('document-account-' + (owner === '1' ? '2' : '1'))
     }
+    await accounts.execute(agents[1]! as unknown as HostAgent, async () => {
+      const result = await coordinator.write(scoped.agents.get(agents[1]!.id)!, 'remember', { content: 'Routine setup task' }, new AbortController().signal)
+      expect(result).toMatchObject({ action: 'skipped', summary: 'No durable facts in this setup task.', memoryBodyIds: [], documentIds: [] })
+      expect(calls.get(result.runId)).toBe(1)
+    })
     const background = accounts.handler(async () => {
       const task = await scoped.agents.create!({ sessionId: 'background-2', meta: { cwd: memory.workspace }, agentOptions: { provider: 'mock', model: 'mock' } })
       try {

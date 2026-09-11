@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { memorySettings } from './helpers/account-settings.ts'
 import { MnemonAccounts } from '../src/host/account-access.ts'
-import type { HostAgent, HostContextShape, HostPrincipal, HostRpcHandler, ToolDefinition } from '../src/host/dsh.ts'
+import type { HostAgent, HostContextShape, HostPrincipal, HostRpcHandler, ToolDefinition, ToolExecution } from '../src/host/dsh.ts'
 import { createReadHandler, createWriteHandler } from '../src/host/rpc.ts'
 import { LiveMnemonRuntime } from '../src/host/runtime.ts'
 import { createSettingsHandler } from '../src/host/settings.ts'
@@ -30,7 +30,9 @@ async function fixture() {
   const workspaces = [{ id: 'shared', title: 'Shared project', path: composition.workspace }, { id: 'bob-only', title: 'Private', path: root }]
   const active = new Set(['1', '2'])
   const tools: ToolDefinition[] = []
+  const on = vi.fn()
   const ctx = {
+    on,
     settings: memorySettings(),
     agents: { get: (id: string) => sessions.find(value => value.id === id), roots: () => sessions,
       create: vi.fn(async ({ sessionId }: { sessionId: string }) => {
@@ -57,7 +59,7 @@ async function fixture() {
   const read = accounts.handler(createReadHandler(live), 'read')
   const write = accounts.handler(createWriteHandler(live), 'write')
   const settings = accounts.handler(createSettingsHandler(accounts.settingsService(p => live.reloadAccount(p))), 'settings')
-  return { root, accounts, live, ctx, scoped, sessions, tools, read, write, settings, active, stat }
+  return { root, accounts, live, ctx, scoped, sessions, tools, read, write, settings, active, stat, on }
 }
 
 describe('authenticated Mnemon account memory', () => {
@@ -183,6 +185,36 @@ describe('authenticated Mnemon account memory', () => {
     const execution = { agent: f.sessions[1]!, principal: bob, signal: new AbortController().signal }
     expect(await execute({} as never, execution)).toContain(f.accounts.key(bob))
     await expect(execute({} as never, { ...execution, principal: alice })).rejects.toThrow('mismatch')
+  })
+
+  it('concludes the Host dispatch and delivers its receipt after the execution is frozen', async () => {
+    const f = await fixture()
+    const staged = new WeakMap<ToolExecution, string>()
+    const concluded = new WeakSet<ToolExecution>()
+    let receipt: string | undefined
+    const execution = {
+      agent: f.sessions[1]!, principal: bob, signal: new AbortController().signal,
+      concludeTurn() { concluded.add(this) },
+    }
+    f.scoped.tools.register({ name: 'memory-result-fixture', execute: async (_args, scoped) => {
+      expect(f.accounts.current()).toEqual(bob)
+      expect(scoped.agent).not.toBe(execution.agent)
+      expect(scoped.agent!.id).toBe(execution.agent.id)
+      scoped.concludeTurn!()
+      staged.set(scoped, 'review skipped')
+      return 'review skipped'
+    } } as ToolDefinition)
+    f.scoped.on('tools/result', (scoped: ToolExecution, _result: unknown) => {
+      expect(scoped.agent!.id).toBe(execution.agent.id)
+      expect(scoped.signal).toBe(execution.signal)
+      receipt = staged.get(scoped)
+    })
+    await f.tools[0]!.execute({} as never, execution)
+    expect(concluded.has(execution)).toBe(true)
+    execution.signal = new AbortController().signal
+    Object.freeze(execution)
+    f.on.mock.calls.find(([name]) => name === 'tools/result')![1](execution, { status: 'success' })
+    expect(receipt).toBe('review skipped')
   })
 
   it('pins an authorized child to its parent account and carries the owner into new worker requests', async () => {

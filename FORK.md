@@ -3,7 +3,7 @@
 - 原作者源：`https://github.com/omdsh-dev/dsh-mnemon.git`，`main`，同步基线 `2fa306b916e0995eb739953318ec7a3d4b89709b`。
 - 自有 fork：`https://github.com/sdwhwzp/dsh-mnemon.git`，上传地址 `git@github.com:sdwhwzp/dsh-mnemon.git`。
 - 当前融合分支：`dev`；本地 `main` 保留源历史，分别上传并核对，不能强行改成相同内容。
-- 适配版本：`0.5.7-dsh.20260911.2`，17 个 Mnemon 包使用同一版本；配套本地 Harness `0.1.5-rc.2` 与 `dsh-passwords 2.7.0-dsh.20260911.1`。
+- 适配版本：`0.5.7-dsh.20260911.3`，17 个 Mnemon 包使用同一版本；配套本地 Harness `0.1.5-rc.2` 与 `dsh-passwords 2.7.0-dsh.20260911.1`。
 
 本 fork 保留原作者的三层记忆、工具、工作台与数据格式，增加可选的登录账号隔离。配置与使用限制见 [账号部署](docs/zh-CN/guides/accounts.md)。未设置 `accountDataDir` 时仍使用原作者的单用户存储规则。
 

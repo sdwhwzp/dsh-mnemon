@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
-import type { HostAgent, HostContextShape, HostPrincipal, HostPreStepDecision, HostRpcHandler, HostSettingsService } from './dsh.ts'
+import type { HostAgent, HostContextShape, HostPrincipal, HostPreStepDecision, HostRpcHandler, HostSettingsService, ToolExecution } from './dsh.ts'
 import { hostSessionEvents } from './session-events.ts'
 import { Config, InteractionConfig, resolveConfig, type ResolvedConfig } from './config.ts'
 
@@ -19,6 +19,7 @@ export class MnemonAccounts {
   private readonly settings = new Map<string, { memory: { get(): Config }; ui: { get(): unknown } }>()
   private readonly proxies = new WeakMap<HostAgent, HostAgent>()
   private readonly originals = new WeakMap<HostAgent, HostAgent>()
+  private readonly executions = new WeakMap<ToolExecution, ToolExecution>()
   private readonly base: Config
 
   constructor(private readonly ctx: HostContextShape, readonly directory: string, config: Config) {
@@ -273,6 +274,27 @@ export class MnemonAccounts {
     return proxy
   }
 
+  /** One account-facing identity per dispatch; methods retain the Host receiver. */
+  private wrapExecution(execution: ToolExecution): ToolExecution {
+    const existing = this.executions.get(execution)
+    if (existing !== undefined) return existing
+    // A separate target permits the agent view after the Host freezes its execution.
+    const wrapped = new Proxy({} as ToolExecution, {
+      get: (_target, property) => {
+        if (property === 'agent') return execution.agent === undefined ? undefined : this.wrapAgent(execution.agent)
+        const value = Reflect.get(execution, property, execution) as unknown
+        return typeof value === 'function' ? value.bind(execution) : value
+      },
+      ownKeys: () => Reflect.ownKeys(execution),
+      getOwnPropertyDescriptor: (_target, property) => {
+        const descriptor = Reflect.getOwnPropertyDescriptor(execution, property)
+        return descriptor === undefined ? undefined : { ...descriptor, configurable: true }
+      },
+    })
+    this.executions.set(execution, wrapped)
+    return wrapped
+  }
+
   wrapContext(): HostContextShape {
     const agents = this.ctx.agents
     const scopedAgents = {
@@ -293,7 +315,7 @@ export class MnemonAccounts {
       if (property === 'tools') return { register: (definition: Parameters<typeof target.tools.register>[0]) => target.tools.register({ ...definition,
         execute: (args: never, execution) => {
           if (execution.agent === undefined) throw new Error('Mnemon requires an Agent')
-          return this.execute(execution.agent, () => definition.execute(args, { ...execution, agent: this.wrapAgent(execution.agent!) }), execution.signal, execution.principal)
+          return this.execute(execution.agent, () => definition.execute(args, this.wrapExecution(execution)), execution.signal, execution.principal)
         },
       }) }
       if (property === 'commands') return { register: (definition: Parameters<typeof target.commands.register>[0]) => target.commands.register({ ...definition,
@@ -305,7 +327,9 @@ export class MnemonAccounts {
         return typeof value === 'function' ? value.bind(service) : value
       } })
       if (property === 'on') return (name: string, listener: (...args: never[]) => unknown, options?: { prepend?: boolean }) => target.on(name,
-        name === 'agent/created' ? ((payload: { agent: HostAgent }) => this.context.exit(() => listener({ ...payload, agent: this.wrapAgent(payload.agent) } as never))) as never : listener, options)
+        name === 'agent/created' ? ((payload: { agent: HostAgent }) => this.context.exit(() => listener({ ...payload, agent: this.wrapAgent(payload.agent) } as never))) as never
+          : name === 'tools/result' ? ((execution: ToolExecution, result: unknown) => listener(this.wrapExecution(execution) as never, result as never)) as never
+          : listener, options)
       const value = Reflect.get(target, property, target) as unknown
       return typeof value === 'function' ? value.bind(target) : value
     } })
