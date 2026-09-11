@@ -3,11 +3,13 @@
 - 原作者源：`https://github.com/omdsh-dev/dsh-mnemon.git`，`main`，同步基线 `2fa306b916e0995eb739953318ec7a3d4b89709b`。
 - 自有 fork：`https://github.com/sdwhwzp/dsh-mnemon.git`，上传地址 `git@github.com:sdwhwzp/dsh-mnemon.git`。
 - 当前融合分支：`dev`；本地 `main` 保留源历史，分别上传并核对，不能强行改成相同内容。
-- 适配版本：`0.5.7-dsh.20260911.1`，17 个 Mnemon 包使用同一版本；配套本地 Harness `0.1.5-rc.2` 与 `dsh-passwords 2.7.0-dsh.20260911.1`。
+- 适配版本：`0.5.7-dsh.20260911.2`，17 个 Mnemon 包使用同一版本；配套本地 Harness `0.1.5-rc.2` 与 `dsh-passwords 2.7.0-dsh.20260911.1`。
 
 本 fork 保留原作者的三层记忆、工具、工作台与数据格式，增加可选的登录账号隔离。配置与使用限制见 [账号部署](docs/zh-CN/guides/accounts.md)。未设置 `accountDataDir` 时仍使用原作者的单用户存储规则。
 
 Web RPC 依赖 Harness 的 Connection 路由修复：通过 `ctx.get` 解析可选 Web 服务器，避免 Cordis 将属性访问归到未声明该服务的提供者上下文。Headless 不要求 Web 服务。
+
+历史会话档案管理从经授权的已保存会话头解析工作区，不依赖 Agent 已加载到内存。保存与读取沿用账号独立目录；元数据读取失败不回退到其他工作区。
 
 ## 同步与发布约束
 

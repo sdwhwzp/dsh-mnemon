@@ -224,6 +224,11 @@ export interface HostAgentsService {
   create?(options: CreateHostAgentOptions): Promise<HostAgentHandle>
 }
 
+/** Read saved headers without activating Agents or opening their event logs. */
+export interface HostSessionPersistence {
+  stat(id: string, options?: { signal?: AbortSignal }): Promise<{ header: { cwd?: string } } | undefined>
+}
+
 export interface HostWorkspace {
   readonly id: string
   readonly path: string

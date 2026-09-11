@@ -1,7 +1,7 @@
 import { Context } from '@deepseek-ai/cordis'
 import { Config, InteractionConfig, resolveConfig, resolveInteractionConfig, type Config as MnemonConfig } from './config.ts'
 import { registerCommands } from './commands.ts'
-import type { HostContextShape, HostWorkspaceRegistry } from './dsh.ts'
+import type { HostContextShape, HostSessionPersistence, HostWorkspaceRegistry } from './dsh.ts'
 import { registerGuidance } from './guidance.ts'
 import { createRuntimeGraph, LiveMnemonRuntime, type MnemonRuntimeGraph } from './runtime.ts'
 import { MnemonLifecycle } from './lifecycle.ts'
@@ -70,7 +70,9 @@ export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
   const initialSettings = settings.get()
   const initialCandidate = prepared.get(initialSettings)
   if (initialCandidate !== undefined) prepared.delete(initialSettings)
-  const runtime = new LiveMnemonRuntime(initialCandidate?.graph ?? createRuntimeGraph(effectiveConfig(initialSettings), undefined, extensions), optionalWorkspaceRegistry(ctx), ctx.agents, extensions, accounts)
+  const runtime = new LiveMnemonRuntime(initialCandidate?.graph ?? createRuntimeGraph(effectiveConfig(initialSettings), undefined, extensions), optionalWorkspaceRegistry(ctx), ctx.agents, extensions, accounts, {
+    stat: async (id, options) => (ctx.get('sessionPersistence') as HostSessionPersistence | undefined)?.stat(id, options),
+  })
   const resolved = runtime.config
   ctx.on('settings/updated', ((namespace: string, next: Config) => {
     if (namespace === memoryPlugins.settingsNamespace) {

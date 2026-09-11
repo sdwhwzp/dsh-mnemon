@@ -28,6 +28,22 @@ import type { DocumentsPageClient } from '../src/client/api.ts'
 import type { DocumentSnapshot, DocumentView } from '../src/contracts.ts'
 
 describe('independent Documents Source client', () => {
+  it('shows unavailable counts after a failed load and recovers on refresh', async () => {
+    const documents = vi.fn<DocumentsPageClient['documents']>().mockRejectedValueOnce(new Error('Workspace lookup failed'))
+    const client: DocumentsPageClient = { documents, document: vi.fn(), searchDocuments: vi.fn(), mutateDocument: vi.fn(), archiveDocument: vi.fn() }
+    render(<MemorySourcePageFrame locale="en"><DocumentsPage canCreate client={client} revision={0} writeEnabled onMutate={() => {}} /></MemorySourcePageFrame>)
+    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Workspace lookup failed')
+    expect(screen.queryByText(t('common.loading'))).toBeNull()
+    expect(screen.queryByText(t('documents.emptyActive'))).toBeNull()
+    expect(screen.getByRole('button', { name: t('documents.new') }).hasAttribute('disabled')).toBe(true)
+    expect(Array.from(screen.getByLabelText(t('documents.summary')).querySelectorAll('strong'), node => node.textContent)).toEqual(['—', '—', '—'])
+    documents.mockResolvedValue({ documents: [], workspaceRoot: '/workspace', directory: '/documents', indexPath: '/documents/index.json', generatedAt: '2026-09-11T00:00:00Z', revision: 'empty', limitBytes: 10000, activeBytes: 0, activeCount: 0, archivedCount: 0, total: 0 })
+    fireEvent.click(screen.getByRole('button', { name: t('documents.refresh') }))
+    expect(await screen.findByText(t('documents.emptyActive'))).not.toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByRole('button', { name: t('documents.new') }).hasAttribute('disabled')).toBe(false)
+  })
+
   it('orders active, archived and searched documents by creation before pagination, including after edits', async () => {
     const records: Array<DocumentView & { healthy: boolean; excerpt: string }> = [3, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(day => ({
       id: `doc-${day}`, title: `Document ${day}`, description: '', content: `Searchable evidence ${day}`, healthy: true, excerpt: '',

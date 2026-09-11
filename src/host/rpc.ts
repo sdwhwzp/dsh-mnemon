@@ -23,11 +23,11 @@ function requestedScope(payload: Record<string, unknown>): { workspaceId?: strin
     return value.trim() === '' ? [] : [[key, value.trim()]]
   }))
 }
-function scoped(runtime: LiveMnemonRuntime, payload: Record<string, unknown>, lifecycle?: MnemonLifecycle) {
+async function scoped(runtime: LiveMnemonRuntime, payload: Record<string, unknown>, lifecycle?: MnemonLifecycle, signal?: AbortSignal) {
   const requested = requestedScope(payload)
-  const route = runtime.route(requested)
+  const route = await runtime.route(requested, signal)
   // Browser workspace ids are resolved through the authenticated DSH registry.
-  const workspaceId = route.selectedWorkspace?.path ?? lifecycle?.workspaceRoot(requested.sessionId)
+  const workspaceId = route.selectedWorkspace?.path ?? route.sessionWorkspaceRoot ?? lifecycle?.workspaceRoot(requested.sessionId)
   const scope: MemoryOperationScope = {
     storage: route.graph.config.storageScope,
     ...(workspaceId === undefined ? {} : { workspaceId }),
@@ -35,7 +35,7 @@ function scoped(runtime: LiveMnemonRuntime, payload: Record<string, unknown>, li
   }
   return { ...route, scope, source: (typeId: string) => route.graph.source(typeId, scope) }
 }
-type ScopedRuntime = ReturnType<typeof scoped>
+type ScopedRuntime = Awaited<ReturnType<typeof scoped>>
 function requireAligned(runtime: ScopedRuntime): void {
   if (!runtime.aligned) throw new Error('the selected memory workspace differs from the current session; align the workbench before running an Agent-backed operation')
 }
@@ -113,7 +113,7 @@ async function assisted(runtime: ScopedRuntime, lifecycle: MnemonLifecycle, type
     if (operation === 'mutate') {
       requireCapability(runtime, typeId, 'write')
       const request = input as unknown as DocumentMutation
-      return runtime.aligned && sessionId !== '' ? lifecycle.mutateDocument(sessionId, request, signal) : runtime.source(typeId).mutate('mutate', request, signal)
+      return runtime.aligned && lifecycle.workspaceRoot(sessionId) !== undefined ? lifecycle.mutateDocument(sessionId, request, signal) : runtime.source(typeId).mutate('mutate', request, signal)
     }
   }
   if (typeId !== 'memory-spaces') throw new Error('unsupported Source assistance operation')
@@ -167,7 +167,7 @@ export function createReadHandler(input: LiveMnemonRuntime, lifecycle?: MnemonLi
         if (lifecycle === undefined) throw new Error('Mnemon task Agent model directory is unavailable')
         return success(await lifecycle.taskAgentModels(payload.includeCatalog !== false))
       }
-      const runtime = scoped(input, payload, lifecycle)
+      const runtime = await scoped(input, payload, lifecycle, signal)
       if (Object.hasOwn(SPACE_READ_CAPABILITIES, endpoint)) {
         // Inspection remains available when model participation is disabled.
         if (SPACE_READ_CAPABILITIES[endpoint] !== 'status') requireCapability(runtime, 'memory-spaces', SPACE_READ_CAPABILITIES[endpoint]!)
@@ -254,7 +254,7 @@ export function createActivationHandler(input: LiveMnemonRuntime): HostRpcHandle
         if (payload.operation !== 'activation' || payload.confirmed !== true) throw new Error('Unsupported activation operation')
         const fields = object(payload.input)
         if (Object.keys(fields).some(key => key !== 'memoryBodyId' && key !== 'active') || typeof fields.active !== 'boolean' || typeof fields.memoryBodyId !== 'string') throw new Error('Activation accepts only a Memory Space id and boolean state')
-        const runtime = scoped(input, payload)
+        const runtime = await scoped(input, payload, undefined, signal)
         requireWritable(runtime)
         const lease = runtime.graph.memoryComposition.acquire()
         try {
@@ -273,7 +273,7 @@ export function createActivationHandler(input: LiveMnemonRuntime): HostRpcHandle
       if (unexpected.length > 0) return badRequest('unsupported activation fields: ' + unexpected.join(', '))
       if (typeof payload.memoryBodyId !== 'string' || payload.memoryBodyId.trim() === '') return badRequest('memoryBodyId must be a non-empty string')
       if (typeof payload.active !== 'boolean') return badRequest('active must be a boolean')
-      const runtime = scoped(input, payload)
+      const runtime = await scoped(input, payload, undefined, signal)
       requireWritable(runtime)
       return success(await runtime.source('memory-spaces').mutate('body-update', { memoryBodyId: payload.memoryBodyId.trim(), active: payload.active }, signal))
     } catch (error) { return failure(error) }
@@ -290,7 +290,7 @@ export function createWriteHandler(input: LiveMnemonRuntime, lifecycle?: MnemonL
         if (!isVersionComponentId(payload.component)) return badRequest('unknown version component')
         return success(await versions.update(payload.component))
       }
-      const runtime = scoped(input, payload, lifecycle)
+      const runtime = await scoped(input, payload, lifecycle, signal)
       requireWritable(runtime)
       if (endpoint === 'source-management-mutate') {
         const request: MemorySourceManagementRequest = {
@@ -346,10 +346,10 @@ export function createWriteHandler(input: LiveMnemonRuntime, lifecycle?: MnemonL
 
 /** Pack data stays inside the selected storage root and DSH authentication. */
 export function createPackHandler(input: LiveMnemonRuntime): HostRpcHandler {
-  return async (endpoint, rawPayload) => {
+  return async (endpoint, rawPayload, signal) => {
     try {
       const payload = object(rawPayload)
-      const runtime = scoped(input, payload)
+      const runtime = await scoped(input, payload, undefined, signal)
       const manager = runtime.graph.packs
       if (endpoint === 'target') return success(manager.target())
       if (endpoint === 'export') return success(await manager.exportPack('full'))

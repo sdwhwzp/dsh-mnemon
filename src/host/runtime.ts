@@ -1,7 +1,7 @@
 import { isDefaultSourceInstance, isWorkspaceStorageScope } from './protocol.ts'
 import { resolve } from 'node:path'
 import type { ResolvedConfig } from './config.ts'
-import type { HostAgent, HostAgentsService, HostWorkspace, HostWorkspaceRegistry } from './dsh.ts'
+import type { HostAgent, HostAgentsService, HostSessionPersistence, HostWorkspace, HostWorkspaceRegistry } from './dsh.ts'
 import { MnemonPackManager } from './pack.ts'
 import { StorageScopeInspector } from './storage-scope.ts'
 import { createStorageRoot } from './storage-root.ts'
@@ -134,7 +134,7 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
   readonly storage: StorageScopeInspector
   readonly packs: MnemonPackManager
 
-  constructor(initial: MnemonRuntimeGraph, private readonly workspaceRegistry: HostWorkspaceRegistry | undefined, private readonly agents: HostAgentsService | undefined, private readonly extensions: MemoryRuntime, private readonly accounts?: MnemonAccounts) {
+  constructor(initial: MnemonRuntimeGraph, private readonly workspaceRegistry: HostWorkspaceRegistry | undefined, private readonly agents: HostAgentsService | undefined, private readonly extensions: MemoryRuntime, private readonly accounts?: MnemonAccounts, private readonly persistence?: HostSessionPersistence) {
     this.current = initial
     this.config = liveProxy(() => this.active().config)
     this.storage = liveProxy(() => this.active().storage)
@@ -248,30 +248,40 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
     return isWorkspaceStorageScope(this.current.config.storageScope) ? this.forWorkspacePath(workspace.path) : this.current
   }
 
-  /** Resolve a Web request, preferring its explicit inspection workspace. */
-  route(request: { workspaceId?: string; sessionId?: string }): {
+  /** Resolve authorized management requests from live or persisted headers, preferring the explicit inspection workspace. */
+  async route(request: { workspaceId?: string; sessionId?: string }, signal?: AbortSignal): Promise<{
     graph: MnemonRuntimeGraph
+    sessionWorkspaceRoot?: string
     selectedWorkspace?: HostWorkspace
     effectiveWorkspace?: HostWorkspace
     selectedRoot: string
     effectiveRoot: string
     aligned: boolean
-  } {
+  }> {
+    this.assertOpen()
+    const effectiveAgent = this.agent(request.sessionId)
+    const stored = effectiveAgent === undefined && request.sessionId !== undefined
+      ? await this.persistence?.stat(request.sessionId, signal === undefined ? undefined : { signal })
+      : undefined
+    signal?.throwIfAborted()
     this.assertOpen()
     const current = this.accounts === undefined ? this.current : this.forAccount(this.accounts.require())
-    const effectiveAgent = this.agent(request.sessionId)
-    const effectiveWorkspace = effectiveAgent === undefined ? undefined : this.workspaceForPath(effectiveAgent.session.header?.cwd)
+    const sessionWorkspaceRoot = effectiveAgent?.session.header?.cwd ?? stored?.header.cwd
+    const effectiveWorkspace = this.workspaceForPath(sessionWorkspaceRoot)
+    const effectiveGraph = effectiveAgent !== undefined ? this.forAgent(effectiveAgent)
+      : sessionWorkspaceRoot !== undefined && isWorkspaceStorageScope(current.config.storageScope)
+        ? this.forWorkspacePath(sessionWorkspaceRoot) : current
     const selectedWorkspace = request.workspaceId === undefined || request.workspaceId.trim() === ''
       ? effectiveWorkspace
       : this.requireWorkspace(request.workspaceId)
     const graph = selectedWorkspace === undefined
-      ? effectiveAgent === undefined ? current : this.forAgent(effectiveAgent)
+      ? effectiveGraph
       : isWorkspaceStorageScope(current.config.storageScope) ? this.forWorkspacePath(selectedWorkspace.path) : current
-    const effectiveGraph = effectiveAgent === undefined ? current : this.forAgent(effectiveAgent)
     const selectedRoot = resolve(graph.directory)
     const effectiveRoot = resolve(effectiveGraph.directory)
     return {
       graph,
+      ...(sessionWorkspaceRoot === undefined ? {} : { sessionWorkspaceRoot }),
       ...(selectedWorkspace === undefined ? {} : { selectedWorkspace }),
       ...(effectiveWorkspace === undefined ? {} : { effectiveWorkspace }),
       selectedRoot,

@@ -50,7 +50,7 @@ describe('default Host scope over the Composable Runtime', () => {
     const write = createWriteHandler(value.live, lifecycle)
     for (const session of sessions) {
       const expected = createStorageRoot(value.config, session.session.header!.cwd!).effectiveDataDir()
-      expect(value.live.route({ sessionId: session.id })).toMatchObject({ selectedRoot: expected, effectiveRoot: expected, aligned: true })
+      expect(await value.live.route({ sessionId: session.id })).toMatchObject({ selectedRoot: expected, effectiveRoot: expected, aligned: true })
       await expect(write('runtime-memory', { sessionId: session.id, action: 'add', target: 'memory', content: `Memory from ${session.id}` })).resolves.toMatchObject({ ok: true })
       await expect(write('document', { sessionId: session.id, action: 'create', title: `Document from ${session.id}`, content: `# ${session.id}` })).resolves.toMatchObject({ ok: true })
     }
@@ -130,10 +130,10 @@ describe('default Host scope over the Composable Runtime', () => {
     try {
       expect(live.forAgent(session).directory).toBe(createStorageRoot(graph.config, one).effectiveDataDir())
       expect(live.forWorkspaceId('two').directory).toBe(createStorageRoot(graph.config, two).effectiveDataDir())
-      expect(live.route({ workspaceId: 'two', sessionId: session.id })).toMatchObject({
+      expect(await live.route({ workspaceId: 'two', sessionId: session.id })).toMatchObject({
         selectedRoot: createStorageRoot(graph.config, two).effectiveDataDir(), effectiveRoot: createStorageRoot(graph.config, one).effectiveDataDir(), aligned: false,
       })
-      expect(live.route({ workspaceId: 'one', sessionId: session.id }).aligned).toBe(true)
+      expect((await live.route({ workspaceId: 'one', sessionId: session.id })).aligned).toBe(true)
       expect(() => live.forWorkspaceId('../../private')).toThrow('selected DSH workspace is unavailable')
     } finally { live.dispose() }
   })
@@ -144,7 +144,7 @@ describe('default Host scope over the Composable Runtime', () => {
     const live = new LiveMnemonRuntime(graph, undefined, { get: () => session, roots: () => [session] }, extensions)
     try {
       expect(live.forAgent(session).directory).toBe(createStorageRoot(graph.config, workspace).effectiveDataDir())
-      expect(live.route({ sessionId: session.id })).toMatchObject({ selectedRoot: createStorageRoot(graph.config, workspace).effectiveDataDir(), effectiveRoot: createStorageRoot(graph.config, workspace).effectiveDataDir(), aligned: true })
+      expect(await live.route({ sessionId: session.id })).toMatchObject({ selectedRoot: createStorageRoot(graph.config, workspace).effectiveDataDir(), effectiveRoot: createStorageRoot(graph.config, workspace).effectiveDataDir(), aligned: true })
     } finally { live.dispose() }
   })
   it('preserves one singleton root for global and custom storage', async () => {

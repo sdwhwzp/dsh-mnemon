@@ -144,8 +144,8 @@ export function DocumentsPage(props: { client: DocumentsPageClient; revision: nu
   }
 
   const usage = snapshot === null ? 0 : Math.min(100, snapshot.activeBytes / snapshot.limitBytes * 100)
-  const activeCount = snapshot?.activeCount ?? 0
-  const archivedCount = snapshot?.archivedCount ?? 0
+  const activeCount = snapshot?.activeCount ?? '—'
+  const archivedCount = snapshot?.archivedCount ?? '—'
   const composer = <form id={documentCreateFormId} className={css.documentEditor} onSubmit={event => void create(event)}>
     <header><div><h3>{t('documents.newTitle')}</h3><p>{t('documents.editorHint')}</p></div><span>{t('documents.managedCopy')}</span></header>
     <div className={css.documentEditorMeta}><label>{t('documents.name')}<input value={title} onChange={event => setTitle(event.target.value)} required /></label><label>{t('documents.routing')}<input value={description} onChange={event => setDescription(event.target.value)} /></label></div>
@@ -170,7 +170,7 @@ export function DocumentsPage(props: { client: DocumentsPageClient; revision: nu
 
   return (
     <div className={css.page}>
-      <PageHeader title={t('documents.title')} description={t('documents.description')} meta={snapshot === null ? t('common.loading') : t('documents.capacity', { used: humanBytes(snapshot.activeBytes), limit: humanBytes(snapshot.limitBytes) })} action={<><button type="button" className={css.secondaryButton} disabled={loading} onClick={() => void display(query, status)}>{t('documents.refresh')}</button>{props.writeEnabled && (props.canCreate ?? props.sessionId !== undefined) && <button type="button" className={css.primaryButton} onClick={startComposer}>{t('documents.new')}</button>}</>} />
+      <PageHeader title={t('documents.title')} description={t('documents.description')} meta={snapshot === null ? t(loading ? 'common.loading' : 'header.unavailable') : t('documents.capacity', { used: humanBytes(snapshot.activeBytes), limit: humanBytes(snapshot.limitBytes) })} action={<><button type="button" className={css.secondaryButton} disabled={loading} onClick={() => void display(query, status)}>{t('documents.refresh')}</button>{props.writeEnabled && (props.canCreate ?? props.sessionId !== undefined) && <button type="button" className={css.primaryButton} disabled={loading || snapshot === null} onClick={startComposer}>{t('documents.new')}</button>}</>} />
       {error !== null && <div className={css.inlineError} role="alert">{error}</div>}
       {notice !== null && <div className={css.runtimeNotice} role="status">{notice}</div>}
 
@@ -190,10 +190,10 @@ export function DocumentsPage(props: { client: DocumentsPageClient; revision: nu
 
       <div className={css.documentWorkspace}>
         <aside className={css.documentList} aria-label={t('documents.list')}>
-          <header><span>{status === 'active' ? t('documents.activeList') : t('documents.archiveList')}</span><code>{items.length}</code></header>
+          <header><span>{status === 'active' ? t('documents.activeList') : t('documents.archiveList')}</span><code>{snapshot === null ? '—' : items.length}</code></header>
           {visibleItems.map(document => <button type="button" key={document.id} aria-pressed={selectedId === document.id} data-selected={selectedId === document.id || undefined} onClick={() => selectDocument(document.id)}><div><strong>{document.title}</strong><time dateTime={document.createdAt}>{new Date(document.createdAt).toLocaleDateString(locale)}</time></div><p>{document.description || document.excerpt || t('documents.noDescription')}</p><footer><span>{humanBytes(document.sizeBytes)}</span><code>{document.id.slice(0, 8)}</code>{document.healthy === false && <em>{t('documents.missing')}</em>}</footer></button>)}
           {!loading && <ProgressiveFooter compact visible={visibleItems.length} total={items.length} pageSize={pageSize} onMore={() => setVisibleLimit(value => value + pageSize)} />}
-          {!loading && items.length === 0 && <div className={css.documentListEmpty}><span>▤</span><strong>{status === 'active' ? t('documents.emptyActive') : t('documents.emptyArchived')}</strong><p>{status === 'active' ? t('documents.emptyActiveText') : t('documents.emptyArchivedText')}</p></div>}
+          {snapshot !== null && !loading && items.length === 0 && <div className={css.documentListEmpty}><span>▤</span><strong>{status === 'active' ? t('documents.emptyActive') : t('documents.emptyArchived')}</strong><p>{status === 'active' ? t('documents.emptyActiveText') : t('documents.emptyArchivedText')}</p></div>}
           {loading && <div className={css.loading}>{t('common.loading')}</div>}
         </aside>
 

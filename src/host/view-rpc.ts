@@ -34,9 +34,9 @@ export function createViewHandler(runtime: LiveMnemonRuntime, engine: MemoryRunt
       }
       const sessionId = optionalId(payload.sessionId)
       const selectedWorkspaceId = optionalId(payload.workspaceId)
-      const route = runtime.route({ ...(sessionId === undefined ? {} : { sessionId }), ...(selectedWorkspaceId === undefined ? {} : { workspaceId: selectedWorkspaceId }) })
-      const workspaceId = route.selectedWorkspace?.path ?? lifecycle?.workspaceRoot(sessionId)
-      const sessionWorkspace = lifecycle?.workspaceRoot(sessionId)
+      const route = await runtime.route({ ...(sessionId === undefined ? {} : { sessionId }), ...(selectedWorkspaceId === undefined ? {} : { workspaceId: selectedWorkspaceId }) }, signal)
+      const sessionWorkspace = route.sessionWorkspaceRoot ?? lifecycle?.workspaceRoot(sessionId)
+      const workspaceId = route.selectedWorkspace?.path ?? sessionWorkspace
       const aligned = route.aligned && (route.selectedWorkspace === undefined || sessionId === undefined
         || sessionWorkspace !== undefined && resolve(route.selectedWorkspace.path) === resolve(sessionWorkspace))
       const config = management.resolveConfig(runtime.config)

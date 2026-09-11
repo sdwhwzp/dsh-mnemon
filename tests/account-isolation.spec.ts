@@ -50,15 +50,28 @@ async function fixture() {
   } as unknown as HostContextShape
   const accounts = new MnemonAccounts(ctx, join(root, 'accounts'), { accountDataDir: join(root, 'accounts'), cliPath: process.env.MNEMON_NATIVE_TEST_CLI ?? '/fake/mnemon' })
   const scoped = accounts.wrapContext()
-  const live = new LiveMnemonRuntime(composition.graph, { get: id => workspaces.find(value => value.id === id), list: () => workspaces }, scoped.agents, composition.extensions, accounts)
+  const stored = new Map(sessions.map(session => [session.id, { header: { cwd: session.session.header!.cwd! } }]))
+  const stat = vi.fn(async (id: string) => stored.get(id))
+  const live = new LiveMnemonRuntime(composition.graph, { get: id => workspaces.find(value => value.id === id), list: () => workspaces }, scoped.agents, composition.extensions, accounts, { stat })
   cleanups.push(() => live.dispose())
   const read = accounts.handler(createReadHandler(live), 'read')
   const write = accounts.handler(createWriteHandler(live), 'write')
   const settings = accounts.handler(createSettingsHandler(accounts.settingsService(p => live.reloadAccount(p))), 'settings')
-  return { root, accounts, live, ctx, scoped, sessions, tools, read, write, settings, active }
+  return { root, accounts, live, ctx, scoped, sessions, tools, read, write, settings, active, stat }
 }
 
 describe('authenticated Mnemon account memory', () => {
+  it('authorizes cold-session metadata before reading it and retains account document isolation', async () => {
+    const f = await fixture()
+    f.sessions.splice(0)
+    expect(await f.read('documents', { sessionId: 'bob-session' }, undefined, alice)).toMatchObject({ ok: false })
+    expect(f.stat).not.toHaveBeenCalled()
+    expect(await f.write('document', { sessionId: 'alice-session', action: 'create', title: 'Alice cold document', content: 'Private saved notes' }, undefined, alice)).toMatchObject({ ok: true })
+    expect(await f.read('documents', { sessionId: 'alice-session' }, undefined, alice)).toMatchObject({ ok: true, value: { activeCount: 1 } })
+    expect(await f.read('documents', { sessionId: 'bob-session' }, undefined, bob)).toMatchObject({ ok: true, value: { activeCount: 0 } })
+    expect(f.ctx.agents.create).not.toHaveBeenCalled()
+  })
+
   it('separates real Runtime and Documents data even when accounts share a project and username', async () => {
     const f = await fixture()
     for (const [principal, label] of [[alice, 'Alice'], [bob, 'Bob']] as const) {

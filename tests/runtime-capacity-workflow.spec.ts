@@ -252,7 +252,7 @@ describe('default Runtime capacity workflow across Host entry points', () => {
     workspaces.set('second', { id: 'second', title: 'Second', path: otherWorkspace })
     parent = { id: 'unrelated-conversation', session: { header: { cwd: f.workspace }, events: [] } } as unknown as HostAgent
     await f.graph.source('runtime').mutate('mutate', { action: 'add', target: 'memory', content: saved })
-    const route = f.live.route({ workspaceId: 'second', sessionId: parent.id })
+    const route = await f.live.route({ workspaceId: 'second', sessionId: parent.id })
     expect(route.aligned).toBe(false)
     await route.graph.source('memory-spaces').mutate('provider-service-update', {
       providerId: 'holographic', enabled: true, settings: { dataPath: join(otherWorkspace, 'facts.json') },
