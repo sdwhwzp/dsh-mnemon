@@ -68,7 +68,11 @@ export function memoryGenerationOptions(config: ResolvedConfig, workspaceRoot: s
           embedding: config.embedding, recallQuality: config.recallQuality, persistenceStrategy: config.persistenceStrategy,
         }))
       }
-      if (config.accountDataDir !== undefined && (!['runtime', 'documents', 'memory-spaces'].includes(type) || !isDefaultSourceInstance(installed.instanceKey, type))) throw new Error('Account memory supports only the bundled default Sources')
+      if (config.accountDataDir !== undefined && (!['runtime', 'documents', 'memory-spaces'].includes(type) || !isDefaultSourceInstance(installed.instanceKey, type))) {
+        // Name the instance: the refusal is otherwise indistinguishable from a
+        // Host that shipped without the shared-instance branch at all.
+        throw new Error(`Account memory supports only the bundled default Sources (refused ${installed.instanceKey}, type ${type})`)
+      }
       if (!isDefaultSourceInstance(installed.instanceKey, type)) return {}
       const account = config.accountDataDir === undefined ? {} : { accountIsolated: true }
       if (type === 'runtime') return { ...account, dataDir: directory, userDataDir: userDirectory, memoryLimitBytes: config.runtimeMemory.memoryLimitBytes, userLimitBytes: config.runtimeMemory.userLimitBytes }
