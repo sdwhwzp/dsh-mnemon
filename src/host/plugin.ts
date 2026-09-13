@@ -116,8 +116,9 @@ export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
   const lifecycle = new MnemonLifecycle(ctx, coordinator, runtime.config, runtime, accounts)
   ctx.effect(() => {
     const stop = lifecycle.start()
-    return () => {
+    return async () => {
       stop()
+      await coordinator.dispose()
       disposePrepared()
       runtime.dispose()
     }

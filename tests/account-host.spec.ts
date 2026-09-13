@@ -96,10 +96,11 @@ it('logs and projects each account memory through the real Harness Agent loop an
       prompts.push({ sessionId: String(options.sessionId), text: JSON.stringify(options.messages) })
       const count = calls.get(String(options.sessionId)) ?? 0
       calls.set(String(options.sessionId), count + 1)
-      const resultTool = options.tools?.find(tool => tool.name.startsWith('mnemon_subagent_result_'))
-      if (resultTool !== undefined) {
+      const resultTool = options.tools?.find(tool => tool.name === 'mnemon_subagent_result')
+      const requestId = JSON.stringify(options.messages).match(/requestId `([^`]+)`/u)?.[1]
+      if (resultTool !== undefined && requestId !== undefined) {
         if (count > 0) throw new Error('The completed memory task requested another model step')
-        return { name: resultTool.name, args: { action: 'skipped', summary: 'No durable facts in this setup task.', memoryBodyIds: [], documentIds: [] } }
+        return { name: resultTool.name, args: { requestId, result: { action: 'skipped', summary: 'No durable facts in this setup task.', memoryBodyIds: [], documentIds: [] } } }
       }
       return count === 0 ? { name: 'mnemon_document_search', args: { query: 'private-token' } } : 'Done.'
     }))

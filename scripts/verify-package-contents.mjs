@@ -42,8 +42,8 @@ const relativeReadmeImages = readmeFiles.flatMap((path) => {
 
 // Core/Host and the shared page kit only; Source/Provider implementations must
 // ship in their own artifacts. Keep a bounded budget, not the old monolith size.
-// Includes account isolation and the legacy Session repair executable.
-const maximumUnpackedBytes = 1_300_000
+// Includes account isolation, Session recovery, archive preflight, and review guards.
+const maximumUnpackedBytes = 1_350_000
 
 if (missing.length > 0 || unexpected.length > 0 || hostLeaks.length > 0 || relativeReadmeImages.length > 0 || pack.unpackedSize > maximumUnpackedBytes) {
   if (missing.length > 0) console.error(`Missing package files:\n${missing.map(path => `- ${path}`).join('\n')}`)
