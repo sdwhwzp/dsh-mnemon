@@ -22,6 +22,125 @@
       "file": "dsh-plugin-subscriptions-0.8.0-dsh.20260910.1-8325569.tgz",
       "sha256": "563c1b1d7b0d089a30a21fe47a48f4d761b7071bcdd4f3fb8d205a16e4e749e3",
       "commit": "83255698967a3f3f2fa4e12208d59c2128ee2dc7"
+    },
+    {
+      "name": "dsh-mnemon",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "1a86765a7535549c9a383b9d7bdce314f7365f9ad6e7416d7a595d0b7de55d91",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-provider-byterover",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-provider-byterover-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "5a349e2eff4205e393ac52586c233a781e0b5fc4aa61074235943e13ba47542d",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-provider-hindsight",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-provider-hindsight-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "87b1eda8390a1fd96b63e67ce6ef17dbf0892804908dd3860f82fb29d0ee9262",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-provider-holographic",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-provider-holographic-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "73db9ecf2fb914a79959239a499f0b3aeae3a260b80afd5e091728ff2755d862",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-provider-honcho",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-provider-honcho-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "be68f679d36362734e3266e6b257e9cc8f98dfdb4afe32eec3a2c79e250747a6",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-provider-mem0",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-provider-mem0-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "f112b25af7f6e98566ac444788ca6508bc8b78b6439bc167cf97a164f27cbe1f",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-provider-mnemon-native",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-provider-mnemon-native-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "3dff6af1a4dcfae0e2658f001048809fbfdcc74da06c115da4869106f010608c",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-provider-openviking",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-provider-openviking-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "6b0ca9f0389287710727b9534ac2546144322a6a04c36dfb067153e405554539",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-provider-retaindb",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-provider-retaindb-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "1d2466787868e8fdd41256c871749d381a895ec638045e8003a369f0a2af59e0",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-provider-supermemory",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-provider-supermemory-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "0610bf3a516371ce04aa4aa4a6cbb98561368474a52a5235043f1f852c1df3bc",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-source-documents",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-source-documents-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "893ba260eccd96c4c3b59020e1fa6b5033ca75a0e7c566629776d02e2985286e",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-source-memory-spaces",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-source-memory-spaces-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "3ddd9aa5dece2ed4746e5bde2bd34540441f94c907ac67aee5ce6233cbe72f8c",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-source-runtime",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-source-runtime-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "0f12d497ce59d605779768a12b44c1cbb60fae28671e946485ef1e07d3095751",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-strategy-auto-capture",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-strategy-auto-capture-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "5f6de8a5fc78868c3ff158e94a58ba1bcc4054c4e5765f0c63db0e818824ba35",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-strategy-default-three-tier",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-strategy-default-three-tier-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "ce451cc121a19f5ae797f8b7fc1d7edcc473b1ebc4380cf55e29b86b2bf45e9c",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-strategy-light-context",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-strategy-light-context-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "fcb9978bcaeb39026f63dd1700cb6d6d0942a1bb5a1ff1cd009cb29f763346cf",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
+    },
+    {
+      "name": "dsh-mnemon-strategy-scoped",
+      "version": "0.5.7-dsh.20260913.1",
+      "file": "dsh-mnemon-strategy-scoped-0.5.7-dsh.20260913.1.tgz",
+      "sha256": "e3aa99f8192a13bb76880db8b66e09d69260f9ddd16c85756172852b2999d4d8",
+      "commit": "c218a9418baa3791f108f3705cc3bf9c8b984287"
     }
   ],
   "requiredConfig": {
