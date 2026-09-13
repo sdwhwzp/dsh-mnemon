@@ -1,5 +1,5 @@
 import z from 'schemastery'
-import { isAbsolute } from 'node:path'
+import { isAbsolute, sep } from 'node:path'
 import { normalizeDisplayMode } from './display-mode.ts'
 import { resolveEmbedding, resolvePersistenceStrategy, resolveRecallQuality } from 'dsh-mnemon-source-memory-spaces'
 
@@ -133,6 +133,8 @@ const MemoryTopologySchema: z<MemoryTopologyConfig> = z.object({
 
 export const Config: z<Config> = z.object({
   accountDataDir: z.string(),
+  sharedMemoryDir: z.string(),
+  sharedMemoryWritable: z.boolean(),
   // Bundle wiring, not an end-user memory setting. Keep the legacy root
   // behavior by default while allowing cordis.patch.yml to compose the public
   // Source/Strategy Entries without double registration.
@@ -307,6 +309,15 @@ function resolveMemoryTopology(value: MemoryTopologyConfig | undefined): SharedR
 export function resolveConfig(config: Config = {}): ResolvedConfig {
   const accountDataDir = optionalText(config.accountDataDir)
   if (accountDataDir !== undefined && !isAbsolute(accountDataDir)) throw new Error('dsh-mnemon: accountDataDir must be absolute')
+  const sharedMemoryDir = optionalText(config.sharedMemoryDir)
+  if (sharedMemoryDir !== undefined && !isAbsolute(sharedMemoryDir)) throw new Error('dsh-mnemon: sharedMemoryDir must be absolute')
+  // The shared directory is checked against whichever account root this scope
+  // knows: the plugin scope carries `accountDataDir` (the parent of every
+  // account directory), an account scope carries only its own `dataDir`.
+  // Nesting either way would let shared memory and account memory share files.
+  if (sharedMemoryDir !== undefined && accountDataDir !== undefined && (sharedMemoryDir === accountDataDir || sharedMemoryDir.startsWith(accountDataDir + sep))) {
+    throw new Error('dsh-mnemon: sharedMemoryDir must sit outside accountDataDir')
+  }
   const cliPath = optionalText(config.cliPath)
   const legacyDataDir = optionalText(config.dataDir)
   const legacyPacks = resolveCustomPacks(config.customPacks, legacyDataDir)
@@ -323,11 +334,16 @@ export function resolveConfig(config: Config = {}): ResolvedConfig {
   if (requestedPackId !== undefined && selectedPack === undefined) throw new Error(`dsh-mnemon: unknown custom Pack: ${requestedPackId}`)
   const dataDir = selectedPack?.dataDir ?? legacyDataDir
   if (storageScope === 'custom' && dataDir === undefined) throw new Error('dsh-mnemon: a custom dataDir is required when storageScope is custom')
+  if (sharedMemoryDir !== undefined && dataDir !== undefined && (sharedMemoryDir === dataDir || sharedMemoryDir.startsWith(dataDir + sep) || dataDir.startsWith(sharedMemoryDir + sep))) {
+    throw new Error('dsh-mnemon: sharedMemoryDir must not nest with the memory dataDir')
+  }
   if (store !== undefined && !/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(store)) {
     throw new Error('dsh-mnemon: store must match [a-zA-Z0-9][a-zA-Z0-9_-]*')
   }
   return {
     ...(accountDataDir === undefined ? {} : { accountDataDir }),
+    ...(sharedMemoryDir === undefined ? {} : { sharedMemoryDir }),
+    ...(config.sharedMemoryWritable === true ? { sharedMemoryWritable: true } : {}),
     storageScope,
     runtimeUserScope,
     ...(cliPath === undefined ? {} : { cliPath }),

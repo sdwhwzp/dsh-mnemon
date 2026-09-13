@@ -2,6 +2,21 @@
 export function isDefaultSourceInstance(instanceKey: string, sourceTypeId: string): boolean {
   return instanceKey.startsWith('source:') && instanceKey.endsWith(':mnemon-source-' + sourceTypeId)
 }
+
+/**
+ * The one shared memory instance every account reads. Account mode otherwise
+ * admits only the bundled default Source instances, because a second instance
+ * could point its own `dataDir` at another account's directory. This instance
+ * is the deliberate exception: the Host assigns its directory and its write
+ * permission, exactly as it does for the per-account instances, so the entry
+ * in cordis.patch.yml selects nothing but participation.
+ */
+export const SHARED_MEMORY_ENTRY_SUFFIX = ':mnemon-source-memory-spaces-shared'
+
+/** Whether an instance key names the Host-owned shared memory instance. */
+export function isSharedMemoryInstance(instanceKey: string): boolean {
+  return instanceKey.startsWith('source:') && instanceKey.endsWith(SHARED_MEMORY_ENTRY_SUFFIX)
+}
 export type MemoryParticipationMode = 'off' | 'manual' | 'automatic'
 export type MemoryParticipationChannel = 'recall' | 'write' | 'projection' | 'maintenance'
 export type MemoryLayerParticipation = Record<MemoryParticipationChannel, MemoryParticipationMode>
@@ -175,6 +190,10 @@ export type MnemonDisplayMode = 'sidebar' | 'builtin'
 export interface Config {
   /** Host-owned root for private account memory; cannot be changed through Web settings. */
   accountDataDir?: string
+  /** Absolute directory of the shared memory instance; unset disables it. */
+  sharedMemoryDir?: string
+  /** Whether THIS scope may write the shared instance (admin accounts only). */
+  sharedMemoryWritable?: boolean
   storageScope?: StorageScopeKind
   /** Whether USER.md follows the selected storage root or stays in the global root. */
   runtimeUserScope?: 'storage' | 'global'
@@ -258,6 +277,10 @@ export interface InteractionConfig {
 
 export interface ResolvedConfig {
   accountDataDir?: string
+  /** Absolute directory of the shared memory instance; unset disables it. */
+  sharedMemoryDir?: string
+  /** Whether THIS scope may write the shared instance (admin accounts only). */
+  sharedMemoryWritable?: boolean
   storageScope: StorageScopeKind
   runtimeUserScope: 'storage' | 'global'
   cliPath?: string

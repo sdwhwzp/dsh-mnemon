@@ -23,7 +23,11 @@ export class MnemonAccounts {
   private readonly base: Config
 
   constructor(private readonly ctx: HostContextShape, readonly directory: string, config: Config) {
-    this.base = { ...config, storageScope: 'custom', runtimeUserScope: 'storage', customPacks: [],
+    // `sharedMemoryWritable` has exactly one source: the principal's role.
+    // Dropping it here keeps a plugin-config value from granting every account
+    // write access to the shared instance.
+    const { sharedMemoryWritable: _ignored, ...rest } = config
+    this.base = { ...rest, storageScope: 'custom', runtimeUserScope: 'storage', customPacks: [],
       persistenceStrategy: { mode: 'manual', providerId: 'mnemon-native', rules: { dataBoundary: 'local-only', allowedProviderIds: ['mnemon-native'] }, providerConnections: {} } }
   }
 
@@ -90,10 +94,22 @@ export class MnemonAccounts {
     const key = this.key(principal)
     let scopes = this.settings.get(key)
     if (scopes !== undefined) return scopes
+    // The shared instance is readable by every account and writable by an
+    // admin only. Both facts come from the Host-verified principal, never from
+    // a value the account itself could edit, so they are re-asserted on every
+    // settings commit.
+    const sharedWritable = principal.role === 'admin'
+    const managed = {
+      dataDir: join(this.directory, key),
+      ...(this.base.sharedMemoryDir === undefined ? {} : { sharedMemoryDir: this.base.sharedMemoryDir }),
+      ...(sharedWritable ? { sharedMemoryWritable: true } : {}),
+    }
     const memory = this.ctx.settings.register<Config>('mnemon-account-' + key, Config, {
-      base: { ...this.base, dataDir: join(this.directory, key) }, applies: 'live',
+      base: { ...this.base, ...managed }, applies: 'live',
       validate: value => {
-        if (value.dataDir !== join(this.directory, key) || value.storageScope !== 'custom' || value.runtimeUserScope !== 'storage') throw new Error('Account memory storage is managed by the Host')
+        if (value.dataDir !== managed.dataDir || value.storageScope !== 'custom' || value.runtimeUserScope !== 'storage') throw new Error('Account memory storage is managed by the Host')
+        if (value.sharedMemoryDir !== this.base.sharedMemoryDir) throw new Error('Shared memory storage is managed by the Host')
+        if ((value.sharedMemoryWritable === true) !== sharedWritable) throw new Error('Shared memory write permission is managed by the Host')
         resolveConfig(value)
       },
     })

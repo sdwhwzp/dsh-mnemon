@@ -73,6 +73,21 @@
                 instanceId: byterover
               - use: dsh-mnemon-provider-supermemory
                 instanceId: supermemory
+        # The shared memory instance: one memory-spaces Source every account
+        # reads and only an admin account writes. It exists only when the core
+        # row sets `sharedMemoryDir`; the Host assigns that directory and the
+        # write permission, so this entry chooses participation and nothing
+        # else. Account mode restricts persistence to the native Provider, so
+        # this instance mounts that one.
+        - id: mnemon-source-memory-spaces-shared
+          name: dsh-mnemon-source-memory-spaces
+          disabled: !!js >-
+            ((entry) => !entry || !entry.options.config || !entry.options.config.sharedMemoryDir)
+            ([...loader.entries()].find(entry => entry.options.id === 'mnemon'))
+          config:
+            providers:
+              - use: dsh-mnemon-provider-mnemon-native
+                instanceId: mnemon-native
         - id: mnemon-strategy-default-three-tier
           name: dsh-mnemon-strategy-default-three-tier
         # v0.5 ships these narrowly scoped enhancements with the Starter so the

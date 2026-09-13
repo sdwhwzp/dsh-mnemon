@@ -1,4 +1,4 @@
-import { isDefaultSourceInstance, isWorkspaceStorageScope } from './protocol.ts'
+import { isDefaultSourceInstance, isWorkspaceStorageScope, isSharedMemoryInstance } from './protocol.ts'
 import { resolve } from 'node:path'
 import type { ResolvedConfig } from './config.ts'
 import type { HostAgent, HostAgentsService, HostSessionPersistence, HostWorkspace, HostWorkspaceRegistry } from './dsh.ts'
@@ -53,6 +53,21 @@ export function memoryGenerationOptions(config: ResolvedConfig, workspaceRoot: s
       && allowsParticipation(config, installed.definition.manifest.typeId, capability, 'automatic')),
     sourceConfiguration: installed => {
       const type = installed.definition.manifest.typeId
+      // The shared instance is the one non-default Source account mode admits,
+      // and the Host assigns its directory and write permission here so the
+      // entry in cordis.patch.yml cannot aim it at an account's own directory.
+      if (isSharedMemoryInstance(installed.instanceKey)) {
+        if (type !== 'memory-spaces') throw new Error('The shared memory instance must be a memory-spaces Source')
+        if (config.sharedMemoryDir === undefined) throw new Error('The shared memory instance requires sharedMemoryDir')
+        return JSON.parse(JSON.stringify({
+          dataDir: config.sharedMemoryDir, cliPath: config.cliPath, store: config.store, timeoutMs: config.timeoutMs,
+          defaultRecallLimit: config.defaultRecallLimit,
+          // Read-only for everyone but an admin account: a recall layer every
+          // account shares must not be writable by every account.
+          writeEnabled: config.writeEnabled && config.sharedMemoryWritable === true,
+          embedding: config.embedding, recallQuality: config.recallQuality, persistenceStrategy: config.persistenceStrategy,
+        }))
+      }
       if (config.accountDataDir !== undefined && (!['runtime', 'documents', 'memory-spaces'].includes(type) || !isDefaultSourceInstance(installed.instanceKey, type))) throw new Error('Account memory supports only the bundled default Sources')
       if (!isDefaultSourceInstance(installed.instanceKey, type)) return {}
       const account = config.accountDataDir === undefined ? {} : { accountIsolated: true }
