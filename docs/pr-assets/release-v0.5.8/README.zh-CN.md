@@ -21,4 +21,3 @@
 | [截图](./01-runtime-after-reload.jpg) | [截图](./02-version-native-status.jpg) |
 
 未调用外部模型 API。这些检查验证应用与插件行为，不评价模型质量、缓存命中或历史 token 消耗。此前各 issue 记录保留各自的实际复现提交。
-

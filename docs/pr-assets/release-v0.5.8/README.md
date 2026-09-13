@@ -21,4 +21,3 @@ Real browser verification used DSH 0.1.5-rc.1 with the Starter and three Strateg
 | [Screenshot](./01-runtime-after-reload.jpg) | [Screenshot](./02-version-native-status.jpg) |
 
 No external model API was called. These checks validate application and plugin behavior; they do not measure model quality, cache hit rates or historical token consumption. Earlier issue reports retain their original reproduction revisions.
-
