@@ -173,11 +173,16 @@
   ],
   "handoff": "20260910-plugin-pinning-handoff.md",
   "release": "20260913-fork-upgrade",
-  "status": "candidate-verified-artifacts",
+  "status": "deployed-verified",
   "requiredEntries": [
     {
       "id": "mnemon-strategy-scoped",
       "disabled": false
     }
-  ]
+  ],
+  "requiredFilesystemChecks": {
+    "serviceUser": "tzwl3",
+    "writableLinkParents": ".dsh-module-fallback/**",
+    "privateCredentials": "node_modules/dsh-passwords/.env: owner tzwl3, mode 0600"
+  }
 }

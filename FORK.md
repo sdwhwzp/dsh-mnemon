@@ -19,7 +19,7 @@ Web RPC 依赖 Harness 的 Connection 路由修复：通过 `ctx.get` 解析可�
 
 先 fetch 原作者和自有 fork，合并原作者分支到当前 `dev`，优先保留源实现并适配账号隔离。相关检查通过后 commit，枚举所有本地分支并将未合并提交纳入 `dev`，推送后核对提交可达性并删除临时分支；最后再次 fetch 核对源分支与远端 SHA。常驻分支只保留 `main` 和 `dev`，不使用 `--mirror` 或裸 `--force`。
 
-服务器 30 的发布包必须纳入 [插件固定清单](deploy/server30-pins.json) 和 `fastTier: false`，并从切换前的当前 profile 制作候选。依赖、补丁、锁文件或 current 链接在准备后发生变化时，重新准备候选。不得用旧快照覆盖交接后的插件更新。安装后恢复 `dsh-passwords/.env`，先用隔离数据库与账号验证候选，再备份、切换、检查并保留回滚入口。`dsh-weknora` 保持现有版本。
+服务器 30 的发布包必须纳入 [插件固定清单](deploy/server30-pins.json) 和 `fastTier: false`，并从切换前的当前 profile 制作候选。依赖、补丁、锁文件或 current 链接在准备后发生变化时，重新准备候选。不得用旧快照覆盖交接后的插件更新。安装后恢复 `dsh-passwords/.env`，先用隔离数据库与账号验证候选，再备份、切换、检查并保留回滚入口。 切换前以 `tzwl3` 检查 `.dsh-module-fallback` 下链接父目录的写入和遍历权限；隔离 profile 的权限修正不能替代对候选原始目录的检查。`dsh-weknora` 保持现有版本。
 
 本 fork 的 `dsh.YYYYMMDD.N` 预发布版本使用 `dsh` 发布通道。Starter 精确固定组件版本，组件 peer 依赖保留兼容范围；不以 `latest` 通道发布定制版本。
 
