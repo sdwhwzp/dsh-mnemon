@@ -7,6 +7,8 @@
 
 本 fork 保留原作者的三层记忆、工具、工作台与数据格式，增加可选的登录账号隔离，以及可选的共享记忆层：设置 `sharedMemoryDir` 后所有账号共读一个记忆空间，只有 `role=admin` 的账号可写，目录与写权限均由 Host 指派。配置与使用限制见 [账号部署](docs/zh-CN/guides/accounts.md)。未设置 `accountDataDir` 时仍使用原作者的单用户存储规则；未设置 `sharedMemoryDir` 时共享条目自动停用。
 
+同时启用私有与共享记忆源的部署必须启用 `mnemon-strategy-scoped`（`disabled: false`）。该插件为默认三层策略提供多数据源选择，按各源权限读取私有和共享记忆；不修改已有数据目录。缺少选择器时，上游会拒绝存在多个 `durable-evidence` 源的模型请求。
+
 Web RPC 依赖 Harness 的 Connection 路由修复：通过 `ctx.get` 解析可选 Web 服务器，避免 Cordis 将属性访问归到未声明该服务的提供者上下文。Headless 不要求 Web 服务。
 
 上游委派结果工具按请求注册接收器并在卸载时释放；计数器仍由账号状态提供。评审工具的发布、取消和归档预检沿用上游流程，账号隔离与共享记忆权限覆盖这些入口。 主包包含账号隔离、会话恢复、归档预检与评审保护；解包大小上限为 1,350,000 字节，Source/Provider 仍单独发包。

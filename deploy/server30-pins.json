@@ -173,5 +173,11 @@
   ],
   "handoff": "20260910-plugin-pinning-handoff.md",
   "release": "20260913-fork-upgrade",
-  "status": "candidate-verified-artifacts"
+  "status": "candidate-verified-artifacts",
+  "requiredEntries": [
+    {
+      "id": "mnemon-strategy-scoped",
+      "disabled": false
+    }
+  ]
 }
