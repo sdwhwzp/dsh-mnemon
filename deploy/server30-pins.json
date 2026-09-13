@@ -12,11 +12,11 @@
     },
     {
       "name": "dsh-context",
-      "version": "0.50.0-dsh.20260913.1",
-      "file": "dsh-context-0.50.0-dsh.20260913.1.tgz",
-      "sha256": "e3277952fd1a1874864d693894bae7e88e15b1cb8512cbe880ee8a53bb216b53",
-      "commit": "15ee122b3ef8328acce748d57da41be01fd6840f",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-context-0.50.0-dsh.20260913.1.tgz"
+      "version": "0.50.0-dsh.20260913.2",
+      "file": "dsh-context-0.50.0-dsh.20260913.2.tgz",
+      "sha256": "95602c38f6943e531f40b25b6c641769847b32edbeaf021e259ec05e55e585cd",
+      "commit": "9050830d86925ab908ced87f366497b0a196f185",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-context-0.50.0-dsh.20260913.2.tgz"
     },
     {
       "name": "dsh-plugin-subscriptions",
