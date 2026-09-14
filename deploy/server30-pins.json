@@ -28,11 +28,11 @@
     },
     {
       "name": "dsh-mnemon",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "7ad302c68e8828e7c9256d1f2699fb0056a85e65415ed9758d724fbe27cc6631",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.8-dsh.20260914.1",
+      "file": "dsh-mnemon-0.5.8-dsh.20260914.1.tgz",
+      "sha256": "c419223e404ff80e13faa4fa1b17f9d7e6de982fb1ce0b8fe80fb3eaced44ed1",
+      "commit": "12efc98ad054fb7380a1316acab9e8d30b298943",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260914-mnemon-ownership/artifacts/dsh-mnemon-0.5.8-dsh.20260914.1.tgz"
     },
     {
       "name": "dsh-mnemon-provider-byterover",
