@@ -316,6 +316,16 @@ export class MnemonAccounts {
     const scopedAgents = {
       get: (id: string) => { const agent = agents.get(id); return agent === undefined || !this.owns(agent) ? undefined : this.wrapAgent(agent) },
       roots: () => agents.roots().filter(agent => this.owns(agent)).map(agent => this.wrapAgent(agent)),
+      // Runtime ownership must survive scoping: the background memory review
+      // asks the registry whether the child it just started belongs to the
+      // parent it holds, and under account mode that parent is a proxy the
+      // registry has never seen. Unwrap it the way the subagents facade does.
+      // Dropping this member made every account-mode review fail closed with
+      // "Mnemon review requires DSH Agent ownership and scoped tool guard
+      // support", because the reviewer reads the member, not the service.
+      ...(agents.isOwnedBy === undefined ? {} : {
+        isOwnedBy: (id: string, parent: HostAgent) => agents.isOwnedBy!(id, this.originals.get(parent) ?? parent),
+      }),
       ...(agents.create === undefined ? {} : { create: async (options: Parameters<NonNullable<typeof agents.create>>[0]) => {
         const account = this.context.getStore()
         if (account === undefined) throw new Error('Mnemon task creation requires an account')
