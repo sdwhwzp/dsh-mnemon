@@ -12,11 +12,11 @@
     },
     {
       "name": "dsh-context",
-      "version": "0.51.0-dsh.20260913.1",
-      "file": "dsh-context-0.51.0-dsh.20260913.1.tgz",
-      "sha256": "7b8df88c74850e64701e06a94b877e19958e62aba640223dbdd8969679b483cf",
-      "commit": "fb6668a652be8c3985ecceb5a5dbe4af28ceb089",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-context-0.51.0-dsh.20260913.1.tgz"
+      "version": "0.52.2-dsh.20260915.1",
+      "file": "dsh-context-0.52.2-dsh.20260915.1.tgz",
+      "sha256": "e4dc231fb422d9324c1871e699640ae1cc0b9f36b2e481e65797f090f4ae3618",
+      "commit": "1bbc6b9704d770915d76597f294e6ab4fb2e54d7",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-context-0.52.2-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-plugin-subscriptions",
@@ -28,139 +28,157 @@
     },
     {
       "name": "dsh-mnemon",
-      "version": "0.5.8-dsh.20260914.1",
-      "file": "dsh-mnemon-0.5.8-dsh.20260914.1.tgz",
-      "sha256": "c419223e404ff80e13faa4fa1b17f9d7e6de982fb1ce0b8fe80fb3eaced44ed1",
-      "commit": "12efc98ad054fb7380a1316acab9e8d30b298943",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260914-mnemon-ownership/artifacts/dsh-mnemon-0.5.8-dsh.20260914.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "b6d9d367c1bdec68ce11725ac80e62c6563d9fbeb131ad01893cea541ac8c2ed",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-provider-byterover",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-provider-byterover-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "19e6675574a6a85af0c687f2540e0197028fec08fae848689294cefbc7321bdb",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-provider-byterover-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-provider-byterover-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "cd0200085d9fc2f7bb533b38699c94a538a3c9521d449e3e73e22ca076164d6a",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-provider-byterover-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-provider-hindsight",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-provider-hindsight-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "5340d040dcb7f0ef94ad3079036b995bf8fe3ee979ab1e339505471b26b2e558",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-provider-hindsight-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-provider-hindsight-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "c72c2b008973ac3f21dae11c65e6c65cf14664ff1f61eee4b86090c2608fea00",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-provider-hindsight-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-provider-holographic",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-provider-holographic-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "f2df83d95927fbf08943a93a162454d04ec1957031174d7c69432fd0db9eff12",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-provider-holographic-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-provider-holographic-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "ee8afcb2d24712c88e93cf22428a1f74db1ea6c80f0c9f0a59b32030c777bac2",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-provider-holographic-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-provider-honcho",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-provider-honcho-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "d48b13b203c5fd8d79b17d40410c86644428c78aae24b3ce5ef2c49eedb02b4a",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-provider-honcho-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-provider-honcho-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "0ab38f95fb619df9138049a250b2ab6ae61bf019228261e6bdff7ac03adce8ef",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-provider-honcho-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-provider-mem0",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-provider-mem0-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "bf082eb6fb27f79672287f2cfc149ffc2fc9e2c9741f16862c618e388a4b84c8",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-provider-mem0-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-provider-mem0-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "d0b8c9e9692f6d66e7ac9adff0870f5942d8d5ea94d1ebff49792e00c3139b7b",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-provider-mem0-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-provider-mnemon-native",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-provider-mnemon-native-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "5a7c044dd3a8e993d11a60a508567d17fd4b9109470aeeacf144b69c7faf8470",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-provider-mnemon-native-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-provider-mnemon-native-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "b596244b832edc2020f5ef49cba7d8c45bf7aae7ebf492099b865b7b2b3ffb6f",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-provider-mnemon-native-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-provider-openviking",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-provider-openviking-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "408ab787de83dd56710543f8cd6cabf060d13746747a540d5dc67e5f36d28e7c",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-provider-openviking-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-provider-openviking-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "34fbbd86fdc97b33caf91e0ab3fabd55217bdfa43a429c706712d341c2cd92cd",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-provider-openviking-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-provider-retaindb",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-provider-retaindb-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "014dbc50155590d111ccbfd008180afdf4295f35627f55e2b494f2f93cebc2c7",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-provider-retaindb-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-provider-retaindb-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "fff10bc139c6611f27870051ddfc415d9c345e0186167bf788b33df05c739499",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-provider-retaindb-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-provider-supermemory",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-provider-supermemory-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "a5dea41e870452337e4c41b25befc2b27b94efea4b010afbcd2a4fc6847fd998",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-provider-supermemory-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-provider-supermemory-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "2864ac5934b37876c4ea3283c2c12cf815a7884955a295fb604b62f712eec3df",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-provider-supermemory-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-source-documents",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-source-documents-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "c68411fb85cb20b62342b65b9ced8e980af620d936b51582d1cdc0580b6ff6e9",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-source-documents-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-source-documents-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "5fcb16ceb9c3e659dbfb86767d5bd1d130621e7091f87064b7cbc262c89fa75d",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-source-documents-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-source-memory-spaces",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-source-memory-spaces-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "d7e175a2b61e81a008388064ba6f916db5de1544a5694cccba3438322f6ecfb6",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-source-memory-spaces-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-source-memory-spaces-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "9624eda5d87ed94b19124584cde6dcfaa5e7c2f9fbf09b68c6d2ee789ad15ac9",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-source-memory-spaces-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-source-runtime",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-source-runtime-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "6a82bbebbf3416a80c8dea0c808b55d72f28e92eade3cf1e9fd2b58e098402cb",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-source-runtime-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-source-runtime-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "78184f51ccb17e1508bab5b77295198b1a933f091b7d8a97e523920c28463f30",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-source-runtime-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-strategy-auto-capture",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-strategy-auto-capture-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "6fd102c5fe3be9a228d0f63e4fb519d81b81526c0c5855309c7ff55892857c77",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-strategy-auto-capture-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-strategy-auto-capture-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "807007a8ea978e57d0b389fb1e373cc26f796c9d5296dc48afa260135e554256",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-strategy-auto-capture-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-strategy-default-three-tier",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-strategy-default-three-tier-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "7d25666f36aeeb7a8a26f66b8f1921ea358fc4f52d74d4bf5974c146da1381b9",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-strategy-default-three-tier-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-strategy-default-three-tier-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "c9f1df6911dfaebc7f3e156d1fa44c520ff6972b7e693fae828a0286b356abc0",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-strategy-default-three-tier-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-strategy-light-context",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-strategy-light-context-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "b3fd3006953452bc6c45af73cfd1db58a9e62b4cf10e8b6df891e199eb484c18",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-strategy-light-context-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-strategy-light-context-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "d3eeabbfa356583cd0612438e8a3bef8812a44b59d96708f6dc83f2a811d8b7f",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-strategy-light-context-0.5.9-dsh.20260915.1.tgz"
     },
     {
       "name": "dsh-mnemon-strategy-scoped",
-      "version": "0.5.8-dsh.20260913.1",
-      "file": "dsh-mnemon-strategy-scoped-0.5.8-dsh.20260913.1.tgz",
-      "sha256": "04b60f41bdbc028853543d1d39687c18fa9217aaf07dd0af7070a004572bd3ee",
-      "commit": "3bb7b0f02d520a229dc5223aaf97a479fcf7e6f5",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260913-fork-upgrade/artifacts/dsh-mnemon-strategy-scoped-0.5.8-dsh.20260913.1.tgz"
+      "version": "0.5.9-dsh.20260915.1",
+      "file": "dsh-mnemon-strategy-scoped-0.5.9-dsh.20260915.1.tgz",
+      "sha256": "510c7b6a3cebfc52535fe1a05fc306c71de11fe78c908b3c93ee31996adec743",
+      "commit": "c3833fdaa59e4f15252475820f31b5603e48e881",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/dsh-mnemon-strategy-scoped-0.5.9-dsh.20260915.1.tgz"
+    },
+    {
+      "name": "@changfenhuang/dsh-genui",
+      "version": "0.11.0-dsh.20260915.1",
+      "file": "changfenhuang-dsh-genui-0.11.0-dsh.20260915.1.tgz",
+      "sha256": "f4f6c2b50ec1fb61b32339481a1d72e30af7daf9c7a3b08c71e86fc4104905fb",
+      "commit": "4b087e6fd1b796faa41a2c38f0e330bb941040cf",
+      "repo": "github.com/sdwhwzp/dsh-genui-patched",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/changfenhuang-dsh-genui-0.11.0-dsh.20260915.1.tgz"
+    },
+    {
+      "name": "@linxin666/dsh-client-ui-git-graph",
+      "version": "0.3.22-dsh.20260915.1",
+      "file": "linxin666-dsh-client-ui-git-graph-0.3.22-dsh.20260915.1.tgz",
+      "sha256": "e19ce2918bc654ab4af73fac1c8110a069ec37c7a4320f8b860900179648394d",
+      "commit": "16340c2a0bdf0506b247c08345065eda44c65e16",
+      "repo": "github.com/sdwhwzp/dsh-git-graph-paired",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260915-upstream-refresh/artifacts/linxin666-dsh-client-ui-git-graph-0.3.22-dsh.20260915.1.tgz"
     }
   ],
   "requiredConfig": {
@@ -172,7 +190,7 @@
     "@wxg-prc-cpg/dsh-weknora"
   ],
   "handoff": "20260910-plugin-pinning-handoff.md",
-  "release": "20260913-fork-upgrade",
+  "release": "20260915-upstream-refresh",
   "status": "deployed-verified",
   "requiredEntries": [
     {
