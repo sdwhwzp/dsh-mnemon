@@ -49,8 +49,8 @@ const relativeReadmeImages = readmeFiles.flatMap((path) => {
 // Audited legacy repair, including recorded-ID chain proofs, stays in the
 // maintenance executable.
 // This fork adds account isolation and its scoped review guards on top, so the
-// budget carries both: upstream's 1_318_000 plus the ~80 KB this fork's Host
-// code measured over the same baseline.
+// budget carries both. Measured at 0.5.9-dsh.20260915.1: 1_348_334 unpacked
+// bytes; the ceiling keeps roughly 4% of headroom over that.
 const maximumUnpackedBytes = 1_400_000
 
 if (missing.length > 0 || unexpected.length > 0 || hostLeaks.length > 0 || relativeReadmeImages.length > 0 || pack.unpackedSize > maximumUnpackedBytes) {

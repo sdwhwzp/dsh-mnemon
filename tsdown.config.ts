@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { dirname, relative, resolve as resolvePath } from 'node:path'
+import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import type { UserConfig, TsdownPlugin } from 'tsdown'
 import { transform } from 'lightningcss'
@@ -7,6 +8,11 @@ import ts from 'typescript'
 
 const PLUGIN_ID = 'dsh-mnemon'
 const PROJECT_ROOT = dirname(fileURLToPath(import.meta.url))
+// Resolve workspace assets through Node's real resolver. `import.meta.resolve`
+// is not dependable here: the loader that evaluates this TypeScript config can
+// substitute a URL-relative stand-in, which turns a bare package specifier into
+// a path under the repository root and loses the `plugins/` segment.
+const requireFrom = createRequire(import.meta.url)
 const CLIENT_EXTERNALS = [
   /^react(?:\/.*)?$/,
   /^react-dom(?:\/.*)?$/,
@@ -67,7 +73,7 @@ export function clientCssPlugin(injectStyles = true): TsdownPlugin {
       if (source === 'dsh-mnemon/client') return resolvePath(PROJECT_ROOT, 'src/client/extension-sdk.ts')
       if (!source.endsWith('.module.css')) return null
       const absolute = source.startsWith('dsh-mnemon-source-')
-        ? fileURLToPath(import.meta.resolve(source))
+        ? requireFrom.resolve(source)
         : importer === undefined ? source : resolveAssetPath(source, importer)
       return CSS_VIRTUAL_PREFIX + absolute + CSS_VIRTUAL_SUFFIX
     },
