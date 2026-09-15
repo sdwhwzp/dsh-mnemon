@@ -127,7 +127,7 @@ async function harness(respond: (options: GenerateOptions) => Response | Promise
   stop = lifecycle.start()
   const children: Agent[] = []
   const recalls: ToolExecutionResult[] = []
-  ctx.on('agent/created', ({ agent }) => {
+  ctx.on('agent/created', ({ agent }): undefined => {
     if (agent.session.header.origin === 'subagent') children.push(agent)
   })
   ctx.on('tools/result', (execution, result) => {

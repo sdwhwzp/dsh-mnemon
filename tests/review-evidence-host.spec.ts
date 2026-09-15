@@ -21,7 +21,15 @@ import { compositionFixture } from './fixtures/composition.ts'
 const requireDsh = createRequire(realpathSync(new URL('../node_modules/@deepseek-ai/dsh/package.json', import.meta.url)))
 const fork = await import(requireDsh.resolve('@deepseek-ai/dsh-subagent-fork-in-process'))
 const requireTools = createRequire(realpathSync(new URL('../node_modules/@deepseek-ai/dsh-tools/package.json', import.meta.url)))
-const worker = await import(requireTools.resolve('@deepseek-ai/dsh-code-runtime-worker-thread'))
+let requireRuntime = requireTools
+let nodePtcPath: string | undefined
+try {
+  requireRuntime = createRequire(requireDsh.resolve('@deepseek-ai/dsh-base/package.json'))
+  nodePtcPath = requireRuntime.resolve('@deepseek-ai/dsh-ptc-runtime-node')
+} catch (error) {
+  if ((error as NodeJS.ErrnoException).code !== 'MODULE_NOT_FOUND') throw error
+}
+const worker = await import(nodePtcPath ?? requireTools.resolve('@deepseek-ai/dsh-code-runtime-worker-thread'))
 const foreignTool = 'mcp__aoci__aoci_overview'
 const chunks = Array.from({ length: 5 }, (_, chunk) => `COMPLETE_OVERVIEW_CHUNK_${chunk + 1}\n` + Array.from({ length: 67 }, (_, index) => `Synthetic module ${chunk * 67 + index + 1}: complete inherited index evidence.`).join('\n'))
 type Reply = string | { name: string; args: Record<string, unknown> }
@@ -66,7 +74,17 @@ it.each(['native', 'ptc'] as const)('reuses the complete fork checkpoint and den
     await ctx.plugin(JsonlSessionPersistence, { root: join(f.root, 'sessions'), compression: 'none' })
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(SystemPrompt)
-    if (mode === 'ptc') await ctx.plugin(worker.default)
+    if (mode === 'ptc') {
+      if (nodePtcPath !== undefined) {
+        for (const name of ['@deepseek-ai/dsh-fs-local', '@deepseek-ai/dsh-subprocess-local', '@deepseek-ai/dsh-sandbox-local']) {
+          const plugin = await import(requireRuntime.resolve(name))
+          await ctx.plugin(plugin.default, {})
+        }
+        const policy = await import(requireRuntime.resolve('@deepseek-ai/dsh-sandbox-policy'))
+        await ctx.plugin(policy.default, { mode: 'danger-full-access' })
+      }
+      await ctx.plugin(worker.default, {})
+    }
     await ctx.plugin(ToolRuntime, { mode: mode === 'ptc' ? 'both' : 'native' })
     await ctx.plugin(AgentRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
@@ -95,7 +113,7 @@ it.each(['native', 'ptc'] as const)('reuses the complete fork checkpoint and den
     }))
     // An independently composed plugin attaches its capability to EVERY Agent.
     // Such own-scope tools intentionally survive DSH's inherited-tool restrict().
-    ctx.on('agent/created', ({ agent }) => {
+    ctx.on('agent/created', ({ agent }): undefined => {
       if (agent.session.header.origin === 'subagent') {
         children.push(agent)
         if (mode === 'ptc') agent.ctx.tools.presentAs('ptc')

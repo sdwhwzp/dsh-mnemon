@@ -272,7 +272,7 @@ async function harness(scenario: string, multipleDestinations: boolean) {
     report.toolErrors.push(sanitized(error))
     console.log(JSON.stringify({ scenario, agentError: sanitized(error) }))
   })
-  ctx.on('agent/created', ({ agent }) => { if (agent.session.header.origin !== 'subagent' && !domains.includes(agent.id as Domain)) report.taskAgentsCreated++ })
+  ctx.on('agent/created', ({ agent }): undefined => { if (agent.session.header.origin !== 'subagent' && !domains.includes(agent.id as Domain)) report.taskAgentsCreated++ })
   stop = lifecycle.start()
   const parentHandles = await Promise.all(domains.map(domain => ctx.agents.create({ sessionId: SessionId(domain),
     agentOptions: { provider: PROVIDER, model: MODEL, maxTokens: 8192 }, meta: { cwd: f.workspace } })))

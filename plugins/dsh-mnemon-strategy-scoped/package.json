@@ -32,8 +32,8 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "dsh-mnemon": "^0.5.8-dsh.20260913.1",
-    "dsh-mnemon-strategy-default-three-tier": "^0.5.8-dsh.20260913.1"
+    "dsh-mnemon": "^0.5.9-dsh.20260915.1",
+    "dsh-mnemon-strategy-default-three-tier": "^0.5.9-dsh.20260915.1"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",

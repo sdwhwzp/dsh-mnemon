@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
-import { existsSync } from 'node:fs'
+import { existsSync, realpathSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -8,6 +9,9 @@ import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const dshBin = join(root, 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js')
+const requireDsh = createRequire(realpathSync(join(root, 'node_modules/@deepseek-ai/dsh/package.json')))
+const baseManifest = JSON.parse(await readFile(requireDsh.resolve('@deepseek-ai/dsh-base/package.json'), 'utf8'))
+const separatePtcRuntime = Object.hasOwn(baseManifest.dependencies ?? {}, '@deepseek-ai/dsh-ptc-runtime-node')
 const marker = 'HEADLESS_MNEMON_READY'
 const arguments_ = process.argv.slice(2)
 const options = new Map()
@@ -35,17 +39,22 @@ function run(args, { cwd = root, env = process.env, timeoutMs = 30_000 } = {}) {
     let stderr = ''
     child.stdout.setEncoding('utf8').on('data', chunk => { stdout += chunk })
     child.stderr.setEncoding('utf8').on('data', chunk => { stderr += chunk })
+    let timedOut = false
+    let forceKill
     const timeout = setTimeout(() => {
+      timedOut = true
       child.kill('SIGTERM')
-      reject(new Error(`dsh Headless verification timed out after ${timeoutMs}ms`))
+      forceKill = setTimeout(() => child.kill('SIGKILL'), 5000)
     }, timeoutMs)
     child.on('error', (error) => {
       clearTimeout(timeout)
       reject(error)
     })
-    child.on('exit', (code, signal) => {
+    child.on('close', (code, signal) => {
       clearTimeout(timeout)
-      resolveRun({ code, signal, stdout, stderr })
+      clearTimeout(forceKill)
+      if (timedOut) reject(new Error(`dsh Headless verification timed out after ${timeoutMs}ms`))
+      else resolveRun({ code, signal, stdout, stderr })
     })
   })
 }
@@ -71,6 +80,19 @@ const server = createServer(async (request, response) => {
       'cache-control': 'no-cache',
       connection: 'keep-alive',
     })
+    if (request.url?.endsWith('/messages')) {
+      const events = [
+        { type: 'message_start', message: { id: `msg_${requests.length}`, model: requests.at(-1).model, usage: { input_tokens: 10, output_tokens: 0 } } },
+        { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
+        { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: marker } },
+        { type: 'content_block_stop', index: 0 },
+        { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 3 } },
+        { type: 'message_stop' },
+      ]
+      for (const event of events) response.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+      response.end()
+      return
+    }
     const id = `chatcmpl-${requests.length}`
     response.write(`data: ${JSON.stringify({ id, choices: [{ index: 0, delta: { role: 'assistant', content: marker }, finish_reason: null }] })}\n\n`)
     response.write(`data: ${JSON.stringify({ id, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] })}\n\n`)
@@ -152,7 +174,7 @@ try {
   disabled: true
 - id: tool-fs-search
   disabled: true
-`.trimStart() + (!extensionsEnabled ? '' : extensionNames.map(name =>
+`.trimStart() + (separatePtcRuntime ? ['ptc-runtime', 'workflow-ptc', 'tool-workflow'].map(id => `- id: ${id}\n  disabled: true\n`).join('') : '') + (!extensionsEnabled ? '' : extensionNames.map(name =>
     `- id: ${name.slice(4)}\n  disabled: false\n`,
   ).join(''))
   await writeFile(profilePatchPath, profileOverrides)
@@ -166,12 +188,12 @@ try {
 
   const toolRequest = requests.find(request => Array.isArray(request.tools) && request.tools.length > 0)
   if (toolRequest === undefined) throw new Error('Headless model request did not expose any tools')
-  const toolNames = new Set(toolRequest.tools.map(tool => tool?.function?.name).filter(name => typeof name === 'string'))
+  const toolNames = new Set(toolRequest.tools.map(tool => (tool?.function?.name ?? tool?.name)).filter(name => typeof name === 'string'))
   const required = ['mnemon_status', 'mnemon_recall', 'mnemon_document_search', 'mnemon_document_create', 'mnemon_runtime_memory', 'mnemon_remember', 'mnemon_view_route', 'mnemon_view_action']
   const missing = required.filter(name => !toolNames.has(name))
   if (missing.length > 0) throw new Error(`Headless model request is missing Mnemon tools: ${missing.join(', ')}`)
   if (extensionsEnabled) {
-    const prompt = JSON.stringify(toolRequest.messages)
+    const prompt = JSON.stringify([toolRequest.system, toolRequest.messages])
     for (const expected of ['Source order expresses preference', 'MNEMON OPTIONAL AUTO CAPTURE']) {
       if (!prompt.includes(expected)) throw new Error(`Optional Strategy contribution did not reach the real DSH prompt: ${expected}`)
     }
@@ -198,7 +220,7 @@ try {
   const pendingEntries = disabledExecution.stderr.split(/\r?\n/u).filter(line => line.includes('waiting for service:'))
   if (pendingEntries.length > 0) throw new Error(`Mnemon-disabled Headless left dependent Entries pending:\n${pendingEntries.join('\n')}`)
   const disabledToolNames = new Set(requests.flatMap(request => Array.isArray(request.tools)
-    ? request.tools.map(tool => tool?.function?.name).filter(name => typeof name === 'string')
+    ? request.tools.map(tool => (tool?.function?.name ?? tool?.name)).filter(name => typeof name === 'string')
     : []))
   const leakedMnemonTools = [...disabledToolNames].filter(name => name.startsWith('mnemon_')).sort()
   if (leakedMnemonTools.length > 0) throw new Error(`Mnemon-disabled Headless exposed Mnemon tools: ${leakedMnemonTools.join(', ')}`)

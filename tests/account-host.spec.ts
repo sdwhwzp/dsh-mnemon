@@ -89,7 +89,7 @@ it('logs and projects each account memory through the real Harness Agent loop an
     registerTools(scoped, runtime, coordinator)
     stop = lifecycle.start()
     const children: Agent[] = []
-    ctx.on('agent/created', ({ agent }) => { if (agent.session.header.origin === 'subagent') children.push(agent) })
+    ctx.on('agent/created', ({ agent }): undefined => { if (agent.session.header.origin === 'subagent') children.push(agent) })
     const prompts: Array<{ sessionId: string; text: string }> = []
     const calls = new Map<string, number>()
     ctx.llm.registerAdapter(['mock'], new ScriptedAdapter(options => {

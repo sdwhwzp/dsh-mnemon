@@ -30,7 +30,7 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "dsh-mnemon-source-memory-spaces": "^0.5.8-dsh.20260913.1"
+    "dsh-mnemon-source-memory-spaces": "^0.5.9-dsh.20260915.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
