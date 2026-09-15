@@ -57,7 +57,7 @@ DSH rc.8 首次说明的可选 SQLite 不兼容性在 DSH 0.1.1-rc.2 中仍然�
 
 1. 停止所属 DSH 进程，单独备份完整会话存储根及全部 generation；Mnemon Pack 不包含这些会话。以 DSH 错误中的准确 `raw log` 路径为准，不扫描或改写其他会话。
 2. 安装修复后的 Mnemon，对**备份副本**执行下面的预览命令。`.jsonl.zstd` 使用 Node `22.19+` 或 `24+`；普通 `.jsonl` 也支持 Node 20。
-3. 将结果写入会话目录外的新路径，核对 `repairedMessages` 和 SHA-256 报告。工具只移除 Mnemon 的 `recall` / `instructions` 两个已知错误 summary 字符串；其余解压后的字节、消息 ID、事件顺序均保留。不处理其他插件或陌生 summary，并拒绝覆盖已有输出。
+3. 将结果写入会话目录外的新路径，核对 `repairedMessages`、`repairedDescriptors`、`expandedToolChunkRows`、`expandedToolChunks`、SHA-256 报告和 `blockers`。预览计数表示候选修改；发现已知不支持的形状时退出码为 1，副本请求返回 `mode: "refused"` 且不生成输出。已有输出文件会被拒绝。
 4. 先在一次性的 Profile 副本中，用修复副本替换对应 `session.jsonl` 或 `session.jsonl.zstd`，保留原始备份。让 DSH 加载、续写，重启后再验证会话。副本验证通过后，才在已停止的原 Profile 中执行同样的明确替换。命令本身绝不替换输入或正在使用的会话。
 
 ```sh
@@ -65,7 +65,20 @@ dsh-mnemon-repair-session --input /backup/session.jsonl.zstd
 dsh-mnemon-repair-session --input /backup/session.jsonl.zstd --output /backup/repaired-session.jsonl.zstd
 ```
 
-可执行命令随 `dsh-mnemon` 安装；Profile 内安装可在该目录使用 `pnpm exec dsh-mnemon-repair-session`。源码 checkout 使用 `node bin/repair-legacy-session.mjs`。工具只接受 v0、合法 UTF-8 JSON 记录和完整的普通 Zstandard 帧，原始与解压输入均限制为 128 MiB。格式损坏、不完整帧、消息路径中的歧义重复键会在发布输出前被拒绝。工具不会修复其他损坏，也不保证任意会话都能迁移；最终仍以 DSH 官方加载器校验为准。
+可执行命令随 `dsh-mnemon` 安装；Profile 内安装可在该目录使用 `pnpm exec dsh-mnemon-repair-session`。源码 checkout 使用 `node bin/repair-legacy-session.mjs`。下表两种 stream 规范化本身不改 ID；同一日志也可叠加经过证明的身份恢复。副本修复仅覆盖经过契约审计的历史形状：
+
+| 历史形状 | 副本行为 |
+|---|---|
+| `dsh-mnemon` instructions summary 为 `Optional memory recall and remember reminder`；recall summary 为 `Memory View snapshot` 或 `Runtime memory snapshot` | 仅移除该 source 的 `summary` 成员，保留其他插件消息和陌生 summary。 |
+| 严格符合旧版封闭字段集合且组合参数满足冻结 v3 契约的 subagent descriptor v2 | 仅将版本值改为 3，保留 provider、成对模型字段、persona、label 和 toolFilter；不添加默认值或 reasoning effort。多余字段、不成对模型和其他不支持的版本会被拒绝。 |
+| 严格符合旧版结构、字符串 `id: ""` 或 `name: ""` 的 `tool-call-chunks` | 展开为原来的 raw delta 事件，保留 ID、name 是否存在、参数字符串、序号和时间戳。不丢弃 chunk，provenance 引用无需重编号。已经是 raw 的空字符串 delta 保持字节不变。 |
+| 严格符合结构、自有成员为 `name: null` 的 raw 或 packed 工具 delta | 保留成员，将值改为 `""`；packed 行按原逻辑序号与时间展开。ID、参数和持久消息不变。两种值均不改变组装状态，保留成员可维持 token 计时。`normalizedToolChunkNames` 统计受影响的逻辑 delta 数。 |
+| 完成的 `deepseek-official` stream 已记录唯一非空 provider ID，后续空 ID 覆盖了持久工具链身份 | 核对完整有序 chunk provenance、按 index 组装的 block、相同 name/参数和唯一 call/result 关联后，仅恢复该已记录 ID。保留首个候选之前的空占位值、消息 UUID、正文及其他插件内容；支持逐条证明的多工具，以及 text/reasoning block。不生成 ID。 |
+| 没有已记录 ID、身份冲突、中断、待修 owner 对象结构未知，或 approval/dispatch/plugin/消息副本引用未闭合 | 报告 blocker 并拒绝输出。任意空 ID 历史及 owner replay state 仍需原写入方恢复。 |
+
+ID 检查使用原 stream 完整的 `sourceEventSeqs`，包括 packed 逻辑成员。result provenance 必须精确指向对应 call；字段缺省时，仅允许没有其他 attempt 的唯一单调用 step。显式错误引用不能使用此回退。通过序号或消息 ID 关联的额外引用会跨 step 检查；普通 compaction 序号引用与无关插件仍可原样保留。`recoveredToolIdentityChains` 统计恢复的链，`recoveredToolIdentityFields` 统计逻辑身份字段，`toolIdentityRecoveryRefusals` 用有数量上限的位置样例解释无法证明的形状。
+
+工具只接受 v0、合法 UTF-8 JSON 记录和完整的普通 Zstandard 帧；原始输入、解压输入和展开输出均限制为 128 MiB。格式损坏、不完整帧、修改或身份判断路径中的歧义重复键、无法安全表示的 delta 序号或时间会在发布输出前被拒绝。仅改写匹配的 summary/version/name/identity 成员和需要展开的 packed 行，其他解压字节均保留。诊断统计每类已知 blocker 的全部次数，并最多列出十个行号/事件/字段路径样例，不输出消息正文。`migrationValidated: false` 明确表示扫描器不会修复其他损坏，也不保证任意会话都能迁移；最终仍以安装的官方 DSH 加载器和 stream 回放为准。参见 [issue #251 契约审计与验证](../../pr-assets/issue-251-legacy-repair/README.zh-CN.md)。
 
 DSH 以写权限打开旧会话时，会迁移为不可变的 v3 generation。Mnemon Runtime、档案与记忆空间维持原有格式。回滚 DSH 时，在独立旧版本 Profile 中恢复升级前会话备份；不要让旧 DSH 打开 v3 generation。参见[验证与截图](../../pr-assets/issue-223-dsh-015/README.zh-CN.md)。
 
@@ -297,5 +310,7 @@ HTTP 403 可能来自 Host/Origin 不匹配，或旧远程 Client 仍调用独�
 ## 运行时归档恢复
 
 容量归档要求已激活的记忆空间，其 Provider 必须支持精确写入和安全删除。Hindsight 等异步提取目标会在任何归档写入前被排除。如果没有合适的目标，请激活支持这些能力的记忆空间，或增大 `runtimeMemory.memoryLimitBytes`；被拒绝的 mutation 不会改变现有热记忆。直接向 Provider 写入仍保持原有的异步行为。
+
+对话归档使用所选 Source 的写入范围：回合中激活的已知空间，以及当前 View 创建的空间，都可作为归档目标。在 View 固定之后由其他操作创建的空间，需要新回合才能使用。空范围始终不授权任何空间。目标错误会区分目录为空、View 范围为空或排除了当前空间、Provider 能力不支持，并报告目录、授权和可写数量。失败时待新增内容尚未保存；修正所报告的原因后，请在新回合重试同一份工具输入。已有热记忆会保留。
 
 归档回执或本地提交失败时，Host 仅尝试删除回执能证明由本次操作新建的条目，保留跳过或复用的既有条目。本地提交报错后，如果 Runtime 修订已变更或无法读取，则提交结果不确定：保留归档条目，避免丢失已提交的记忆。清理失败会标出剩余目标空间和条目 id。Provider 请求失败且没有返回回执时，远端结果可能不确定，因此这不是分布式事务；重试前应检查对应 Provider。

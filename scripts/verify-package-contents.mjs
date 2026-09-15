@@ -42,8 +42,16 @@ const relativeReadmeImages = readmeFiles.flatMap((path) => {
 
 // Core/Host and the shared page kit only; Source/Provider implementations must
 // ship in their own artifacts. Keep a bounded budget, not the old monolith size.
-// Includes account isolation, Session recovery, archive preflight, and review guards.
-const maximumUnpackedBytes = 1_350_000
+// Includes the bounded legacy Session copy-repair executable and its bilingual
+// recovery instructions; Source implementations remain independent artifacts.
+// Runtime archive preflight and compensation add bounded Host recovery code.
+// The review publication/guard helper adds about 4 KB of Host-only code.
+// Audited legacy repair, including recorded-ID chain proofs, stays in the
+// maintenance executable.
+// This fork adds account isolation and its scoped review guards on top, so the
+// budget carries both: upstream's 1_318_000 plus the ~80 KB this fork's Host
+// code measured over the same baseline.
+const maximumUnpackedBytes = 1_400_000
 
 if (missing.length > 0 || unexpected.length > 0 || hostLeaks.length > 0 || relativeReadmeImages.length > 0 || pack.unpackedSize > maximumUnpackedBytes) {
   if (missing.length > 0) console.error(`Missing package files:\n${missing.map(path => `- ${path}`).join('\n')}`)
