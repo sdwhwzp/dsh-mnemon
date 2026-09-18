@@ -273,6 +273,16 @@ export class MnemonAccounts {
         return this.context.run(account, invoke)
       }) as never, options)
       const value = Reflect.get(target, property, target) as unknown
+      // Scope-keyed tool lookups (the Agent Teams pause check) must see the
+      // Host's Agent object: the registry keys scope chains by identity.
+      if (property === 'tools' && value !== null && typeof value === 'object' && typeof (value as { get?: unknown }).get === 'function') {
+        const tools = value as NonNullable<HostAgent['ctx']['tools']>
+        return new Proxy(tools, { get: (service, key) => {
+          if (key === 'get') return (name: string, scope?: HostAgent) => tools.get!(name, scope === undefined ? undefined : this.originals.get(scope) ?? scope)
+          const member = Reflect.get(service, key, service) as unknown
+          return typeof member === 'function' ? member.bind(service) : member
+        } })
+      }
       return typeof value === 'function' ? value.bind(target) : value
     } })
     const proxy = new Proxy(agent, { get: (target, property) => {

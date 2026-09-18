@@ -30,6 +30,7 @@
 
 Runtime context, searchable documents and long-term evidence share a familiar Sidebar. The default Starter installs a tested plugin combination; contributors can replace or extend its parts without rebuilding the memory system.
 
+Automatic idle review now uses bounded spawn checkpoints, a five-minute minimum interval and a 20-attempt limit per loaded session. It can be disabled independently. Published Agent Teams tool conflicts pause review before any child starts; failed runs retain committed receipt metadata and are never replayed automatically. See [review configuration and compatibility](./docs/en/reference/configuration.md#provider-requirements).
 This fork adds optional per-account memory for the principal-enabled Harness deployment. See [account deployment](https://github.com/sdwhwzp/dsh-mnemon/blob/dev/docs/en/guides/accounts.md) and [fork synchronization](https://github.com/sdwhwzp/dsh-mnemon/blob/dev/FORK.md).
 
 ## Use three tiers, not three copies

@@ -231,6 +231,17 @@ describe('authenticated Mnemon account memory', () => {
     await expect(f.accounts.execute(child, async () => {})).rejects.toThrow('parent account mismatch')
   })
 
+  it('looks up scope-keyed tools through the Host Agent behind the account proxy', async () => {
+    const f = await fixture()
+    const get = vi.fn((name: string, scope?: HostAgent) => name === 'spawn_teammate' && scope === f.sessions[1] ? {} : undefined)
+    f.sessions[1]!.ctx.tools = { get }
+    const wrapped = f.scoped.agents.get('bob-session')!
+    expect(wrapped).not.toBe(f.sessions[1])
+    expect(wrapped.ctx.tools?.get?.('spawn_teammate', wrapped)).toEqual({})
+    expect(get).toHaveBeenCalledWith('spawn_teammate', f.sessions[1])
+    expect(wrapped.ctx.tools?.get?.('spawn_teammate')).toBeUndefined()
+  })
+
   it('keeps an explicit background task and injected messages under the requesting account', async () => {
     const f = await fixture()
     const run = f.accounts.handler(async () => {

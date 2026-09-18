@@ -66,6 +66,8 @@ The header summarizes User Profile (`USER.md`) and Working Memory (`MEMORY.md`).
 
 Runtime entries display their creation time, newest first, across both targets and text filters. Editing an older entry keeps its original position. Show more continues in the same order.
 
+Edit and Remove select the entry's full content within its target. A short entry such as `X` can be changed or removed while `EGO_LINUX_CHROME` remains intact. Identical entries in the same target are still ambiguous and are rejected without changing data.
+
 When Working Memory reaches capacity, the Host archives the exact original entries. If a routing batch fails or returns an invalid proposal, that entire batch uses the eligible default Memory Space (or the first eligible space when no default is available). Earlier valid batches keep their destinations, and the maintenance summary records the fallback reason. Caller cancellation still stops the operation.
 
 Spaces created by the current conversation View, or known spaces activated during that turn, can receive the archive once active and supported. Spaces created elsewhere after the turn began require a new turn. A destination failure explains the directory or scope restriction and leaves existing Runtime entries intact; the pending add has not been saved, so retry its original input after correcting the cause.
@@ -234,3 +236,7 @@ Remote Provider workspaces, users, banks, projects, containers, and URIs are ind
 - The workbench defaults to Sidebar; Builtin puts the same UI in the owning conversation. Turn memory and Save to memory remain conversation shortcuts.
 
 Next: [Capability map](./capabilities.md) · [Getting Started](./getting-started.md) · [Provider guide](./memory-providers.md) · [Configuration](../reference/configuration.md)
+
+## Idle review controls
+
+Settings includes **Idle review**: enable it independently, choose bounded spawn or full-context fork, and set the interval, attempt cap, checkpoint size and output budget. Changes respect the existing Host settings grant; read-only clients cannot save them. The Memory System shows an Agent Teams compatibility pause or partial-write receipts after failure. Refresh status to read current state. See [configuration](../reference/configuration.md#provider-requirements) for retention and restart limits.

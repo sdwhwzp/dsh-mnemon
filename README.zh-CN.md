@@ -30,6 +30,7 @@
 
 运行时上下文、可检索档案和长期证据，使用同一个熟悉的侧栏（Sidebar）。默认安装包（Starter）安装经过验证的插件组合；贡献者可以独立替换或扩展其中的部分。
 
+自动空闲审查默认使用有界 spawn 检查点、至少五分钟间隔与每个加载会话最多 20 次尝试，并提供独立开关。已发布的 Agent Teams 工具冲突会在创建子 Agent 前暂停审查；失败运行保留已提交回执元数据且不自动重放。详见[审查配置与兼容性](./docs/zh-CN/reference/configuration.md)。
 本 fork 增加按登录账号隔离的记忆功能，适用于带 principal 扩展的 Harness 部署。见[账号部署](https://github.com/sdwhwzp/dsh-mnemon/blob/dev/docs/zh-CN/guides/accounts.md)和 [fork 同步约束](https://github.com/sdwhwzp/dsh-mnemon/blob/dev/FORK.md)。
 
 ## 三层记忆，三种用途

@@ -257,6 +257,7 @@ Report vulnerabilities privately through [SECURITY.md](../../../SECURITY.md), no
 
 | Symptom | Check and resolution |
 |---|---|
+| Terminal flashes when switching conversations on Windows | Update the Starter, or Runtime Source if independently installed, then restart the DSH Host. Runtime Git branch detection hides its console window; Git failures, timeouts and detached HEAD still fall back to an unfiltered Runtime view. |
 | Mnemon unavailable | macOS/Linux: run `command -v mnemon`, `mnemon --version`. Windows PowerShell: run `Get-Command mnemon`, `Test-Path "$env:LOCALAPPDATA\Programs\mnemon\mnemon.exe"`. Set `MNEMON_CLI_PATH` or `mnemon.cliPath`, then restart |
 | Electron desktop Host cannot run npm CLI scripts | Verified npm launchers use child-only `ELECTRON_RUN_AS_NODE=1`. If the desktop shell disables the [Electron `runAsNode` fuse](https://www.electronjs.org/docs/latest/tutorial/fuses#runasnode), this flag is ignored; set `mnemon.cliPath` to the official native binary (`mnemon.exe` on Windows). Automatic npm updates still require a Host that can run the JavaScript launcher |
 | Headless Agent has no Mnemon tools | Plugins are profile-local. Run `dsh plugin --profile headless add dsh-mnemon`; a Web-profile installation does not carry over |
@@ -268,7 +269,7 @@ Report vulnerabilities privately through [SECURITY.md](../../../SECURITY.md), no
 | Custom directory rejected | Use an absolute path, `~`, or `~/...` |
 | `memoryBodyId is required...` | Active count is not exactly one; select a target explicitly |
 | `memory space is not active for reading` | Activate it in Overview; inactive writes are allowed, reads are not |
-| Provider error | Semantic work needs full isolation capabilities; background review additionally needs `fork + inheritsParentContext` |
+| Provider error | Review needs guarded local child publication; use bounded `spawn` or opt-in `fork`. Active Agent Teams tools pause automatic review; inspect partial-write receipts before retrying |
 | Runtime replace exceeds capacity | Shorten it or organize first; automatic maintenance handles add overflow only |
 | Document source path rejected | Keep it inside the session workspace and outside managed Documents |
 | CLI timeout | Increase `timeoutMs`; large Stores may need more than 10 seconds for status or graph |
