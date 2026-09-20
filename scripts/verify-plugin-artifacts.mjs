@@ -141,6 +141,7 @@ async function verifyIndependent(name) {
   }
   const installed = await realpath(directory)
   assert(!inside(root, installed))
+  if (!args.has('--keep')) await rm(directory, { recursive: true, force: true })
 }
 
 async function verifyConsumer() {
@@ -150,6 +151,7 @@ async function verifyConsumer() {
   await install(consumer, consumerManifest)
   await writeFile(join(consumer, 'artifacts.json'), JSON.stringify([...artifacts.keys()]) + '\n')
   for (const command of ['build', 'typecheck', 'test']) await run('npm', ['run', command], consumer, `external consumer: ${command}`)
+  if (!args.has('--keep')) await rm(consumer, { recursive: true, force: true })
 }
 
 let succeeded = false
