@@ -2,6 +2,7 @@ import z from 'schemastery'
 import { DEFAULT_IDLE_REVIEW } from './protocol.ts'
 import { isAbsolute, sep } from 'node:path'
 import { normalizeDisplayMode } from './display-mode.ts'
+import { schema as MemoryViewConfig, preferences as validateMemoryViewPreferences } from './view-preferences.ts'
 import { resolveEmbedding, resolvePersistenceStrategy, resolveRecallQuality } from 'dsh-mnemon-source-memory-spaces'
 
 export { resolveEmbedding, resolvePersistenceStrategy, resolveRecallQuality } from 'dsh-mnemon-source-memory-spaces'
@@ -143,6 +144,7 @@ const MemoryTopologySchema: z<MemoryTopologyConfig> = z.object({
 })
 
 export const Config: z<Config> = z.object({
+  accountPreferences: z.dict(z.dict(z.any())).role('secret').hidden(),
   accountDataDir: z.string(),
   sharedMemoryDir: z.string(),
   sharedMemoryWritable: z.boolean(),
@@ -177,6 +179,8 @@ export const Config: z<Config> = z.object({
     protocol: DEFAULT_EMBEDDING_PROTOCOL,
   }),
   memoryTopology: MemoryTopologySchema,
+  memoryView: MemoryViewConfig,
+  legacySettingsImported: z.boolean(),
   recallQuality: RecallQualitySchema.default({
     policy: DEFAULT_RECALL_QUALITY_POLICY,
     lowScoreThreshold: DEFAULT_RECALL_LOW_SCORE_THRESHOLD,
@@ -330,6 +334,7 @@ export function resolveConfig(config: Config = {}): ResolvedConfig {
   if (sharedMemoryDir !== undefined && accountDataDir !== undefined && (sharedMemoryDir === accountDataDir || sharedMemoryDir.startsWith(accountDataDir + sep))) {
     throw new Error('dsh-mnemon: sharedMemoryDir must sit outside accountDataDir')
   }
+  if (config.memoryView !== undefined) validateMemoryViewPreferences(config.memoryView)
   const cliPath = optionalText(config.cliPath)
   const legacyDataDir = optionalText(config.dataDir)
   const legacyPacks = resolveCustomPacks(config.customPacks, legacyDataDir)

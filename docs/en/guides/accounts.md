@@ -1,5 +1,7 @@
 # Deploy Mnemon per signed-in account
 
+On Harness 0.1.7, account preferences are stored in the host-managed `accountPreferences` profile field, keyed by the hashed account namespace. Account UI reads and writes expose only the authenticated account preferences. Existing namespaces in `settings.yaml.imported` are recovered without replacing explicit profile values. Mnemon context messages retain the authenticated principal in the Session log.
+
 This fork's `accountDataDir` gives each authenticated dsh-passwords account private Runtime USER/MEMORY, Documents, Native databases, indexes, revisions, backups and preferences. Sessions of one account share its memory; accounts sharing a workspace do not. Administrators also receive their own memory through these APIs.
 
 Directories use `SHA-256("dsh-passwords:" + accountId)`, so renaming an account does not move its data. Identity comes from the Host-verified RPC principal or the recorded turn/start principal. Browser user ids, names and paths cannot select another account. Session and workspace requests additionally use principalAccess. Stale, deleted or banned accounts are rejected. Subagents and background tasks retain the initiating account and its model permission and accounting checks.

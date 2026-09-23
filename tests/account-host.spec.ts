@@ -151,7 +151,7 @@ it('logs and projects each account memory through the real Harness Agent loop an
       expect(messages.at(-1)!.text).toContain('document-account-' + own)
       expect(messages.map(value => value.text).join('')).not.toMatch(new RegExp('Only-account-' + other + '|document-account-' + other))
       const events = hostSessionEvents((agent as unknown as HostAgent).session)
-      const injected = events.filter(event => event.type === 'user/message' && (event.data.source as { plugin?: string } | undefined)?.plugin === 'dsh-mnemon')
+      const injected = events.filter(event => event.type === 'user/message' && (event.data.source as { kind?: string } | undefined)?.kind === 'dsh-mnemon')
       expect(injected.length).toBeGreaterThan(0)
       expect(injected.every(event => (event.data.principal as HostPrincipal)?.id === own)).toBe(true)
       expect(events.filter(event => event.type === 'error')).toEqual([])

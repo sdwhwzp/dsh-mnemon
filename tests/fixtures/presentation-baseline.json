@@ -100,6 +100,13 @@
       "sha256": "b6ae834f8963c1a818d7d6facacf8e2dcd2276384af900d5f75af0cbe575ac45"
     }
   },
+  "builtinWidthHandles": {
+    "page": {
+      "rules": 1069,
+      "rulesSha256": "ead9b2f40ea0c381d5953c29f663f6a8b15d246eff382522b2f732b6fbd5b126"
+    },
+    "sidebar": {}
+  },
   "idleReviewWarning": {
     "en": {
       "keys": 996,
@@ -108,6 +115,16 @@
     "zh": {
       "keys": 996,
       "sha256": "817d0a4e6c4283fb3ce8230a24c0d8611ef07125eabd40acb9954548d26ab0e6"
+    }
+  },
+  "profileSettingsMigration": {
+    "en": {
+      "keys": 995,
+      "sha256": "02cc045196bc779ea213473c6bef4c34a9c4d69865956ba41e48311f77acecac"
+    },
+    "zh": {
+      "keys": 995,
+      "sha256": "5127ac969debbb3c5285290563bb999416e2a449d21785028c8d44d6beeffff3"
     }
   }
 }

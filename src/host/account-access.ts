@@ -22,11 +22,11 @@ export class MnemonAccounts {
   private readonly executions = new WeakMap<ToolExecution, ToolExecution>()
   private readonly base: Config
 
-  constructor(private readonly ctx: HostContextShape, readonly directory: string, config: Config) {
+  constructor(private readonly ctx: HostContextShape, readonly directory: string, config: Config, private readonly accountSettings: HostSettingsService = ctx.settings) {
     // `sharedMemoryWritable` has exactly one source: the principal's role.
     // Dropping it here keeps a plugin-config value from granting every account
     // write access to the shared instance.
-    const { sharedMemoryWritable: _ignored, ...rest } = config
+    const { sharedMemoryWritable: _ignored, accountPreferences: _preferences, ...rest } = config
     this.base = { ...rest, storageScope: 'custom', runtimeUserScope: 'storage', customPacks: [],
       persistenceStrategy: { mode: 'manual', providerId: 'mnemon-native', rules: { dataBoundary: 'local-only', allowedProviderIds: ['mnemon-native'] }, providerConnections: {} } }
   }
@@ -104,7 +104,7 @@ export class MnemonAccounts {
       ...(this.base.sharedMemoryDir === undefined ? {} : { sharedMemoryDir: this.base.sharedMemoryDir }),
       ...(sharedWritable ? { sharedMemoryWritable: true } : {}),
     }
-    const memory = this.ctx.settings.register<Config>('mnemon-account-' + key, Config, {
+    const memory = this.accountSettings.register<Config>('mnemon-account-' + key, Config, {
       base: { ...this.base, ...managed }, applies: 'live',
       validate: value => {
         if (value.dataDir !== managed.dataDir || value.storageScope !== 'custom' || value.runtimeUserScope !== 'storage') throw new Error('Account memory storage is managed by the Host')
@@ -113,7 +113,7 @@ export class MnemonAccounts {
         resolveConfig(value)
       },
     })
-    const ui = this.ctx.settings.register('mnemon-account-ui-' + key, InteractionConfig, { base: { turnBar: true, saveAction: true }, applies: 'live' })
+    const ui = this.accountSettings.register('mnemon-account-ui-' + key, InteractionConfig, { base: { turnBar: true, saveAction: true }, applies: 'live' })
     scopes = { memory, ui }
     this.settings.set(key, scopes)
     return scopes
@@ -126,13 +126,13 @@ export class MnemonAccounts {
       ['mnemon-ui', 'mnemon-account-ui-' + this.key(principal)],
     ])
     return {
-      writable: this.ctx.settings.writable,
+      writable: this.accountSettings.writable,
       register() { throw new Error('Account settings are registered by the Host') },
       describe: options => {
         const principal = this.require()
         this.scopes(principal)
         const mapped = names(principal)
-        return this.ctx.settings.describe(options).flatMap(value => {
+        return this.accountSettings.describe(options).flatMap(value => {
           const ns = [...mapped].find(([, stored]) => stored === value.ns)?.[0]
           if (ns === undefined) return []
           const redact = (value: unknown) => {
@@ -148,14 +148,14 @@ export class MnemonAccounts {
         this.scopes(principal)
         const ns = names(principal).get(namespace)
         if (ns === undefined) throw new Error('Unsupported account settings namespace')
-        const fixed = ['accountDataDir', 'storageScope', 'runtimeUserScope', 'dataDir', 'customPackId', 'customPacks', 'store', 'cliPath', 'embedding', 'persistenceStrategy', 'remoteAccess']
+        const fixed = ['accountPreferences', 'accountDataDir', 'storageScope', 'runtimeUserScope', 'dataDir', 'customPackId', 'customPacks', 'store', 'cliPath', 'embedding', 'persistenceStrategy', 'remoteAccess']
         for (const op of ops) {
           if (op.op !== 'set' || op.path[0] !== 'taskAgentModel') continue
           const model = resolveConfig({ taskAgentModel: op.value as NonNullable<Config['taskAgentModel']> }).taskAgentModel
           if (model.mode === 'fixed' && !(this.ctx.get('principalAccess') as AccessProvider).modelAllowed(principal, model.provider!, model.model!)) throw new Error('This model is unavailable to the account')
         }
         if (ops.some(op => fixed.includes(op.path[0] ?? ''))) throw new Error('Storage and provider connections are managed by the Host')
-        await this.ctx.settings.mutate(ns, ops, revision)
+        await this.accountSettings.mutate(ns, ops, revision)
         changed(principal)
       },
     }
@@ -265,7 +265,7 @@ export class MnemonAccounts {
           if (name !== 'agent/pre-step') return result
           const decision = result as HostPreStepDecision
           return decision.kind !== 'enter' ? decision : { ...decision, messages: decision.messages.map(message =>
-            message.source.kind === 'plugin' && message.source.plugin === 'dsh-mnemon' ? { ...message, principal } : message) }
+            (message.source.kind === 'dsh-mnemon' || message.source.kind === 'plugin' && message.source.plugin === 'dsh-mnemon') ? { ...message, principal } : message) }
         })
         const current = this.context.getStore()
         const account = this.agents.get(agent) ?? (current !== undefined && this.key(current.principal) === this.key(principal) ? current : undefined)

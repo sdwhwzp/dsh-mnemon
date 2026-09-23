@@ -32,6 +32,8 @@ export interface HostRpcRegistrationOptions {
 }
 
 export interface HostConnectionHandle {
+  /** Resolve the transport-owned scope on Harness versions with PeerScope dispatch. */
+  principalOfPeer?(peer: object): HostPrincipal | undefined
   rpc: {
     handle(channel: string, handler: HostRpcHandler, options: HostRpcRegistrationOptions): unknown
   }

@@ -1,5 +1,5 @@
 import { Context } from '@deepseek-ai/cordis'
-import { Config, InteractionConfig, resolveConfig, resolveInteractionConfig, type Config as MnemonConfig } from './config.ts'
+import { Config as PlainConfig, InteractionConfig, resolveConfig, resolveInteractionConfig, type Config as MnemonConfig } from './config.ts'
 import { registerCommands } from './commands.ts'
 import type { HostContextShape, HostSessionPersistence, HostWorkspaceRegistry } from './dsh.ts'
 import { registerGuidance } from './guidance.ts'
@@ -17,11 +17,13 @@ import { MemoryPluginInstallation } from './plugin-installation.ts'
 import { MnemonRemoteService } from './remote-rpc.ts'
 import { MnemonAccounts } from './account-access.ts'
 import { join } from 'node:path'
+import { plainHostConfig, type LiveHostConfig } from './live-config.ts'
+import { createHostSettings, ProfileMnemonSettings, subscribeSettings } from './settings-service.ts'
 
 export const name = 'dsh-mnemon'
 export const provide = ['mnemonMemory']
 export const inject = ['tools', 'settings', 'commands', 'agents', 'subagents']
-export { Config }
+export { LiveConfig as Config } from './live-config.ts'
 export type { MnemonConfig }
 
 /** Resolve the optional Web workspace service at call time, not plugin-mount time. */
@@ -34,31 +36,39 @@ function optionalWorkspaceRegistry(ctx: HostContextShape): HostWorkspaceRegistry
 }
 
 /** DSH owns assembly; this Host only wires scope, phases and user preferences. */
-export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
-  const original = rawContext as unknown as HostContextShape
+export function apply(rawContext: unknown, rawConfig: MnemonConfig | LiveHostConfig = {}): void {
+  const original = rawContext as HostContextShape
+  const config = plainHostConfig(rawConfig)
   const accountDataDir = resolveConfig(config).accountDataDir
-  const accounts = accountDataDir === undefined ? undefined : new MnemonAccounts(original, accountDataDir, config)
+  const hostSettings = createHostSettings(original, rawConfig)
+  const accounts = accountDataDir === undefined ? undefined : new MnemonAccounts(original, accountDataDir, config, hostSettings)
   const ctx = accounts?.wrapContext() ?? original
   registerMnemonSubagentTokenUsageProjection(ctx)
   const extensions = provideMemoryRuntime(ctx)
-  const memoryPlugins = new MemoryPluginManagement(ctx, extensions)
+  const memoryPlugins = new MemoryPluginManagement(ctx, extensions, hostSettings)
   const pluginInstallation = new MemoryPluginInstallation(ctx)
-  const effectiveConfig = (value: Config) => memoryPlugins.resolveConfig(resolveConfig(accountDataDir === undefined ? value : {
+  const effectiveConfig = (value: MnemonConfig) => memoryPlugins.resolveConfig(resolveConfig(accountDataDir === undefined ? value : {
     ...value, storageScope: 'custom', runtimeUserScope: 'storage', customPacks: [], dataDir: join(accountDataDir, '_host-control'),
-  }))
+  }), hostSettings instanceof ProfileMnemonSettings ? value.memoryView ?? { entries: {} } : undefined)
   const prepared = new Map<object, { graph: MnemonRuntimeGraph; token: symbol }>()
   const disposePrepared = (): void => {
     for (const candidate of prepared.values()) candidate.graph.dispose()
     prepared.clear()
   }
-  const settings = ctx.settings.register<Config>('mnemon', Config, {
+  const settings = hostSettings.register<MnemonConfig>('mnemon', PlainConfig, {
     base: config,
     applies: 'live',
     validate: value => {
       disposePrepared()
       const candidate = { graph: createRuntimeGraph(effectiveConfig(value), undefined, extensions), token: Symbol('prepared-runtime') }
+      // Profile writes are asynchronous. Check the candidate now, then build
+      // from the committed live references when DSH emits volatile-update.
+      if (hostSettings instanceof ProfileMnemonSettings) {
+        candidate.graph.dispose()
+        return
+      }
       prepared.set(value, candidate)
-      // Settings commits synchronously after validation. A standalone/cancelled
+      // Legacy Settings commits synchronously after validation. A standalone/cancelled
       // validation has no commit event, so retire its attached graph next tick.
       queueMicrotask(() => {
         if (prepared.get(value)?.token !== candidate.token) return
@@ -74,7 +84,8 @@ export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
     stat: async (id, options) => (ctx.get('sessionPersistence') as HostSessionPersistence | undefined)?.stat(id, options),
   })
   const resolved = runtime.config
-  ctx.on('settings/updated', ((namespace: string, next: Config) => {
+  ctx.effect(() => subscribeSettings(ctx, hostSettings, (namespace: string, value: unknown) => {
+    const next = value as MnemonConfig
     if (namespace === memoryPlugins.settingsNamespace) {
       runtime.swap(createRuntimeGraph(effectiveConfig(settings.get()), undefined, extensions))
       return
@@ -84,9 +95,9 @@ export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
     if (candidate !== undefined) prepared.delete(next)
     disposePrepared()
     runtime.swap(candidate?.graph ?? createRuntimeGraph(effectiveConfig(next), undefined, extensions))
-  }) as never)
+  }), 'dsh-mnemon: live runtime settings')
   ctx.effect(() => memoryPlugins.start(), 'dsh-mnemon: plugin graph settings')
-  ctx.settings.register('mnemon-ui', InteractionConfig, {
+  hostSettings.register('mnemon-ui', InteractionConfig, {
     base: resolveInteractionConfig(resolved.conversationInteraction),
     applies: 'live',
   })
@@ -94,7 +105,7 @@ export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
     let disposed = false
     const migrate = (): void => {
       if (disposed) return
-      void migrateLegacyDisplayMode(ctx.settings).catch(error => {
+      void migrateLegacyDisplayMode(hostSettings).catch(error => {
         console.warn('dsh-mnemon: could not persist the builtin displayMode migration', error)
       })
     }
@@ -104,6 +115,19 @@ export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
     migrate()
     return () => { disposed = true; unsubscribe() }
   }, 'dsh-mnemon: canonical displayMode migration')
+  if (hostSettings instanceof ProfileMnemonSettings) {
+    ctx.effect(() => {
+      let disposed = false
+      const loader = ctx.get('loader') as { await?(): Promise<unknown> } | undefined
+      void Promise.resolve(loader?.await?.()).then(async () => {
+        if (disposed) return
+        const catalog = await memoryPlugins.catalog()
+        if (disposed) return
+        await hostSettings.importLegacy(catalog.entries.filter(entry => entry.roles.includes('source')).map(entry => entry.entryId))
+      }).catch(error => { console.warn('dsh-mnemon: could not recover retained legacy settings', error) })
+      return () => { disposed = true }
+    }, 'dsh-mnemon: retained settings migration')
+  }
   const coordinator: MnemonSubagentCoordinator = new MnemonSubagentCoordinator(ctx.subagents, runtime, ctx, () => {
     const taskAgentModel = runtime.config.taskAgentModel
     if (taskAgentModel.mode !== 'fixed') return undefined
@@ -136,10 +160,14 @@ export function apply(rawContext: unknown, config: MnemonConfig = {}): void {
     const managementAuthority = resolved.remoteAccess === 'trusted-host' ? 'trusted-host' : 'loopback'
     const connection = accounts === undefined ? webContext.connection : { rpc: {
       handle: (channel: string, handler: import('./dsh.ts').HostRpcHandler, options: import('./dsh.ts').HostRpcRegistrationOptions) =>
-        webContext.connection!.rpc.handle(channel, accounts.handler(handler, channel), options),
+        webContext.connection!.rpc.handle(channel, (endpoint, payload, signal, caller) => {
+          const principal = caller === undefined ? undefined : webContext.connection!.principalOfPeer === undefined
+            ? caller : webContext.connection!.principalOfPeer(caller)
+          return accounts.handler(handler, channel)(endpoint, payload, signal, principal)
+        }, options),
     } }
     const rpc = registerRpc(connection, runtime, lifecycle, undefined, managementAuthority)
-    const settings = registerSettingsRpc(connection, accounts?.settingsService(principal => runtime.reloadAccount(principal)) ?? ctx.settings, managementAuthority)
+    const settings = registerSettingsRpc(connection, accounts?.settingsService(principal => runtime.reloadAccount(principal)) ?? hostSettings, managementAuthority)
     const view = registerViewRpc(connection, runtime, extensions, memoryPlugins, lifecycle, managementAuthority, pluginInstallation)
     if (Context.is(webContext)) {
       new MnemonRemoteService(webContext, {

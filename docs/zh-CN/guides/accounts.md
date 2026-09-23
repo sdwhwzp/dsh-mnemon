@@ -1,5 +1,7 @@
 # 按登录账号部署 Mnemon
 
+Harness 0.1.7 将账号偏好保存在 Host 管理的 profile 字段 `accountPreferences`，按账号命名空间哈希分开存储。账号界面只读写当前认证账号的偏好；从 `settings.yaml.imported` 恢复旧命名空间时保留 profile 中已明确设置的值。Mnemon 上下文消息在会话日志中保留认证账号身份。
+
 本 fork 的 `accountDataDir` 为每个已登录的 dsh-passwords 账号创建独立记忆目录。Runtime 的 USER/MEMORY、Documents、Native 数据库、索引、修订、备份与记忆偏好都属于该账号。同一账号跨会话使用自己的记忆；两个账号即使使用相同工作区，也不共享记忆。管理员通过这些记忆接口也读取自己的数据。
 
 账号目录使用 `SHA-256("dsh-passwords:" + accountId)`，账号改名不会迁移目录。身份来自 Host 已验证的 RPC principal 或会话的 turn/start 记录；浏览器提交的用户名、用户 id 和路径不决定归属。访问会话或工作区还必须通过现有 principalAccess 授权。删除、封禁或身份记录失效后，新的记忆操作被拒绝；子代理和后台任务继承发起账号，模型用量继续走账号权限与费用检查。
