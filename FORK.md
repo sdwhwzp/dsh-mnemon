@@ -1,9 +1,9 @@
 # dsh-mnemon 账号隔离融合
 
-- 原作者源：`https://github.com/omdsh-dev/dsh-mnemon.git`，`main`，同步基线 `84d469ffa838a36fa579295d94029fcac8ac058e`。
+- 原作者源：`https://github.com/omdsh-dev/dsh-mnemon.git`，`main`，同步基线 `6d79c663262f71c4309cd6db5bd70b204abb143d`。
 - 自有 fork：`https://github.com/sdwhwzp/dsh-mnemon.git`，上传地址 `git@github.com:sdwhwzp/dsh-mnemon.git`。
 - 当前融合分支：`dev`；`main` 跟随源分支。所有临时分支的提交必须可从 `dev` 到达后，才删除本地和自有远端临时分支。
-- 适配版本：`0.5.13-dsh.20260923.1`，17 个 Mnemon 包使用同一版本；配套本地 Harness `0.1.7-alpha.2` 与 `dsh-passwords 2.7.1-dsh.20260915.2`。
+- 适配版本：`0.5.15-dsh.20260926.1`，17 个 Mnemon 包使用同一版本；配套本地 Harness `0.1.7-rc.2` 与 `dsh-passwords 2.7.1-dsh.20260915.2`。
 
 本 fork 保留原作者的三层记忆、工具、工作台与数据格式，增加可选的登录账号隔离，以及可选的共享记忆层：设置 `sharedMemoryDir` 后所有账号共读一个记忆空间，只有 `role=admin` 的账号可写，目录与写权限均由 Host 指派。配置与使用限制见 [账号部署](docs/zh-CN/guides/accounts.md)。未设置 `accountDataDir` 时仍使用原作者的单用户存储规则；未设置 `sharedMemoryDir` 时共享条目自动停用。
 
@@ -11,7 +11,7 @@
 
 Web RPC 依赖 Harness 的 Connection 路由修复：通过 `ctx.get` 解析可选 Web 服务器，避免 Cordis 将属性访问归到未声明该服务的提供者上下文。Headless 不要求 Web 服务。
 
-上游委派结果工具按请求注册接收器并在卸载时释放；计数器仍由账号状态提供。评审工具的发布、取消和归档预检沿用上游流程，账号隔离与共享记忆权限覆盖这些入口。 主包包含账号隔离、会话恢复、归档预检与评审保护；解包大小上限为 1,410,000 字节，Source/Provider 仍单独发包。
+上游委派结果工具按请求注册接收器并在卸载时释放；计数器仍由账号状态提供。评审工具的发布、取消和归档预检沿用上游流程，账号隔离与共享记忆权限覆盖这些入口。 主包包含账号隔离、会话恢复、归档预检与评审保护；解包大小上限为 1,415,000 字节，Source/Provider 仍单独发包。
 
 历史会话档案管理从经授权的已保存会话头解析工作区，不依赖 Agent 已加载到内存。保存与读取沿用账号独立目录；元数据读取失败不回退到其他工作区。
 
@@ -32,7 +32,7 @@ pnpm install --frozen-lockfile
 pnpm_config_verify_deps_before_run=false pnpm run typecheck
 pnpm_config_verify_deps_before_run=false pnpm run build
 pnpm_config_verify_deps_before_run=false pnpm --workspace-concurrency=4 --no-sort -r build
-DSH_SOURCE_VERSION=0.1.7-alpha.2 DSH_SOURCE_ROOT=/absolute/path/to/deepseek-harness pnpm run dsh:link-source
+DSH_SOURCE_VERSION=0.1.7-rc.2 DSH_SOURCE_ROOT=/absolute/path/to/deepseek-harness pnpm run dsh:link-source
 pnpm_config_verify_deps_before_run=false pnpm exec vitest run tests/account-isolation.spec.ts tests/account-host.spec.ts
 pnpm run dsh:restore-registry
 pnpm run verify:docs

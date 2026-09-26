@@ -26,6 +26,8 @@ Test-Path "$env:LOCALAPPDATA\Programs\mnemon\mnemon.exe"
 
 Status shows Mnemon / dsh-mnemon versions, Runtime, Memory Spaces, Documents, and effective directories. `mnemon status` opens the effective Store and may initialize data or run upstream migrations, so it is not a completely side-effect-free probe.
 
+If OpenViking reports `/api/v1/admin/*` access restrictions, configure **User key owner (skip admin)** (`discoveryUser`), the account identifier, endpoint, and user API key in Settings. This verifies access to the selected memory root using the data API; a denied or missing root keeps the previous configuration. It does not prove write permission or change the identity bound to the key. Leave the field empty for admin discovery. See [Provider boundaries and downgrade steps](./memory-providers.md#operational-boundaries).
+
 ## Version checks and updates
 
 **Check versions** on Status opens the version panel:
@@ -271,7 +273,7 @@ Report vulnerabilities privately through [SECURITY.md](../../../SECURITY.md), no
 | Custom directory rejected | Use an absolute path, `~`, or `~/...` |
 | `memoryBodyId is required...` | Active count is not exactly one; select a target explicitly |
 | `memory space is not active for reading` | Activate it in Overview; inactive writes are allowed, reads are not |
-| Provider error | Review needs guarded local child publication; use bounded `spawn` or opt-in `fork`. Active Agent Teams tools pause automatic review; inspect partial-write receipts before retrying |
+| Provider error | Review needs guarded local child publication; use bounded `spawn` or opt-in `fork`. With DSH/Teams 0.1.7-rc.1, opt into `idleReview.agentTeams: scoped`; keep `pause` for older policies. Inspect partial-write receipts before retrying |
 | Runtime replace exceeds capacity | Shorten it or organize first; automatic maintenance handles add overflow only |
 | Document source path rejected | Keep it inside the session workspace and outside managed Documents |
 | CLI timeout | Increase `timeoutMs`; large Stores may need more than 10 seconds for status or graph |

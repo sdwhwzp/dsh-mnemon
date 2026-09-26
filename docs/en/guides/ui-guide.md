@@ -68,6 +68,8 @@ The header summarizes User Profile (`USER.md`) and Working Memory (`MEMORY.md`).
 
 Runtime entries display their creation time, newest first, across both targets and text filters. Editing an older entry keeps its original position. Show more continues in the same order.
 
+The model-facing Runtime snapshot also shows each projected entry's recorded importance and age since creation and last update, in whole days. These annotations are calculated for each new turn; stored text and the editor remain unchanged. Current instructions still take priority. See [projection format and limits](../reference/storage-model.md#source-of-truth-and-projections).
+
 Edit and Remove select the entry's full content within its target. A short entry such as `X` can be changed or removed while `EGO_LINUX_CHROME` remains intact. Identical entries in the same target are still ambiguous and are rejected without changing data.
 
 When Working Memory reaches capacity, the Host archives the exact original entries. If a routing batch fails or returns an invalid proposal, that entire batch uses the eligible default Memory Space (or the first eligible space when no default is available). Earlier valid batches keep their destinations, and the maintenance summary records the fallback reason. Caller cancellation still stops the operation.
@@ -75,6 +77,8 @@ When Working Memory reaches capacity, the Host archives the exact original entri
 Spaces created by the current conversation View, or known spaces activated during that turn, can receive the archive once active and supported. Spaces created elsewhere after the turn began require a new turn. A destination failure explains the directory or scope restriction and leaves existing Runtime entries intact; the pending add has not been saved, so retry its original input after correcting the cause.
 
 Runtime items should be compact, independent, and repeatedly useful. Working Memory items can carry an optional branch scope (comma-separated git branch names in the add and edit forms): scoped items show a branch badge and are projected into the model context only while the session workspace is checked out on a listed branch; leaving the field empty keeps an item visible on every branch. The scope never affects this page or the on-disk `USER.md`/`MEMORY.md` projections. Identity, preferences, and explicit collaboration rules belong in User Profile. Project facts, environment, decisions, and tool lessons belong in Working Memory. Temporary progress and raw logs do not.
+
+When the agent uses `mnemon_runtime_memory` for User Profile (`target=user`), `branches` may be omitted or supplied as `[]`. Non-empty branch scopes remain invalid for User Profile. For Working Memory, replacing an entry with `branches: []` clears its scope; omitting the field preserves it.
 
 ## 3. Documents: preserve complete project narratives
 
@@ -181,6 +185,7 @@ Settings centralizes stable user choices and reusable **service configuration**:
 - Memory enhancements provide three shipped switches—Active capture, Light context, and Scoped composition—disabled by default and applied immediately to future turns;
 - every external Provider has its own switch and is off by default;
 - endpoint, API Key, and Provider-specific fields appear only after enabling;
+- OpenViking's optional **User key owner (skip admin)** field selects one user namespace for keys without Admin API access; fill the account and user key as well. A rejected data-plane check leaves the previous service configuration unchanged. [Setup and limits](./memory-providers.md#operational-boundaries);
 - API Keys use a conventional password field whose eye button toggles visible/hidden; there is no clear-credential checkbox, dedicated Remove row, or saved-secret caption;
 - the three enhancement switches apply immediately; the footer Save action persists all other changes without waiting for discovery or recall. Health belongs on Status and instances belong on Overview;
 - global / workspace / custom tags show effective scope; Providers with the same scope semantics reuse Mnemon's configuration framework.
@@ -231,6 +236,34 @@ You may inspect project B while staying in project A's conversation. The convers
 
 Remote Provider workspaces, users, banks, projects, containers, and URIs are independent namespaces and never change implicitly with the DSH workspace. `global` and `custom` resolve to one explicit root and need no inspection/execution alignment.
 
+<a id="theme-skin-overrides"></a>
+
+## Theme and skin overrides
+
+Skin authors can start with [Skin development and Mnemon integration](../development/skin-integration.md) for a dsh-web example, migration from generated classes and real WebUI verification. This section defines the supported surface contract.
+
+Sidebar and Builtin expose the same supported workspace root selector: `[data-dsh-plugin="dsh-mnemon"][data-dsh-part="mnemon-view"]`. Theme authors can set these supported custom properties directly on that element; assignments on an ancestor are shadowed by the workspace defaults. Generated CSS-module class names are not public selectors.
+
+| Property | Accepted value and purpose | Default |
+|---|---|---|
+| `--mn-bg` | CSS color for the base surface | `var(--dsw-alias-bg-base)` |
+| `--mn-backdrop` | CSS color behind the base in the default layered surface | `var(--dsw-alias-bg-overlay, var(--mn-bg))` |
+| `--mn-surface` | CSS `background` value consumed by the workspace, header and canvas | Base gradient over backdrop gradient, backed by the base color |
+
+The default surface remains `linear-gradient(var(--mn-bg), var(--mn-bg)), linear-gradient(var(--mn-backdrop), var(--mn-backdrop)) var(--mn-bg)`. Its layered backing preserves readability when a skin makes the host base transparent; the official theme stays opaque. A skin can explicitly replace that composition, for example:
+
+```css
+[data-dsh-plugin="dsh-mnemon"][data-dsh-part="mnemon-view"] {
+  --mn-bg: rgb(232 241 249 / 74%);
+  --mn-backdrop: var(--mn-bg);
+  --mn-surface: var(--mn-bg);
+}
+```
+
+Use the paired selector in an unlayered stylesheet as shown. Its specificity `(0,2,0)` exceeds the default custom-property declarations `(0,1,0)`, so the override works whether the skin stylesheet loads before or after Mnemon. A lone `[data-dsh-part="mnemon-view"]` ties the defaults and depends on stylesheet order; a normal declaration inside `@layer` ranks below the unlayered defaults. Add your skin's own ancestor selector when it needs an activation scope.
+
+These properties inherit into workspace descendants that consume them. Body-portaled dialogs and other plugins' roots are outside this selector's scope. Replacing `--mn-surface` chooses the skin's own readability and transparency; it does not change settings, memory data, or Provider behavior.
+
 ## Common rules
 
 - Solid blue means primary action; blue outline usually means Edit; red is reserved for Delete, Disconnect, Archive, or Forget; neutral actions are View, Copy, and Cancel.
@@ -243,4 +276,4 @@ Next: [Capability map](./capabilities.md) · [Getting Started](./getting-started
 
 ## Idle review controls
 
-Settings includes **Idle review**: enable it independently, choose bounded spawn or full-context fork, and set the interval, attempt cap, checkpoint size and output budget. Changes respect the existing Host settings grant; read-only clients cannot save them. The Memory System shows an Agent Teams compatibility pause or partial-write receipts after failure. Refresh status to read current state. See [configuration](../reference/configuration.md#provider-requirements) for retention and restart limits.
+Settings includes **Idle review**: enable it independently, choose bounded spawn or full-context fork, and set the interval, attempt cap, checkpoint size and output budget. Changes respect the existing Host settings grant; read-only clients cannot save them. Agent Teams compatibility defaults to **Pause review**. With DSH and official Teams 0.1.7-rc.1, select **Scoped child review** to keep both features enabled with the same mandatory tool restrictions. The Memory System shows the configured Team pause or partial-write receipts after failure. Refresh status to read current state. See [configuration](../reference/configuration.md#provider-requirements) for retention and restart limits.

@@ -40,23 +40,11 @@ const relativeReadmeImages = readmeFiles.flatMap((path) => {
     .map(source => `${path}: ${source}`)
 })
 
-// Core/Host and the shared page kit only; Source/Provider implementations must
-// ship in their own artifacts. Keep a bounded budget, not the old monolith size.
-// Includes the bounded legacy Session copy-repair executable and its bilingual
-// recovery instructions; Source implementations remain independent artifacts.
-// Runtime archive preflight and compensation add bounded Host recovery code.
-// The review publication/guard helper adds about 4 KB of Host-only code.
-// Audited legacy repair, including recorded-ID chain proofs, stays in the
-// maintenance executable. Its measured growth is ~24 KB over the null-name
-// repair baseline; retain ~2.2 KB for the separately verified Host grant fix.
-// No Source implementation enters the Starter.
-// Bounded idle review adds Host checkpoint/receipt handling, budgets and the
-// bilingual settings/status UI: measured 1,335,573 bytes (+19,717), with no
-// Source implementation included. Retain less than 3 KB of headroom.
-// This fork adds account isolation and its scoped review guards on top, so the
-// budget carries both. Measured at 0.5.11-dsh.20260918.1: 1_368_163 unpacked
-// bytes; the ceiling keeps roughly 3% of headroom over that.
-const maximumUnpackedBytes = 1_410_000
+// The Starter ships Core/Host, the shared page kit and the legacy Session
+// copy-repair executable; Source/Provider implementations remain separate.
+// Version 0.5.15 with account isolation measures 1,410,951 unpacked bytes.
+// Allow less than 5 KB for metadata while retaining a bounded artifact budget.
+const maximumUnpackedBytes = 1_415_000
 
 if (missing.length > 0 || unexpected.length > 0 || hostLeaks.length > 0 || relativeReadmeImages.length > 0 || pack.unpackedSize > maximumUnpackedBytes) {
   if (missing.length > 0) console.error(`Missing package files:\n${missing.map(path => `- ${path}`).join('\n')}`)

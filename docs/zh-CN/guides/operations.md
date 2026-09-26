@@ -26,6 +26,8 @@ Test-Path "$env:LOCALAPPDATA\Programs\mnemon\mnemon.exe"
 
 状态页显示 Mnemon / dsh-mnemon 版本、Runtime、Memory Spaces、Documents 和当前实际目录。`mnemon status` 会打开有效 Store，上游 CLI 可能初始化数据或执行迁移，因此不是完全无副作用的只读探测。
 
+如果 OpenViking 提示 `/api/v1/admin/*` access restrictions，在设置中填写 **User Key 所属用户（跳过 Admin）**（`discoveryUser`）、账号标识、服务地址与 user API key。这会用数据 API 验证所选记忆根；根目录被拒绝或不存在时保留原配置。此校验不证明写入权限，也不改变 key 绑定的身份。留空仍使用 admin 发现。参见 [Provider 边界与降级步骤](./memory-providers.md#运维边界)。
+
 ## 版本检查与更新
 
 状态页的“检查版本”打开“检查与更新版本”面板：
@@ -271,7 +273,7 @@ HTTP 403 可能来自 Host/Origin 不匹配，或旧远程 Client 仍调用独�
 | 自定义目录被拒绝 | 使用绝对路径、`~` 或 `~/...` |
 | `memoryBodyId is required...` | active 数量不是恰好 1；显式选择目标 |
 | `memory space is not active for reading` | 在概览激活目标；写入 inactive 可以，读取不行 |
-| Provider 错误 | 审查需要受 guard 保护的本地子 Agent；默认有界 `spawn`，可选择 `fork`。Agent Teams 工具在役时暂停自动审查；重试前核对部分写入回执 |
+| Provider 错误 | 审查需要受 guard 保护的本地子 Agent；默认有界 `spawn`，可选择 `fork`。DSH/Teams 0.1.7-rc.1 可选择 `idleReview.agentTeams: scoped`，旧版策略保留 `pause`；重试前核对部分写入回执 |
 | Runtime replace 超容量 | 缩短 replacement 或先显式整理；自动维护只处理 add 溢出 |
 | Document source path 被拒绝 | 路径必须在会话工作区内，且不能引用受管 Documents 目录 |
 | CLI timeout | 增大 `timeoutMs`；大 Store 的状态与图谱可能超过 10 秒 |

@@ -14,6 +14,8 @@ The default is commonly `~/.dsh/settings.yaml`. All current settings are marked 
 
 The Web settings page edits `storageScope`, the independent `runtimeUserScope`, `dataDir`, Mnemon Native's Ollama embedding override, one master switch for each of the three memory Sources, the background task Agent model route, and the Turn memory and Save-to-memory switches under `mnemon-ui`. The scope selector applies to the complete memory system. Centralized workspaces exposes its optional root beside that selector; the USER.md profile may explicitly remain global while project memory follows the selected scope. Mnemon Native owns its Custom data location, embedding runtime, and ZIP backup/migration controls. Each external provider has a collapsible service configuration for reusable endpoints, credentials, or executables. Enabling or saving it discovers the provider's existing namespaces and maps them into Memory Spaces → Overview; disabling it removes those local mappings without deleting provider data. Other advanced settings must be changed directly in YAML.
 
+OpenViking user keys without admin access can opt into one-owner discovery using the service field `discoveryUser` together with `endpoint`, `apiKey`, and `account`. Leave it empty to retain admin enumeration. These service fields stay in the Memory Spaces provider registry; they are not new top-level Mnemon YAML settings. See [OpenViking setup and compatibility](../guides/memory-providers.md#operational-boundaries).
+
 ## Complete Example
 
 ```yaml
@@ -54,6 +56,7 @@ mnemon:
     enabled: true
     provider: spawn
     fallback: spawn
+    agentTeams: pause # pause | scoped
     minIntervalMs: 300000
     maxPerSession: 20
     maxContextChars: 24000
@@ -97,6 +100,7 @@ mnemon:
 | `idleReview.enabled` | `true` | boolean | Independent automatic-review switch |
 | `idleReview.provider` | `spawn` | `spawn` / `fork` | Bounded checkpoint or inherited parent context |
 | `idleReview.fallback` | `spawn` | `spawn` / `skip` | Missing/incompatible fork handling before startup only |
+| `idleReview.agentTeams` | `pause` | `pause` / `scoped` | Pause for older Team policies or explicitly allow guarded review; verified with DSH/Teams 0.1.7-rc.1 |
 | `idleReview.minIntervalMs` | `300000` | 5000–86400000 ms | Minimum interval between attempts |
 | `idleReview.maxPerSession` | `20` | 0–200 | Attempt cap per loaded parent Agent; includes failures/cancellations |
 | `idleReview.maxContextChars` | `24000` | 1000–1000000 | Spawn checkpoint character limit |
@@ -124,6 +128,8 @@ mnemon:
 ```
 
 The defaults preserve the released 10240 / 4096 / 8192 behavior. Saving the block builds a new runtime generation, so subsequent Runtime reads, writes, capacity maintenance, and Mnemon Pack validation use the same limits. Existing entries and the `memories.json` format are unchanged. Lowering a byte limit below current usage does not delete data; the Runtime view reports the over-capacity state and further writes require compaction or a higher limit. Rollback only requires removing the block or restoring the defaults.
+
+Storage byte limits count entry content and delimiters. The model snapshot's importance and age annotations do not consume storage capacity; they do consume the Strategy's existing projection character budget. They add no ranking, relevance filter or separate configuration.
 
 These separate Light captures show the same 20 imported Runtime entries under v0.5.4. The first uses default USER 4 KB / MEMORY 10 KB limits; the second shows the saved USER 10 KB / MEMORY 20 KB configuration. Both filter the list to the two User Profile entries. The disposable environment was restored to its defaults after capture.
 
@@ -323,7 +329,11 @@ Review requires local child publication, `agents.isOwnedBy`, and `agent.ctx.tool
 
 `idleReviewMs` remains the continuous-idle debounce. A separate `minIntervalMs` spaces attempts, including failures and cancellations. `maxPerSession` caps attempts for the loaded parent Agent, including across context clear/compact notifications; zero suspends review. Restarting the Host or unloading/reopening the Agent starts a new in-memory budget. Completed runs are disposed through DSH's public API. Persisted session history is retained: the published Host provides no plugin-scoped archive/TTL contract, and Mnemon never deletes session files or other plugins' agents.
 
-**Known composition limitation:** the published DSH 0.1.5-rc.2 with experimental Agent Teams 0.1.5-alpha.2 tools installs a Team policy before either fork or spawn publishes its descriptor. Both providers can then fail with `TEAM_NOT_MEMBER`. Mnemon checks the public `agentTeams` service and scoped `spawn_teammate` capability and pauses automatic review before creating a child. The workspace explains the pause. TeamService alone does not trigger it; after Team tools are removed, the next eligible completed turn can schedule review. This does not change recall, writeback, or manual-operation settings and does not repair upstream manual delegation.
+**Agent Teams compatibility:** `idleReview.agentTeams: pause` remains the default for existing profiles. It pauses before child creation when both the public `agentTeams` service and parent-scoped `spawn_teammate` tool are present. DSH 0.1.5-rc.2 with Teams 0.1.5-alpha.2 has a dynamic child policy that can fail with `TEAM_NOT_MEMBER`. TeamService alone does not pause review.
+
+With DSH and all official Agent Teams components at **0.1.7-rc.1**, select **Scoped child review** under Settings → Idle review, or set `idleReview.agentTeams: scoped`. That published Team policy supports both bounded spawn and explicit fork. The opt-in retains parent ownership checks, local child publication, `maxDepth: 1`, and the monotonic review-tool allowlist, including Code Mode dispatch. Team tools and further delegation stay denied to the reviewer; the parent keeps Teams. No package-version guess or other plugin policy removal is used. Missing guard/ownership support or a policy error fails the run without fallback replay. Use `pause` on older unverified combinations, or `idleReview.enabled: false` to disable only review while keeping Teams, recall and explicit writes.
+
+Bounded spawn reads live-user evidence from the public flat `user/message` event payload. It includes only whole visible messages before the completed checkpoint; injected recall, summaries and messages without a live-user source are not promoted to user assertions. This preserves explicit decisions and no-write instructions within the configured character budget.
 
 Failed reviews remain failures. The workspace shows the child run id and committed mutation receipt metadata when writes happened before failure, including a committed inner tool followed by a failed Code Mode wrapper. No rollback or automatic replay occurs. Inspect the run and the listed document ids or Runtime revisions before any manual retry. A later review still respects the cooldown and session budget. To disable only this maintenance pass, set `idleReview.enabled: false` in Settings or configuration.
 
@@ -369,7 +379,7 @@ routingGuidance=false
 
 ## Entry Placement: `displayMode` and `tabEnabled`
 
-Memory System defaults to Sidebar, opening a dedicated center-column workbench with a minimal, logo-free skin aligned with official DSH panels. Set `displayMode: builtin`, or select Builtin in Settings, to put that same workspace in the current conversation's `conversation.view` tab instead. Pages, navigation, dialogs, and styling remain shared; there is no separate builtin UI.
+Memory System defaults to Sidebar, opening a dedicated center-column workbench with a minimal, logo-free skin aligned with official DSH panels. Set `displayMode: builtin`, or select Builtin in Settings, to put that same workspace in the current conversation's `conversation.view` tab instead. Pages, navigation, dialogs, and styling remain shared; there is no separate builtin UI. Theme authors can use the [supported surface selectors and custom properties](../guides/ui-guide.md#theme-skin-overrides) in either placement.
 
 The sidebar entry is an explicit navigation action: clicking it again keeps the workspace open; use “Back to conversation” to close it. Switching to the task board or SSH synchronizes both visibility and entry state, so a missed peer activation notification cannot prevent reopening Memory System.
 
