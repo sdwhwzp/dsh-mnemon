@@ -1430,7 +1430,7 @@ describe('MnemonWorkbench', () => {
     expect(document.activeElement).toBe(eye)
   })
 
-  it.each([1280, 700])('shares Status page insets and scroll ownership across Source pages at %ipx', async width => {
+  it.each([1280, 700, 390])('shares Status page insets and scroll ownership across Source pages at %ipx', async width => {
     const disposeStyles = installClientFrameStyles(width)
     try {
       const { connection } = createConnection()

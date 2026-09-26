@@ -310,7 +310,7 @@
 .storageUnavailable { display: grid; min-height: 126px; place-content: center; gap: 5px; margin-top: 12px; border: 1px dashed var(--mn-line); border-radius: 9px; color: var(--mn-muted); text-align: center; }
 .storageUnavailable strong { font-size: 12px; }
 .storageUnavailable p { max-width: 520px; margin: 0; color: var(--mn-faint); font-size: 10px; }
-.storageFootnote { margin: 11px 0 0; color: var(--mn-faint); font-size: 9px; line-height: 1.5; }
+.storageFootnote { margin: 11px 0 0; color: var(--mn-faint); font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }
 .statusSectionHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .statusSectionHeader h3 { margin: 4px 0 0; font-size: 15px; }
 .statusSectionHeader p { max-width: 590px; margin: 5px 0 0; color: var(--mn-muted); font-size: 10px; }
