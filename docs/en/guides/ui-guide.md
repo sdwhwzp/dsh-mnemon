@@ -14,13 +14,15 @@ Older media remain available with their original version labels in [historical e
 
 ## Interaction model
 
-The Memory System sidebar entry always opens its workspace, including after visiting Task Board or SSH. Clicking it again keeps the current page open; use Back to conversation to close it.
+The Memory System sidebar entry uses the same native DSH row as Plugins, including its skin, selected state and collapsed icon. Selecting Plugins, another native panel or New Session leaves the memory workspace; Back to conversation and Escape return to the current conversation. Clicking Memory System again keeps its current page open, and returning after Task Board or SSH restores it.
 
 With `displayMode: builtin`, open Memory System from the conversation's tabs instead; the Sidebar entry is absent. The header omits storage-mode and workspace-selection controls because the Host uses the owning session's global, workspace, centralized workspaces or custom scope. All Source pages and dialogs below are shared, and conversation shortcuts open the matching tab. See [scope mapping](../reference/configuration.md#entry-placement-displaymode-and-tabenabled).
 
 While Memory System is displayed in Builtin, its owning conversation's width resize handles are hidden. The resident composer remains usable; switching to Chat or another view restores normal width dragging. This applies only to the owning conversation, including when other plugins render adjacent or nested conversations.
 
 Primary pages remain **Status, Runtime, Documents, Memory Spaces**. Memory Spaces adds **Overview, Recall, Content, Entities**, with **Remember** and **Distillation strategy** at the top right. A generated View is an internal per-turn runtime artifact, not a navigation page; Status does not own plugin discovery or installation.
+
+All four pages use the same content inset and one page scroll area. Their primary headers remain visible while scrolling; Memory Spaces keeps its title, actions and internal tabs together. Changing a primary page or a Memory Spaces tab starts at the top without moving the conversation or other plugin panels. Opening related memories reveals their heading and close button below the fixed header. Document readers, related-memory readers and dialogs retain their own bounded scrolling.
 
 | Visible action | What happens after the click | Independent task Agent? |
 |---|---|---|

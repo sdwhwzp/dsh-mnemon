@@ -33,6 +33,22 @@ Desktop 可能删除插件 generation 内的私有 `@deepseek-ai/*` 包，改用
 
 参见[原版 Desktop 复现与验收记录](../../pr-assets/issue-274-profile-generation/README.zh-CN.md)。
 
+## DSH 0.1.7 bundle 组件列表
+
+DSH `0.1.7-rc.2` 的“插件 → dsh-mnemon”详情页会把 `cordis:group` / `mnemon-bundle` 内部容器列为“已关闭”的组件。即使 8 个实际组件全部运行，计数也可能显示“共 9 个 · 8 运行中 · 1 已停用”。点击容器开关会返回 `unknown-plugin`，中文界面提示“组件启用失败：找不到该插件”。参见[原始截图](../../pr-assets/sidebar-native-20260926/before-bundle-toggle-error.jpg)与[上游问题 #649](https://github.com/dsh-external/issues/issues/649)。
+
+这是宿主的展示与管理清单不一致：bundle 声明列表包含原生 group，但可管理插件清单明确排除了 group。该行的“已关闭”不代表 Mnemon 核心或其子插件已停用，也不能据此判断记忆读写是否正常。
+
+遇到这一现象时：
+
+1. 查看“记忆系统 → 状态”以及实际 Source、Strategy 组件的状态。如果只有内部容器误显示关闭，而所需组件和读写正常，可以继续使用；实际组件报错或读写失败仍需单独排查。
+2. 停用或恢复整套组合时，使用顶层 `dsh-mnemon` bundle 开关，或对应 `mnemon` 条目的核心组件开关；不要使用 `cordis:group` 行的开关。
+3. 保留已有配置和记忆。此显示问题不需要重置数据，也不需要迁移配置或记忆。
+
+Starter 保留稳定的 group ID 和已有 `mnemon` 配置目标。停用核心会停止其 Source、Strategy 和私有 Provider 子项；重新启用后，各组件恢复各自的独立选择。移除 group 会让仍启用的依赖项等待缺失的核心；将 group 改为匿名条目则可能在 profile 重载后留下旧实例。不要通过删除容器、稳定 ID 或修改分组声明来隐藏这一行。[正式宿主生命周期回归](../development/README.md#测试归属与覆盖)在不修改已安装宿主的前提下，验证管理器持久化、重启及旧版字面值／表达式停用标志。
+
+已在独立环境验证的[上游候选补丁](../../pr-assets/sidebar-native-20260926/upstream-fix.patch)会过滤容器展示并保留实际子插件；它未包含在正式 DSH `0.1.7-rc.2` 或 Mnemon `v0.5.16` 中。本地管理适配器方案需要接管 DSH 全局插件管理服务，把它内置于 Mnemon 会影响 Mnemon 的独立停用，因此未随插件提供。修复进展以 [#649](https://github.com/dsh-external/issues/issues/649) 及后续 DSH 发布说明为准；候选环境的截图不代表正式宿主已修复。
+
 ## DSH 0.1.7 设置恢复
 
 DSH `0.1.7-alpha.1` 用基于 Config 的表单替代了 `settings.register()` 和 `settings-file`。Mnemon 提供动态 Config 字段，现有界面操作通过宿主检查 revision 的 profile 写入器持久化；修改传输权限仍需正常重载插件。DSH `0.1.5-rc.2` 和 `0.1.6-alpha.2` 继续沿用原设置路径。

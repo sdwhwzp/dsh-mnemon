@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import type { MnemonClientContext } from './dsh-context.ts'
 import type { MnemonTranslate } from './locales.ts'
 import type { MnemonBetterSidebarSeat, MnemonWorkspaceScope } from './better-sidebar-seat.ts'
+import { MEMORY_ICON_PATHS } from './memory-icon.ts'
 import css from './MnemonWorkspace.module.css'
 
 /** Stable type id exposed to Better Sidebar and its persisted tab state. */
@@ -30,9 +31,8 @@ interface BetterSidebarMemoryTabProps extends BetterSidebarTabProps {
 }
 
 function MnemonTabIcon({ size }: { size: number }): JSX.Element {
-  return <svg aria-hidden="true" viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <ellipse cx="8" cy="3.5" rx="5" ry="2" />
-    <path d="M3 3.5v4c0 1.1 2.2 2 5 2s5-.9 5-2v-4M3 7.5v4c0 1.1 2.2 2 5 2s5-.9 5-2v-4" />
+  return <svg aria-hidden="true" viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+    {MEMORY_ICON_PATHS.map(path => <path key={path} d={path} />)}
   </svg>
 }
 

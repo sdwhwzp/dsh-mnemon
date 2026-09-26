@@ -12,6 +12,12 @@ For new evaluations, commit the reusable harness, workload generator, concise bi
 
 | Record / 记录 | Scope / 范围 |
 |---|---|
+| [Memory System brain icon](./sidebar-brain-icon-20260927/README.md) / [中文](./sidebar-brain-icon-20260927/README.zh-CN.md) | Shared thin brain outline, native navigation and retained composable naming / 共用细线大脑轮廓、原生导航与可组合记忆命名保留 |
+| [Sidebar icon weight](./sidebar-icon-weight-20260927/README.md) / [中文](./sidebar-icon-weight-20260927/README.zh-CN.md) | Native icon stroke alignment, expanded/collapsed comparison and navigation / 原生图标线宽对齐、展开/折叠对比与导航验证 |
+| [Composable memory naming](./composable-naming-20260927/README.md) / [中文](./composable-naming-20260927/README.zh-CN.md) | Packed Chinese/English metadata and real plugin-page display / 制品中英文元数据与真实插件页面展示 |
+| [v0.5.16 release](./release-v0.5.16/README.md) / [中文](./release-v0.5.16/README.zh-CN.md) | Real Flash, versioned seventeen-package composition, Native CLI, archival and cold-restart persistence / 真实 Flash、十七个版本化包组合、Native CLI、归档与冷重启数据保留 |
+| [Chinese plugin metadata — PR #286](./pr-286-plugin-metadata/README.md) / [中文](./pr-286-plugin-metadata/README.zh-CN.md) | Packed locale validation, real DSH metadata reader and Chinese/English plugin display / 打包 locale 验证、真实 DSH 元数据读取与中英文插件展示 |
+| [Native Sidebar and bundle diagnostic](./sidebar-native-20260926/README.md) / [中文](./sidebar-native-20260926/README.zh-CN.md) | Native panel alignment, real skins, CLI/WebUI and isolated group-list candidate / 原生导航对齐、真实皮肤、CLI/WebUI 与隔离的分组清单候选补丁 |
 | [v0.5.15 release](./release-v0.5.15/README.md) / [中文](./release-v0.5.15/README.zh-CN.md) | Versioned composition, actual USER tool write, model projection metadata and reload persistence / 版本化组合、真实 USER 工具写入、模型投影元数据与刷新保留 |
 | [USER empty branches — issue #281](./issue-281-user-branches/README.md) / [中文](./issue-281-user-branches/README.zh-CN.md) | Published rc.2 WebUI before/after, strict scope boundaries, CLI and three-tier workflows / 正式 rc.2 WebUI 前后对比、严格范围边界、CLI 与三层基础流程 |
 | [v0.5.14 release](./release-v0.5.14/README.md) / [中文](./release-v0.5.14/README.zh-CN.md) | Versioned artifacts, real CLI, packed WebUI Runtime edits and cold-restart settings / 版本化制品、真实 CLI、制品 WebUI Runtime 编辑与冷启动设置 |

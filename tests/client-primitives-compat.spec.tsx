@@ -21,14 +21,20 @@ afterEach(() => {
 describe('host UI icon compatibility', () => {
   it.each(['size', 'weight'] as const)('renders the overlay and save action with %s-named DSH icons', async generation => {
     const actual = await vi.importActual<typeof import('@deepseek-ai/dsh-client-ui-primitives')>('@deepseek-ai/dsh-client-ui-primitives')
+    const icons = actual as typeof actual & {
+      IconChevronLeftOutlineRegular?: typeof actual.IconChevronLeftOutline14
+      IconDataOutlineRegular?: typeof actual.IconDataOutline16
+    }
+    const ChevronLeft = icons.IconChevronLeftOutline14 ?? icons.IconChevronLeftOutlineRegular
+    const Data = icons.IconDataOutline16 ?? icons.IconDataOutlineRegular
     // 0.1.7-alpha.1 removed the size-suffixed exports. Preserve the other
     // real primitives while exposing exactly one generation of icon names.
     vi.doMock('@deepseek-ai/dsh-client-ui-primitives', () => ({
       ...actual,
-      IconChevronLeftOutline14: generation === 'size' ? actual.IconChevronLeftOutline14 : undefined,
-      IconDataOutline16: generation === 'size' ? actual.IconDataOutline16 : undefined,
-      IconChevronLeftOutlineRegular: generation === 'weight' ? actual.IconChevronLeftOutline14 : undefined,
-      IconDataOutlineRegular: generation === 'weight' ? actual.IconDataOutline16 : undefined,
+      IconChevronLeftOutline14: generation === 'size' ? ChevronLeft : undefined,
+      IconDataOutline16: generation === 'size' ? Data : undefined,
+      IconChevronLeftOutlineRegular: generation === 'weight' ? ChevronLeft : undefined,
+      IconDataOutlineRegular: generation === 'weight' ? Data : undefined,
     }))
     const { MnemonWorkbench } = await import('../src/client/MnemonWorkbench.tsx')
     const { MnemonSaveAction } = await import('../src/client/MnemonSaveAction.tsx')
@@ -49,7 +55,7 @@ describe('host UI icon compatibility', () => {
     expect(back.querySelector('svg')?.getAttribute('width')).toBe('14')
     fireEvent.click(back)
     expect(close).toHaveBeenCalledOnce()
-    expect(sdk.IconChevronLeftOutline14).toBe(actual.IconChevronLeftOutline14)
+    expect(sdk.IconChevronLeftOutline14).toBe(ChevronLeft)
 
     const save = screen.getByRole('button', { name: 'saveAction.button' })
     expect(save.querySelector('svg')?.getAttribute('width')).toBe('16')

@@ -20,11 +20,12 @@ describe('default Source presentation migration', () => {
     const filename = kind === 'page' ? 'src/client/MnemonView.module.css' : 'src/client/MnemonSidebarView.module.css'
     const files = [filename, ...sources.map(source => `plugins/dsh-mnemon-source-${source}/presentation/${kind}.module.css`)]
     // Rules include their container/media conditions. Browser checks cover cascade and layout.
-    const expected = { ...baseline[kind], ...baseline.memorySpaceTerminology[kind], ...baseline.centralizedWorkspaces[kind], ...baseline.builtinWidthHandles[kind] }
+    const expected = { ...baseline[kind], ...baseline.memorySpaceTerminology[kind], ...baseline.centralizedWorkspaces[kind], ...baseline.builtinWidthHandles[kind], ...baseline.sourcePageFrames[kind] }
     expect(presentationFingerprint(files.map(path => ({ filename: presentationNamespace(path), text: read(path) })))).toEqual(expected)
   })
 
   it('preserves bilingual memory space terminology while Sources own their copy', () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(zh).sort())
     expect(copyFingerprint(zh)).toEqual(baseline.openVikingUserDiscoveryAndScopedReview.zh)
     expect(copyFingerprint(en)).toEqual(baseline.openVikingUserDiscoveryAndScopedReview.en)
     for (const source of sources) {

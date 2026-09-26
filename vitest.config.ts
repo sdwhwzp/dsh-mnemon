@@ -1,8 +1,13 @@
 import { configDefaults, defineConfig } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { clientCssPlugin } from './tsdown.config.ts'
 
 export default defineConfig({
+  // Source-linked compatibility tests intentionally load a second checkout.
+  ...(process.env.DSH_SOURCE_ROOT ? { server: { fs: { allow: [
+    fileURLToPath(new URL('.', import.meta.url)), resolve(process.env.DSH_SOURCE_ROOT),
+  ] } } } : {}),
   // Compile the real class maps; JSDOM does not implement the browser CSS layout engine.
   plugins: [{ ...clientCssPlugin(false), enforce: 'pre' } as never],
   resolve: {

@@ -1,6 +1,7 @@
 import type { MnemonTranslate } from './locales.ts'
 import css from './MnemonWorkspace.module.css'
 import type { MnemonWorkspaceController } from './workspace-controller.ts'
+import { MEMORY_ICON_PATHS } from './memory-icon.ts'
 
 export const MNEMON_ENTRY_SELECTOR = '[data-dsh-mnemon-entry]'
 
@@ -30,18 +31,15 @@ function createIcon(): SVGSVGElement {
   icon.setAttribute('height', '18')
   icon.setAttribute('fill', 'none')
   icon.setAttribute('stroke', 'currentColor')
-  icon.setAttribute('stroke-width', '1.5')
+  icon.setAttribute('stroke-width', '1')
   icon.setAttribute('stroke-linecap', 'round')
   icon.setAttribute('stroke-linejoin', 'round')
   icon.setAttribute('aria-hidden', 'true')
-  const ellipse = document.createElementNS(namespace, 'ellipse')
-  ellipse.setAttribute('cx', '8')
-  ellipse.setAttribute('cy', '3.5')
-  ellipse.setAttribute('rx', '5')
-  ellipse.setAttribute('ry', '2')
-  const path = document.createElementNS(namespace, 'path')
-  path.setAttribute('d', 'M3 3.5v4c0 1.1 2.2 2 5 2s5-.9 5-2v-4M3 7.5v4c0 1.1 2.2 2 5 2s5-.9 5-2v-4')
-  icon.append(ellipse, path)
+  for (const data of MEMORY_ICON_PATHS) {
+    const path = document.createElementNS(namespace, 'path')
+    path.setAttribute('d', data)
+    icon.append(path)
+  }
   return icon
 }
 
