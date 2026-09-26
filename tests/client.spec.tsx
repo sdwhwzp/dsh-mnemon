@@ -745,6 +745,7 @@ describe('MnemonWorkbench', () => {
     if (surface === 'sidebar') {
       const back = within(sidebarHeader).getByRole('button', { name: '返回会话' })
       expect(sidebarHeader.firstElementChild).toBe(back)
+      expect(back.hasAttribute('data-dsh-center-view-back')).toBe(true)
       fireEvent.click(back)
       expect(onClose).toHaveBeenCalledTimes(1)
     } else {

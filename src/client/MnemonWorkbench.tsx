@@ -593,7 +593,7 @@ function MnemonWorkspace({ connection, settingsScope, sessionId, workspaceId, wo
   return (
     <main className={appearanceClass(css.shell, sidebarCss.shell)} data-dsh-plugin="dsh-mnemon" data-dsh-part="mnemon-view" data-mnemon-surface={surface}>
       <header className={appearanceClass(css.masthead, sidebarCss.masthead)}>
-        {onClose !== undefined && <button type="button" className={appearanceClass(css.ghostButton, css.backButton)} onClick={onClose} aria-label={t('header.backToConversation')}><IconChevronLeftOutline14 size={14} /><span>{t('header.backToConversation')}</span></button>}
+        {onClose !== undefined && <button type="button" className={appearanceClass(css.ghostButton, css.backButton)} data-dsh-center-view-back="" onClick={onClose} aria-label={t('header.backToConversation')}><IconChevronLeftOutline14 size={14} /><span>{t('header.backToConversation')}</span></button>}
         <div className={appearanceClass(css.brand, sidebarCss.brand)}>
           <h1>{t('tab.label')}</h1>
           {surface === 'sidebar' && <>
