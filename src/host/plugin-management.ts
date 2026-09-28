@@ -26,12 +26,12 @@ import {
   MNEMON_VIEW_SETTINGS_NAMESPACE,
   type MemoryPluginEntryView,
   type MemoryPluginPreference,
+  type MemoryPluginSavedPreference,
   type MemoryViewConfigurationRequest,
   type MemoryViewPreferences,
 } from './view-protocol.ts'
 import { inspectMemoryView } from './view-presentation.ts'
 import { schema, legacySchema, preferences, legacyPreferences, type LegacySourcePreferences } from './view-preferences.ts'
-import { subscribeSettings } from './settings-service.ts'
 
 /** Deliberately excludes Loader.write(): generated or package YAML is never edited. */
 export interface MemoryPluginLoaderEntry {
@@ -53,6 +53,16 @@ export interface MemoryPluginLoader {
 interface MemoryPluginModule {
   memoryPlugin?: MemoryPluginDescriptor
   memoryStrategyConfiguration?: MemoryStrategyConfiguration
+}
+
+/** DSH's official plugin manager; it owns enablement in the profile patch. */
+interface HostPluginManager {
+  setPluginEnabled(entryId: string, enabled: boolean): Promise<{ application: string; error?: { message?: string } }>
+}
+
+/** Saved choices keep only configuration once the profile patch owns enablement. */
+function configurationOnly(entries: Record<string, MemoryPluginSavedPreference>): Record<string, MemoryPluginSavedPreference> {
+  return Object.fromEntries(Object.entries(entries).map(([entryId, value]) => [entryId, { config: value.config }]))
 }
 
 interface ManagedPlugin {
@@ -153,8 +163,10 @@ export class MemoryPluginManagement {
   private discoveryWarnings: string[] = []
   private changingEntries = false
   private restorePending = false
+  /** A failed move keeps saved choices in effect instead of retrying on every profile reload. */
+  private enablementMoveError: string | undefined
 
-  constructor(private readonly ctx: HostContextShape, private readonly engine: MemoryRuntime, private readonly settingsService: HostSettingsService = ctx.settings as HostSettingsService) {
+  constructor(private readonly ctx: HostContextShape, private readonly engine: MemoryRuntime, private readonly settingsService: HostSettingsService) {
     const loader = this.loader()
     const anchor = loader?.config?.baseUrl ?? loader?.ctx?.baseUrl ?? loader?.context?.baseUrl
     const suffix = anchor ? `-${hash(anchor).slice(0, 16)}` : ''
@@ -180,9 +192,11 @@ export class MemoryPluginManagement {
       // ConfigEditor reconciles the whole profile, including unrelated writes.
       // Its public settled event can arrive while an overlay is being restored.
       this.ctx.on('app-boot/config-reload', () => this.scheduleRestore(true)),
-      subscribeSettings(this.ctx, this.settingsService, (namespace: string) => {
+      this.settingsService.onUpdated(namespace => {
         if (namespace === this.settingsNamespace || namespace === `mnemon-plugins${this.settingsNamespace.slice(MNEMON_VIEW_SETTINGS_NAMESPACE.length)}`) schedule()
       })]
+    // Saved enablement moves into the profile patch once the plugin manager runs.
+    this.ctx.inject(['pluginManager'], () => { schedule() })
     schedule()
     return () => { this.closed = true; this.restorePending = false; clearTimeout(this.timer); for (const stop of stops.reverse()) stop() }
   }
@@ -221,8 +235,27 @@ export class MemoryPluginManagement {
     return candidate && typeof candidate.entries === 'function' ? candidate as MemoryPluginLoader : undefined
   }
 
-  private settingsRevision(): number {
-    return this.settingsService.describe({ redactSecrets: true }).find(value => value.ns === this.settingsNamespace)?.revision ?? 0
+  /**
+   * With the DSH plugin manager, the profile patch owns enablement, so its
+   * Plugins page and Mnemon agree. Profiles without it keep Mnemon's overlay.
+   */
+  private pluginManager(): HostPluginManager | undefined {
+    const candidate = this.ctx.get('pluginManager') as Partial<HostPluginManager> | undefined
+    return typeof candidate?.setPluginEnabled === 'function' ? candidate as HostPluginManager : undefined
+  }
+
+  private async setEnabled(manager: HostPluginManager, entryId: string, enabled: boolean): Promise<void> {
+    const result = await manager.setPluginEnabled(entryId, enabled)
+    if (result.application !== 'applied') throw new Error(`DSH could not ${enabled ? 'enable' : 'disable'} ${entryId}: ${result.error?.message ?? result.application}`)
+  }
+
+  private settingsRevision(namespace = this.settingsNamespace): number {
+    return this.settingsService.describe({ redactSecrets: true }).find(value => value.ns === namespace)?.revision ?? 0
+  }
+
+  /** The plugin manager owns enablement unless moving the saved choices failed. */
+  private enablementOwner(): HostPluginManager | undefined {
+    return this.enablementMoveError === undefined ? this.pluginManager() : undefined
   }
 
   private async managed(): Promise<ManagedPlugin[]> {
@@ -338,7 +371,7 @@ export class MemoryPluginManagement {
       revision: this.revision(items),
       writable: this.settingsService.writable && this.loader() !== undefined,
       entries: orderPlugins(values),
-      diagnostics: [...this.discoveryWarnings, ...(this.restoreError === undefined ? [] : [this.restoreError])],
+      diagnostics: [...this.discoveryWarnings, ...[this.restoreError, this.enablementMoveError].filter((value): value is string => value !== undefined)],
     }
   }
 
@@ -363,8 +396,11 @@ export class MemoryPluginManagement {
     if (request.expectedRevision !== this.revision(items)) throw new Error('Memory plugin configuration changed; refresh before saving or previewing.')
     const incoming = preferences({ strategyTypeId: request.strategyTypeId, entries: request.entries })
     const managedIds = new Set(items.map(item => item.entry.id))
-    for (const entryId of Object.keys(incoming.entries)) if (!managedIds.has(entryId)) throw new Error('Memory plugin Entry is not managed by this Host: ' + entryId)
-    const choices = this.choices(items, incoming.entries)
+    for (const [entryId, value] of Object.entries(incoming.entries)) {
+      if (!managedIds.has(entryId)) throw new Error('Memory plugin Entry is not managed by this Host: ' + entryId)
+      if (typeof value.enabled !== 'boolean') throw new Error('Plugin enabled must be boolean')
+    }
+    const choices = this.choices(items, incoming.entries as Record<string, MemoryPluginPreference>)
     for (const item of items) {
       const chosen = choices.get(item.entry.id)!
       if (!restoring && !item.value.writable && hash(chosen) !== hash({ enabled: item.value.enabled, config: item.value.config })) throw new Error('Memory plugin Entry is read-only: ' + item.entry.id)
@@ -420,7 +456,9 @@ export class MemoryPluginManagement {
 
   private async evaluateSnapshot(snapshot: MemoryContributionSnapshot, config: ResolvedConfig, scope: MemoryOperationScope, strategyTypeId: string, signal?: AbortSignal) {
     signal?.throwIfAborted()
-    const generation = new MemoryCompositionGeneration(snapshot, { ...memoryGenerationOptions(config, scope.workspaceId), strategyTypeId })
+    // An explicit choice is validated strictly; the runtime fallback never hides it.
+    const { strategyFallback: _fallback, ...options } = memoryGenerationOptions(config, scope.workspaceId)
+    const generation = new MemoryCompositionGeneration(snapshot, { ...options, strategyTypeId })
     try {
       const view = await generation.compose({ scope, scenario: 'agent.root-turn', budget: { ...DEFAULT_MEMORY_VIEW_BUDGET } }, signal)
       signal?.throwIfAborted()
@@ -435,8 +473,16 @@ export class MemoryPluginManagement {
       const items = await this.managed()
       const choices = this.validateRequest(items, request)
       const expectedSettingsRevision = this.settingsRevision()
+      const manager = this.enablementOwner()
       const previous = preferences(this.settings.get())
-      const next = preferences({ strategyTypeId: request.strategyTypeId, entries: { ...previous.entries, ...request.entries } })
+      const merged = { ...previous.entries, ...request.entries }
+      const next = preferences({ strategyTypeId: request.strategyTypeId, entries: manager === undefined ? merged : configurationOnly(merged) })
+      // Enable before disabling, so a dependency is never left without its provider.
+      const toggles = manager === undefined ? [] : items.flatMap(item => {
+        const enabled = choices.get(item.entry.id)!.enabled
+        return enabled === !item.entry.disabled ? [] : [{ entryId: item.entry.id, enabled }]
+      }).sort((left, right) => Number(right.enabled) - Number(left.enabled))
+      const written: typeof toggles = []
       let committedRevision: number | undefined
       await this.updateEntries(items, choices, {
         validate: () => this.evaluateSnapshot(this.engine.contributionSnapshot(), config, scope, request.strategyTypeId, signal),
@@ -446,8 +492,13 @@ export class MemoryPluginManagement {
             { op: 'set', path: ['entries'], value: next.entries },
           ], expectedSettingsRevision)
           committedRevision = this.settingsRevision()
+          for (const toggle of toggles) {
+            await this.setEnabled(manager!, toggle.entryId, toggle.enabled)
+            written.push(toggle)
+          }
         },
         compensate: async () => {
+          for (const toggle of [...written].reverse()) await this.setEnabled(manager!, toggle.entryId, !toggle.enabled)
           if (hash(preferences(this.settings.get())) !== hash(next)) throw new Error('Memory plugin settings changed before rollback; refresh and inspect the saved configuration.')
           await this.settingsService.mutate(this.settingsNamespace, [
             previous.strategyTypeId === undefined ? { op: 'unset', path: ['strategyTypeId'] }
@@ -460,15 +511,46 @@ export class MemoryPluginManagement {
     })
   }
 
+  /** Move saved enablement into the profile patch once, keeping only configuration overlays. */
+  private async moveEnablement(manager: HostPluginManager, items: ManagedPlugin[]): Promise<boolean> {
+    const saved = this.settings.get().entries ?? {}
+    const legacy = this.legacySettings.get().sources ?? {}
+    const moves = items.flatMap(item => {
+      const enabled = saved[item.entry.id] !== undefined ? saved[item.entry.id]!.enabled
+        : item.descriptor.roles.includes('source') ? legacy[item.entry.id]?.enabled : undefined
+      return enabled === undefined ? [] : [{ entryId: item.entry.id, enabled }]
+    }).sort((left, right) => Number(right.enabled) - Number(left.enabled))
+    if (moves.length === 0 && Object.keys(legacy).length === 0) return false
+    // Write each saved choice explicitly: the live state may still be Mnemon's
+    // earlier overlay rather than what the profile patch declares.
+    const legacyNamespace = `mnemon-plugins${this.settingsNamespace.slice(MNEMON_VIEW_SETTINGS_NAMESPACE.length)}`
+    const revisions = { view: this.settingsRevision(), legacy: this.settingsRevision(legacyNamespace) }
+    for (const move of moves) await this.setEnabled(manager, move.entryId, move.enabled)
+    await this.settingsService.mutate(this.settingsNamespace, [{ op: 'set', path: ['entries'], value: configurationOnly(saved) }], revisions.view)
+    if (Object.keys(legacy).length > 0) await this.settingsService.mutate(legacyNamespace, [{ op: 'set', path: ['sources'], value: {} }], revisions.legacy)
+    return true
+  }
+
   private async restore(): Promise<void> {
     if (this.closed) return
-    const items = await this.managed()
+    let items = await this.managed()
+    const available = this.enablementOwner()
+    if (available !== undefined && this.settingsService.writable) {
+      try {
+        if (await this.moveEnablement(available, items)) items = await this.managed()
+      } catch (error) {
+        this.enablementMoveError = `Saved plugin choices could not move into the DSH profile and stay managed by Mnemon: ${error instanceof Error ? error.message : String(error)}`
+      }
+    }
+    const manager = this.enablementOwner()
     const saved = this.settings.get().entries ?? {}
     const legacy = this.legacySettings.get().sources ?? {}
     const desired = Object.fromEntries(items.flatMap(item => {
       const unified = saved[item.entry.id]
-      if (unified !== undefined) return [[item.entry.id, unified]]
-      const oldSource = item.descriptor.roles.includes('source') ? legacy[item.entry.id] : undefined
+      // With the plugin manager, the profile patch already decided enablement.
+      const current = !item.entry.disabled
+      if (unified !== undefined) return [[item.entry.id, { enabled: manager === undefined ? unified.enabled ?? current : current, config: unified.config }]]
+      const oldSource = manager === undefined && item.descriptor.roles.includes('source') ? legacy[item.entry.id] : undefined
       return oldSource === undefined ? [] : [[item.entry.id, { enabled: oldSource.enabled, config: item.value.config }]]
     }))
     const request: MemoryViewConfigurationRequest = {

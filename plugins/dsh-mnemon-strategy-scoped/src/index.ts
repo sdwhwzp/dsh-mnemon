@@ -1,6 +1,5 @@
 import type { Context } from '@deepseek-ai/cordis'
-import { defineMemoryPlugin, installMemory, defineMemoryStrategyConfiguration } from 'dsh-mnemon/extension-sdk'
-import { defineThreeTierExtension, validateThreeTierExtension } from 'dsh-mnemon-strategy-default-three-tier/extension-sdk'
+import { defineMemoryPlugin, defineMemoryViewExtension, installMemory, defineMemoryStrategyConfiguration, validateMemoryViewExtension } from 'dsh-mnemon/extension-sdk'
 
 export interface Config { sourceKeys?: string[]; writableSourceKeys?: string[] }
 export const name = 'dsh-mnemon-strategy-scoped'
@@ -8,21 +7,21 @@ export const inject = ['mnemonMemory']
 export const memoryPlugin = defineMemoryPlugin({
   packageName: name,
   label: { en: 'Scoped composition', 'zh-CN': '范围组合' },
-  description: { en: 'Select and order the Sources admitted to the current View.', 'zh-CN': '选择并排序允许进入当前 View 的 Source。' },
+  description: { en: 'Compose the available memory sources in a stable order.', 'zh-CN': '按稳定顺序组合当前可用的记忆来源。' },
   roles: ['strategy-extension'],
-  provides: [{ id: 'strategy.default-three-tier.selection', exclusive: true }],
-  requires: ['strategy.default-three-tier'],
+  provides: [{ id: 'strategy.selection', exclusive: true }],
+  requires: ['strategy'],
 })
 const roles = ['working-context', 'narrative', 'durable-evidence']
 
 export function createScopedExtension(config: Config = {}) {
-  const selection = config.sourceKeys === undefined ? undefined : validateThreeTierExtension('selection', {
+  const selection = config.sourceKeys === undefined ? undefined : validateMemoryViewExtension('selection', {
     sourceKeys: config.sourceKeys, ...(config.writableSourceKeys === undefined ? {} : { writableSourceKeys: config.writableSourceKeys }),
   })
-  const writable = config.writableSourceKeys === undefined ? undefined : validateThreeTierExtension('selection', {
+  const writable = config.writableSourceKeys === undefined ? undefined : validateMemoryViewExtension('selection', {
     sourceKeys: config.writableSourceKeys, writableSourceKeys: config.writableSourceKeys,
   }).writableSourceKeys
-  return defineThreeTierExtension({ typeId: 'scoped', packageName: name, slot: 'selection',
+  return defineMemoryViewExtension({ typeId: 'scoped', packageName: name, slot: 'selection',
     contribute: (_request, sources) => selection ?? {
       sourceKeys: sources.filter(source => roles.includes(source.role))
         .sort((a, b) => roles.indexOf(a.role) - roles.indexOf(b.role) || a.sourceInstanceKey.localeCompare(b.sourceInstanceKey))

@@ -179,9 +179,8 @@ describe('Mnemon Documents control plane', () => {
     const root = workspace()
     const storageRoot = workspace()
     const manager = new DocumentManager(undefined, undefined, () => storageRoot)
-    const agent = { session: { header: { cwd: root } } } as never
 
-    const result = await manager.forAgent(agent).mutate({ action: 'create', title: 'Unified storage', content: 'All managed memory belongs below one selected root.' })
+    const result = await manager.forWorkspace(root).mutate({ action: 'create', title: 'Unified storage', content: 'All managed memory belongs below one selected root.' })
 
     expect(result.document.relativePath).toMatch(/^documents\/active\//)
     expect(result.snapshot.directory).toBe(join(storageRoot, 'documents'))

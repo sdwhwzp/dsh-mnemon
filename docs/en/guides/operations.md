@@ -4,7 +4,7 @@
 
 ## Health checks
 
-Check the binary, then open **Status** in the workbench:
+Open **Status** in the workbench. If you use Mnemon Native, also check its binary; the other Providers do not need it:
 
 ```sh
 command -v mnemon
@@ -26,7 +26,7 @@ Test-Path "$env:LOCALAPPDATA\Programs\mnemon\mnemon.exe"
 
 Status shows Mnemon / dsh-mnemon versions, Runtime, Memory Spaces, Documents, and effective directories. `mnemon status` opens the effective Store and may initialize data or run upstream migrations, so it is not a completely side-effect-free probe.
 
-If OpenViking reports `/api/v1/admin/*` access restrictions, configure **User key owner (skip admin)** (`discoveryUser`), the account identifier, endpoint, and user API key in Settings. This verifies access to the selected memory root using the data API; a denied or missing root keeps the previous configuration. It does not prove write permission or change the identity bound to the key. Leave the field empty for admin discovery. See [Provider boundaries and downgrade steps](./memory-providers.md#operational-boundaries).
+If OpenViking reports `/api/v1/admin/*` access restrictions, configure **User key owner (skip admin)** (`discoveryUser`), the account identifier, endpoint, and user API key on the `dsh-mnemon` page under **Plugins**. This verifies access to the selected memory root using the data API; a denied or missing root keeps the previous configuration. It does not prove write permission or change the identity bound to the key. Leave the field empty for admin discovery. See [Provider boundaries and downgrade steps](./memory-providers.md#operational-boundaries).
 
 ## Version checks and updates
 
@@ -34,8 +34,8 @@ If OpenViking reports `/api/v1/admin/*` access restrictions, configure **User ke
 
 [![Check and update Mnemon CLI and dsh-mnemon](../../assets/webui-v0.5.4/en/versions.jpg)](../../assets/webui-v0.5.4/en/versions.jpg)
 
-- **Mnemon CLI**: installed from `mnemon --version`; latest from the official `@mnemon-dev/mnemon` npm package.
 - **dsh-mnemon**: installed from the running package; updates from npm `latest`. An installed beta/alpha/rc also checks its own channel and can graduate to a newer stable version. Stable users never opt into prereleases automatically.
+- **Mnemon CLI**: installed from `mnemon --version`; latest from the official `@mnemon-dev/mnemon` npm package. Only Mnemon Native needs it, so a missing CLI shows as optional with its install command.
 
 Checking is read-only and never installs automatically. Update appears only when a newer version exists and the source is safely recognized. Mnemon supports the official npm launcher, Homebrew Cask / Formula, and `go install`; dsh-mnemon supports npm installations managed by pnpm in the owning DSH Profile. `link:` / `file:` development builds and unrecognized manual installs show guidance only.
 
@@ -53,7 +53,7 @@ The opt-in SQLite incompatibility first called out for DSH rc.8 remains in DSH 0
 
 ## DSH 0.1.5 compatibility and legacy Session recovery
 
-DSH `0.1.5-rc.1` is the pinned development baseline; see the [compatibility matrix](../reference/compatibility.md) for additional verified versions. Restart the Web Profile after upgrading Mnemon: the Starter patch gives the owning `connection` entry both `webRuntime` and `webServer`. This restores all seven Mnemon RPC channels when **Memory System** or its Settings page previously returned HTTP 405. Custom profiles that install the Host without the Starter must apply the same dependency declaration to their connection entry, preserving any additional dependencies in their own composition. No DSH package source is changed; browser authentication and Mnemon grants still apply.
+DSH `0.1.7-rc.2` is the supported host; see the [compatibility matrix](../reference/compatibility.md). Restart the Web Profile after upgrading Mnemon: the Starter patch gives the owning `connection` entry both `webRuntime` and `webServer`. This restores all seven Mnemon RPC channels when **Memory System** or its configuration page previously returned HTTP 405. Custom profiles that install the Host without the Starter must apply the same dependency declaration to their connection entry, preserving any additional dependencies in their own composition. No DSH package source is changed; browser authentication and Mnemon grants still apply.
 
 The separate error `source summary requires notice form; source v0 artifact remains unchanged` comes from older Mnemon messages in DSH Session logs. New recall/instruction messages omit that invalid summary. Updating the plugin does not rewrite an existing Session. To repair one affected log:
 
@@ -86,9 +86,11 @@ DSH migrates old Sessions to immutable v3 generations when opening for write. Mn
 
 ## Backup and recovery
 
-### Recommended: Settings ZIP
+<a id="recommended-settings-zip"></a>
 
-**Settings → Memory System → Backup and migration** operates on the **currently effective root**:
+### Recommended: ZIP from the plugin page
+
+**Storage → Backup and migration** on the `dsh-mnemon` page under **Plugins** operates on the **currently effective root**:
 
 - **Export ZIP** includes Runtime, Documents, and every Mnemon Native Memory Space. Third-party connections, local external stores, and remote data are excluded.
 - **Import ZIP** previews, validates, then merges into the effective root.
@@ -109,9 +111,9 @@ Import is governed by `writeEnabled` and is rejected in read-only deployments. A
 
 ### Recovery rehearsal
 
-1. Select an isolated `custom` directory and save.
-2. Confirm **Current directory ZIP** points to that root.
-3. Select the backup, review its preview, then import.
+1. Under **Storage**, set **Data directory** to **Custom**, enter an isolated directory and apply.
+2. Confirm the current read/write root on Status is that directory.
+3. Select the backup under **Backup and migration**, review its preview, then import.
 4. Check Runtime, Documents, Memory Spaces, and directories on Status.
 5. Run one focused direct recall and read one Document.
 6. Only after verification decide whether to switch a production scope.
@@ -152,9 +154,9 @@ Existing turns and delegated child activations may still use the old runtime. Wa
 
 <a id="cloud-hosted-webui"></a>
 
-## Cloud-hosted WebUI on DSH 0.1.5-rc.1
+## Cloud-hosted WebUI
 
-DSH 0.1.5-rc.1 is the recommended registry target. It authenticates the page, every RPC, and every stream through an authority-bound browser session created from the launch-token URL printed by the Host. `--trusted-host` remains a Host/Origin fence; it does not replace HTTPS or deployment access controls.
+DSH 0.1.7-rc.2 is the supported registry target. It authenticates the page, every RPC, and every stream through an authority-bound browser session created from the launch-token URL printed by the Host. `--trusted-host` remains a Host/Origin fence; it does not replace HTTPS or deployment access controls.
 
 1. Terminate HTTPS at a reverse proxy or access gateway and protect the public entry for its intended users. Proxy the same-origin `/` and `/api` traffic, including streams, to `http://127.0.0.1:3080` while preserving the external `Host` authority.
 2. Start the loopback service with the external authority. Use a bare `host[:port]`, not a URL:
@@ -165,7 +167,7 @@ DSH 0.1.5-rc.1 is the recommended registry target. It authenticates the page, ev
 
    For a non-default public port, use the exact authority, for example `memory.example.com:8443`. DSH deliberately rejects `--host 0.0.0.0`; keep the service on loopback and let the proxy or an SSH tunnel reach it.
 3. For a browser that does not already have a valid cookie for this public authority, use the launch-token URL printed as `dsh web: ...`. With a reverse proxy, replace only the printed loopback origin with the public HTTPS origin and preserve the `/` path and `?token=...` query. For example, transform `http://127.0.0.1:3080/?token=...` into `https://memory.example.com/?token=...`. Treat that URL as a credential and do not put it in logs, tickets, or chat. DSH exchanges it for an HttpOnly, SameSite cookie and redirects to a clean `/`; a still-valid authority-bound cookie can survive a Host restart.
-4. Open the clean external URL and verify that **Status** and **Settings → Memory System** both load and a page reload remains authenticated. Remote settings are read-only by default. If management is intended, apply the [explicit remote management grant](#remote-management), restart DSH, then verify one deliberate small save.
+4. Open the clean external URL and verify that **Status** and the `dsh-mnemon` page under **Plugins** both load and a page reload remains authenticated. Remote settings are read-only by default. If management is intended, apply the [explicit remote management grant](#remote-management), restart DSH, then verify one deliberate small save.
 
 An HTTP 403 can indicate a Host/Origin mismatch or an old remote Client still using standalone channels: check `--trusted-host`, the public authority and proxy routing, then upgrade dsh-mnemon to v0.5.5 or later, restart DSH and reload the browser. Remote Mnemon calls use the authenticated API Gateway. An HTTP 401 requires restoring the Host's browser authentication or pairing. A response saying remote management requires `remoteAccess: trusted-host` is a separate Mnemon grant check; successful browser authentication alone does not authorize management.
 
@@ -178,14 +180,14 @@ The legacy `mnemon` Entry remains the lifecycle switch for the complete Starter.
   disabled: true
 ```
 
-This disables the Core/Host, all three bundled Sources, the default Strategy, and all three optional Strategy enhancements together. It does not remove installed packages or delete memory data. Remove the override, or change it to `false`, and restart DSH to enable the Starter again.
+This disables the Core/Host, all three bundled Sources, both main Strategies, and all three optional Strategy enhancements together. It does not remove installed packages or delete memory data. Remove the override, or change it to `false`, and restart DSH to enable the Starter again.
 
 <a id="remote-management"></a>
 <a id="dsh-011-rc2-rollback"></a>
 
 ### Remote management and DSH 0.1.1-rc.2 rollback
 
-The DSH `0.1.1-rc.2` procedure below is historical. Current Mnemon Client code requires DSH `0.1.5-rc.1` or the verified newer cohorts in the [compatibility matrix](../reference/compatibility.md). When rolling back, pair the older DSH with its previously verified Mnemon release and restore the corresponding pre-upgrade Session backup.
+The DSH `0.1.1-rc.2` procedure below is historical. Current Mnemon requires DSH `0.1.7-rc.2`; see the [compatibility matrix](../reference/compatibility.md). When rolling back, pair the older DSH with its previously verified Mnemon release and restore the corresponding pre-upgrade Session backup.
 
 For v0.5.5 authenticated Gateway clients, `remoteAccess: trusted-host` grants management operations; default remote reads and narrow activation do not need it. The previous DSH rc.2 line enforces the same local configuration through legacy method-authority tiers, with settings, backups and broad mutations loopback-only by default. Configure management only for the intended authenticated users.
 
@@ -274,13 +276,12 @@ Report vulnerabilities privately through [SECURITY.md](../../../SECURITY.md), no
 | Custom directory rejected | Use an absolute path, `~`, or `~/...` |
 | `memoryBodyId is required...` | Active count is not exactly one; select a target explicitly |
 | `memory space is not active for reading` | Activate it in Overview; inactive writes are allowed, reads are not |
-| Provider error | Review needs guarded local child publication; use bounded `spawn` or opt-in `fork`. With DSH/Teams 0.1.7-rc.1, opt into `idleReview.agentTeams: scoped`; keep `pause` for older policies. Inspect partial-write receipts before retrying |
+| Provider error | Review needs guarded local child publication; use bounded `spawn` or opt-in `fork`. With DSH/Teams 0.1.7-rc.2, opt into `idleReview.agentTeams: scoped`; `pause` stays the default. Inspect partial-write receipts before retrying |
 | Runtime replace exceeds capacity | Shorten it or organize first; automatic maintenance handles add overflow only |
 | Document source path rejected | Keep it inside the session workspace and outside managed Documents |
 | CLI timeout | Increase `timeoutMs`; large Stores may need more than 10 seconds for status or graph |
 | Lock timeout | Check other writers; never delete a lock owned by a live process |
 | Memory System goes blank with a `refreshSnapshot` or settings-store error | Upgrade dsh-mnemon to v0.4.1 and restart the owning DSH profile; settings callbacks preserve their host store receiver |
-| DSH alpha reports `list slot "conversation.chat.turnTail" requires options.id` | Install a dsh-mnemon release containing the DSH `0.1.6-alpha.2` turn-tail fix, restart the owning Web profile, and reload the page. The fix retains the turn-memory toggle and requires no data repair |
 | ZIP export reports `date not in range 1980-2099` | Upgrade dsh-mnemon to v0.4.1; fixed local ZIP date fields work in timezones behind UTC and keep identical exports byte-stable across timezones |
 | ZIP export reports WAL busy | Wait for Memory Space writes to settle; do not bypass the uncheckpointed-WAL guard |
 | ZIP import checksum/schema failure | The backup is damaged or incompatible; preserve the current root and never unzip over it manually |

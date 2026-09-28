@@ -17,7 +17,7 @@ import { provideMemoryRuntime } from '../../src/core/runtime.ts'
 
 /** Compose real, public Cordis modules. No Source controller or Host business binding. */
 export async function compositionFixture(options: Config = {}, host: {
-  workspaceRegistry?: HostWorkspaceRegistry; agents?: HostAgentsService; providers?: MemorySpaceProviderEntry[]
+  workspaceRegistry?: HostWorkspaceRegistry; agents?: Pick<HostAgentsService, 'get'>; providers?: MemorySpaceProviderEntry[]
   entryPrefix?: string
   nativeOnly?: boolean
   sourceDataDir?: string

@@ -11,8 +11,8 @@ const read = (path: string) => readFileSync(new URL('../' + path, import.meta.ur
 
 describe('default Source presentation migration', () => {
   it('uses real class maps rather than non-enumerable test proxies', () => {
-    expect(Object.keys(memoryPageStyles)).toHaveLength(baseline.memorySpaceTerminology.page.classes)
-    expect(Object.keys(memorySidebarStyles)).toHaveLength(baseline.sidebar.classes)
+    expect(Object.keys(memoryPageStyles)).toHaveLength(baseline.clientDebtCleanup.page.classes)
+    expect(Object.keys(memorySidebarStyles)).toHaveLength(baseline.clientDebtCleanup.sidebar.classes)
     expect(memoryPageStyles.primaryButton).toContain('primaryButton')
   })
 
@@ -20,14 +20,13 @@ describe('default Source presentation migration', () => {
     const filename = kind === 'page' ? 'src/client/MnemonView.module.css' : 'src/client/MnemonSidebarView.module.css'
     const files = [filename, ...sources.map(source => `plugins/dsh-mnemon-source-${source}/presentation/${kind}.module.css`)]
     // Rules include their container/media conditions. Browser checks cover cascade and layout.
-    const expected = { ...baseline[kind], ...baseline.memorySpaceTerminology[kind], ...baseline.centralizedWorkspaces[kind], ...baseline.builtinWidthHandles[kind], ...baseline.sourcePageFrames[kind] }
-    expect(presentationFingerprint(files.map(path => ({ filename: presentationNamespace(path), text: read(path) })))).toEqual(expected)
+    expect(presentationFingerprint(files.map(path => ({ filename: presentationNamespace(path), text: read(path) })))).toEqual(baseline.clientDebtCleanup[kind])
   })
 
   it('preserves bilingual memory space terminology while Sources own their copy', () => {
     expect(Object.keys(en).sort()).toEqual(Object.keys(zh).sort())
-    expect(copyFingerprint(zh)).toEqual(baseline.openVikingUserDiscoveryAndScopedReview.zh)
-    expect(copyFingerprint(en)).toEqual(baseline.openVikingUserDiscoveryAndScopedReview.en)
+    expect(copyFingerprint(zh)).toEqual(baseline.clientDebtCleanup.zh)
+    expect(copyFingerprint(en)).toEqual(baseline.clientDebtCleanup.en)
     for (const source of sources) {
       const copy = JSON.parse(read(`plugins/dsh-mnemon-source-${source}/presentation/locales.json`))
       expect(Object.keys(copy.en).sort()).toEqual(Object.keys(copy.zh).sort())

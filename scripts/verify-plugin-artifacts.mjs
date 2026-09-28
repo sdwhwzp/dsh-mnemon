@@ -15,16 +15,30 @@ const configuredConcurrency = process.env.MNEMON_PLUGIN_VERIFY_CONCURRENCY ?? '4
 assert.match(configuredConcurrency, /^[1-9]\d*$/, 'MNEMON_PLUGIN_VERIFY_CONCURRENCY must be a positive integer')
 const concurrency = Math.min(Number(configuredConcurrency), names.length)
 const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
-const upgradeBaseResponse = await fetch('https://registry.npmjs.org/dsh-mnemon/0.4.7')
-assert(upgradeBaseResponse.ok, `Unable to read the published v0.4.7 upgrade base (${upgradeBaseResponse.status})`)
-const upgradeBaseManifest = await upgradeBaseResponse.json()
-assert.equal(upgradeBaseManifest.version, '0.4.7')
+// The newest earlier release that runs on the supported DSH is the realistic
+// upgrade base; upgrading to the same version would test nothing.
+const upgradeBase = '0.5.15'
+assert.notEqual(upgradeBase, manifest.version, 'The upgrade base must be an earlier release than the packed version')
 const temporary = await mkdtemp(join(tmpdir(), 'mnemon-plugin-artifacts-'))
 assert(!inside(root, temporary), 'The consumer must be outside the development workspace')
 const artifacts = new Map()
 const artifactManifests = new Map()
 let registryUrl = ''
-const registry = createServer((request, response) => {
+const publishedDocuments = new Map()
+function publishedDocument(name) {
+  if (!publishedDocuments.has(name)) {
+    publishedDocuments.set(name, fetch(`https://registry.npmjs.org/${name}`).then(async response => {
+      if (response.status === 404) return undefined
+      assert(response.ok, `Unable to read the published ${name} document (${response.status})`)
+      return response.json()
+    }))
+  }
+  return publishedDocuments.get(name)
+}
+// The local registry answers as npm will once this build is published: earlier
+// releases stay resolvable (the Headless upgrade re-resolves its installed base
+// here), and each packed artifact replaces its own version and takes its dist-tag.
+const registry = createServer(async (request, response) => {
   const path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname).slice(1)
   if (path.startsWith('tarballs/')) {
     const artifact = artifacts.get(path.slice('tarballs/'.length))
@@ -33,14 +47,11 @@ const registry = createServer((request, response) => {
     createReadStream(artifact).pipe(response)
   } else if (artifactManifests.has(path)) {
     const value = artifactManifests.get(path)
-    const versions = { [value.version]: { ...value, dist: { ...value.dist, tarball: registryUrl + '/tarballs/' + path } } }
-    const tags = { [value.publishConfig.tag]: value.version }
-    if (path === 'dsh-mnemon') {
-      versions[upgradeBaseManifest.version] = upgradeBaseManifest
-      tags.latest = upgradeBaseManifest.version
-    }
+    let published
+    try { published = await publishedDocument(path) } catch (error) { response.writeHead(502); response.end(String(error)); return }
+    const versions = { ...published?.versions, [value.version]: { ...value, dist: { ...value.dist, tarball: registryUrl + '/tarballs/' + path } } }
     response.writeHead(200, { 'content-type': 'application/json' })
-    response.end(JSON.stringify({ name: path, 'dist-tags': tags, versions }))
+    response.end(JSON.stringify({ name: path, 'dist-tags': { ...published?.['dist-tags'], [value.publishConfig.tag]: value.version }, versions }))
   } else {
     response.writeHead(307, { location: 'https://registry.npmjs.org' + request.url })
     response.end()
@@ -191,7 +202,7 @@ try {
     { label: 'real DSH Starter upgrade', priority: 10, action: () => run(process.execPath, [
       join(root, 'scripts/verify-headless-profile.mjs'),
       '--package', 'file:' + artifacts.get(manifest.name), '--registry', registryUrl,
-      '--upgrade-from', 'dsh-mnemon@0.4.7', '--upgrade-registry', 'https://registry.npmjs.org',
+      '--upgrade-from', `dsh-mnemon@${upgradeBase}`, '--upgrade-registry', 'https://registry.npmjs.org',
     ], root, 'real DSH: install only the packed Starter and activate its plugins') },
     { label: 'real DSH Strategy composition', priority: 10, action: () => run(process.execPath, [
       join(root, 'scripts/verify-headless-profile.mjs'),

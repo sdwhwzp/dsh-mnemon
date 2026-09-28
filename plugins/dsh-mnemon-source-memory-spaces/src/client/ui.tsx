@@ -118,4 +118,4 @@ export function installMemorySpacesUI(ctx: Parameters<typeof installMemorySource
 }
 
 export const inject = ['slots', 'locale']
-export function apply(ctx: Parameters<typeof installMemorySourceUI>[0]): void { installMemorySpacesUI(ctx, ctx.locale?.bind('mnemon') ?? translateEn) }
+export function apply(ctx: Parameters<typeof installMemorySourceUI>[0]): void { installMemorySpacesUI(ctx, ctx.locale!.bind('mnemon')) }

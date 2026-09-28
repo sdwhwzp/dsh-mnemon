@@ -1,5 +1,5 @@
 import { isDefaultSourceInstance, isWorkspaceStorageScope } from './protocol.ts'
-import type { HostConnectionHandle, HostRpcAuthority, HostRpcHandler, RpcResult } from './dsh.ts'
+import type { HostConnectionHandle, HostRpcHandler, RpcResult } from './dsh.ts'
 import type { MnemonLifecycle } from './lifecycle.ts'
 import type { LiveMnemonRuntime } from './runtime.ts'
 import { assertParticipation } from './access.ts'
@@ -8,7 +8,7 @@ import type { MemoryCapability, MemoryJsonValue, MemoryOperationScope, MemorySou
 import type { CreateMemoryBodyRequest as CreateMemorySpaceRequest, Insight, MemoryBodyCatalog as MemorySpaceCatalog, PreparedMemoryPlacement, RememberRequest } from 'dsh-mnemon-source-memory-spaces/contracts'
 import type { RuntimeMemoryMutation } from 'dsh-mnemon-source-runtime/contracts'
 import type { DocumentMutation } from 'dsh-mnemon-source-documents/contracts'
-import { MNEMON_ACTIVATION_CHANNEL, MNEMON_PACK_CHANNEL, MNEMON_READ_CHANNEL, MNEMON_WRITE_CHANNEL } from './protocol.ts'
+import { MNEMON_ACTIVATION_CHANNEL, MNEMON_PACK_CHANNEL, MNEMON_READ_CHANNEL, MNEMON_WRITE_CHANNEL, type MemoryCompositionStatus } from './protocol.ts'
 export { MNEMON_ACTIVATION_CHANNEL, MNEMON_PACK_CHANNEL, MNEMON_READ_CHANNEL, MNEMON_WRITE_CHANNEL } from './protocol.ts'
 
 function object(value: unknown): Record<string, unknown> {
@@ -44,6 +44,15 @@ function requireWritable(runtime: ScopedRuntime): void {
 }
 function requireCapability(runtime: ScopedRuntime, typeId: string, capability: MemoryCapability): void {
   assertParticipation(runtime.graph.config, typeId, capability, 'manual')
+}
+/** A memory layer that is off takes no part in reads or writes, management and assistance included. */
+function requireLayerOn(runtime: ScopedRuntime, sourceTypeId: string | undefined): void {
+  if (sourceTypeId !== undefined && runtime.graph.config.memoryTopology.layers[sourceTypeId]?.enabled === false) {
+    throw new Error(`Memory layer ${sourceTypeId} is off; turn it on to read or change it`)
+  }
+}
+function sourceTypeOf(generation: { sourceInstances(): ReadonlyArray<{ sourceInstanceKey: string; sourceTypeId: string }> } | undefined, sourceInstanceKey: string): string | undefined {
+  return generation?.sourceInstances().find(source => source.sourceInstanceKey === sourceInstanceKey)?.sourceTypeId
 }
 function success(value: unknown): RpcResult<unknown> { return { ok: true, value } }
 function failure(error: unknown): RpcResult<unknown> {
@@ -83,8 +92,14 @@ async function catalog(runtime: ScopedRuntime, lifecycle?: MnemonLifecycle) {
     return { ...value, sources: value.sources.map(source => ({ ...source, assistance: assistance(source, lifecycle, runtime) })) }
   } finally { lease.release() }
 }
-async function compositionStatus(runtime: ScopedRuntime) {
-  return { evaluation: runtime.graph.memoryComposition.inspect().evaluation, sources: (await catalog(runtime)).sources, configuration: runtime.graph.config.memoryTopology }
+async function compositionStatus(runtime: ScopedRuntime): Promise<MemoryCompositionStatus> {
+  const composition = runtime.graph.memoryComposition.inspect()
+  const strategyTypeId = runtime.graph.memoryComposition.current()?.strategy.definition.manifest.typeId
+  return {
+    serving: composition.servingGenerationId !== undefined,
+    ...(strategyTypeId === undefined ? {} : { strategyTypeId }),
+    evaluation: composition.evaluation, sources: (await catalog(runtime)).sources, configuration: runtime.graph.config.memoryTopology,
+  }
 }
 
 async function assisted(runtime: ScopedRuntime, lifecycle: MnemonLifecycle, typeId: string, operation: string, input: Record<string, unknown>, signal?: AbortSignal, target?: { sourceInstanceKey: string; expectedRevision: string }): Promise<unknown> {
@@ -186,6 +201,7 @@ export function createReadHandler(input: LiveMnemonRuntime, lifecycle?: MnemonLi
         case 'source-management-read': {
           const lease = runtime.graph.memoryComposition.acquire()
           try {
+            requireLayerOn(runtime, sourceTypeOf(lease.generation, String(payload.sourceInstanceKey ?? '')))
             return success(await lease.generation.executeManagement({
               scope: runtime.scope, sourceInstanceKey: String(payload.sourceInstanceKey ?? ''), mode: 'read',
               operation: String(payload.operation ?? ''), input: (payload.input ?? null) as MemoryJsonValue, confirmed: false,
@@ -260,6 +276,7 @@ export function createActivationHandler(input: LiveMnemonRuntime): HostRpcHandle
         try {
           const source = (await lease.generation.managementCatalog(runtime.scope)).sources.find(item => item.sourceInstanceKey === payload.sourceInstanceKey && item.sourceTypeId === 'memory-spaces')
           if (source === undefined) throw new Error('Memory Spaces Source instance is unavailable')
+          requireLayerOn(runtime, source.sourceTypeId)
           return success(await lease.generation.executeManagement({
             scope: runtime.scope, sourceInstanceKey: source.sourceInstanceKey, mode: 'mutate', operation: 'body-update',
             input: fields as MemoryJsonValue, confirmed: true, expectedRevision: String(payload.expectedRevision ?? ''),
@@ -300,6 +317,7 @@ export function createWriteHandler(input: LiveMnemonRuntime, lifecycle?: MnemonL
           ...(typeof payload.expectedRevision === 'string' ? { expectedRevision: payload.expectedRevision } : {}),
           ...(signal === undefined ? {} : { signal }),
         }
+        requireLayerOn(runtime, sourceTypeOf(runtime.graph.memoryComposition.current(), request.sourceInstanceKey))
         if (lifecycle !== undefined) return success(await lifecycle.manageSource(runtime.graph, request))
         const lease = runtime.graph.memoryComposition.acquire()
         try {
@@ -311,6 +329,7 @@ export function createWriteHandler(input: LiveMnemonRuntime, lifecycle?: MnemonL
         const source = (await catalog(runtime, lifecycle)).sources.find(item => item.sourceInstanceKey === payload.sourceInstanceKey)
         const operation = String(payload.operation ?? '')
         if (source === undefined || !source.assistance.includes(operation)) throw new Error('Host assistance is not available for this Source instance')
+        requireLayerOn(runtime, source.sourceTypeId)
         if (operation !== 'agent-search' && (payload.confirmed !== true || payload.expectedRevision !== source.revision)) throw new Error('Host assistance requires confirmation of the current Source revision')
         const value = await assisted(runtime, lifecycle, source.sourceTypeId, operation, object(payload.input), signal, { sourceInstanceKey: source.sourceInstanceKey, expectedRevision: source.revision })
         if (source.sourceTypeId === 'runtime') return success({ revision: object(value).revision, value })
@@ -365,7 +384,7 @@ export function createPackHandler(input: LiveMnemonRuntime): HostRpcHandler {
   }
 }
 
-export function registerRpc(connection: HostConnectionHandle, input: LiveMnemonRuntime, lifecycle?: MnemonLifecycle, versions?: VersionUpdateManager, managementAuthority: HostRpcAuthority = 'loopback'): {
+export function registerRpc(connection: HostConnectionHandle, input: LiveMnemonRuntime, lifecycle?: MnemonLifecycle, versions?: VersionUpdateManager): {
   read: HostRpcHandler
   activation: HostRpcHandler
   write: HostRpcHandler
@@ -376,9 +395,9 @@ export function registerRpc(connection: HostConnectionHandle, input: LiveMnemonR
   const activationHandler = createActivationHandler(input)
   const writeHandler = createWriteHandler(input, lifecycle, versionManager)
   const packHandler = createPackHandler(input)
-  connection.rpc.handle(MNEMON_READ_CHANNEL, readHandler, { authority: 'trusted-host' })
-  connection.rpc.handle(MNEMON_ACTIVATION_CHANNEL, activationHandler, { authority: 'trusted-host' })
-  connection.rpc.handle(MNEMON_WRITE_CHANNEL, writeHandler, { authority: managementAuthority })
-  connection.rpc.handle(MNEMON_PACK_CHANNEL, packHandler, { authority: managementAuthority })
+  connection.rpc.handle(MNEMON_READ_CHANNEL, readHandler)
+  connection.rpc.handle(MNEMON_ACTIVATION_CHANNEL, activationHandler)
+  connection.rpc.handle(MNEMON_WRITE_CHANNEL, writeHandler)
+  connection.rpc.handle(MNEMON_PACK_CHANNEL, packHandler)
   return { read: readHandler, activation: activationHandler, write: writeHandler, pack: packHandler }
 }

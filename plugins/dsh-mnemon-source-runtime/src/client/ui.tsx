@@ -30,4 +30,4 @@ export function installRuntimeMemoryUI(ctx: Parameters<typeof installMemorySourc
 }
 
 export const inject = ['slots', 'locale']
-export function apply(ctx: Parameters<typeof installMemorySourceUI>[0]): void { installRuntimeMemoryUI(ctx, ctx.locale?.bind('mnemon') ?? translateEn) }
+export function apply(ctx: Parameters<typeof installMemorySourceUI>[0]): void { installRuntimeMemoryUI(ctx, ctx.locale!.bind('mnemon')) }

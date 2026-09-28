@@ -253,7 +253,7 @@ async function runScenario(multipleSpaces: boolean) {
         handle.agent.followup(createUserMessage({ content: [{ type: 'text', text: prompt }], source: { kind: 'user' } }))
         await handle.agent.whenIdle()
         const assistant = handle.agent.session.snapshotEvents().slice(before).filter(event => event.type === 'assistant/message')
-          .flatMap(event => ((event.data as { message?: { content?: Array<{ type: string; text?: string }> } }).message?.content ?? [])
+          .flatMap(event => ((event.data as unknown as { message?: { content?: Array<{ type: string; text?: string }> } }).message?.content ?? [])
             .filter(block => block.type === 'text').map(block => block.text ?? '')).join('\n')
         report.conversations.push({ domain, wave, assistant })
       }))

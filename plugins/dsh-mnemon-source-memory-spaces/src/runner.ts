@@ -1,28 +1,15 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import type { JsonValue } from './contracts.ts'
 import type { ResolvedMemorySpacesConfig as ResolvedConfig } from './config.ts'
 import { runProcess, type ProcessOptions, type ProcessRunner } from './providers/process.ts'
 import { withMemoryStorageLock } from 'dsh-mnemon/extension-sdk'
 import { findMnemonCommand, isMnemonExecutable, mnemonNpmLauncher, nodeLauncherEnvironment } from './native-cli.ts'
 
-export { findMnemonCommand } from './native-cli.ts'
-export type { CommandDiscoveryOptions } from './native-cli.ts'
-
-function expandHome(path: string): string {
-  return path === '~' ? homedir() : path.startsWith('~/') || path.startsWith('~\\') ? join(homedir(), path.slice(2)) : path
-}
-
 export class MnemonCliError extends Error {
-  readonly exitCode: number | null
-  readonly stderr: string
-
-  constructor(message: string, exitCode: number | null = null, stderr = '') {
+  constructor(message: string) {
     super(message)
     this.name = 'MnemonCliError'
-    this.exitCode = exitCode
-    this.stderr = stderr
   }
 }
 
@@ -40,13 +27,10 @@ export interface MnemonTextCommand {
 export interface MnemonRunner {
   readonly command: string
   readonly commandFound: boolean
-  readonly config: ResolvedConfig
   runJson(args: readonly string[], options?: MnemonRunOptions): Promise<JsonValue>
   runText(args: readonly string[], options?: MnemonRunOptions): Promise<string>
   /** Run related CLI commands consecutively without allowing queued work between them. */
   runTextBatch(commands: readonly MnemonTextCommand[]): Promise<string[]>
-  /** Run one operation after all CLI work and hold the same queue until it settles. */
-  withExclusive<T>(operation: () => T | Promise<T>): Promise<T>
   effectiveDataDir(): string
   /** Read Mnemon's persisted active-file selection, ignoring config and environment overrides. */
   persistedStore(): string
@@ -69,7 +53,7 @@ function processEnvironment(config: ResolvedConfig): NodeJS.ProcessEnv | undefin
   }
 }
 
-export function createRunner(config: ResolvedConfig, processRunner: ProcessRunner = runProcess, workspaceRoot?: string): MnemonRunner {
+export function createRunner(config: ResolvedConfig, processRunner: ProcessRunner = runProcess): MnemonRunner {
   // Installation can change while DSH stays running. Status and execution
   // must resolve the same current executable, not a boot-time availability flag.
   const currentCommand = (): string => findMnemonCommand(config) ?? config.cliPath ?? 'mnemon'
@@ -78,17 +62,13 @@ export function createRunner(config: ResolvedConfig, processRunner: ProcessRunne
   // racing that migration and surfacing a transient SQLITE_BUSY error.
 
   const globalArgs = (store?: string): string[] => {
-    const args: string[] = []
-    if (config.storageScope !== 'global' || config.dataDir !== undefined) args.push('--data-dir', effectiveDataDir())
+    const args = ['--data-dir', effectiveDataDir()]
     if (store !== undefined) args.push('--store', store)
     else if (config.store !== undefined) args.push('--store', config.store)
     return args
   }
-  const effectiveDataDir = (): string => {
-    if (config.storageScope === 'workspace') return resolve(workspaceRoot ?? process.cwd(), '.mnemon')
-    if (config.storageScope === 'custom') return expandHome(config.dataDir!)
-    return expandHome(process.env.MNEMON_DATA_DIR?.trim() || '~/.mnemon')
-  }
+  // resolveMemorySpacesConfig always yields a custom scope with an absolute dataDir.
+  const effectiveDataDir = (): string => config.dataDir!
   const persistedStore = (): string => {
     const active = join(effectiveDataDir(), 'active')
     if (existsSync(active)) {
@@ -130,7 +110,7 @@ export function createRunner(config: ResolvedConfig, processRunner: ProcessRunne
     }
     if (result.exitCode !== 0) {
       const detail = result.stderr.trim() || result.stdout.trim() || 'no output'
-      throw new MnemonCliError(`mnemon ${args.join(' ')} exited ${String(result.exitCode)}: ${detail}`, result.exitCode, result.stderr)
+      throw new MnemonCliError(`mnemon ${args.join(' ')} exited ${String(result.exitCode)}: ${detail}`)
     }
     return result.stdout
   }
@@ -148,7 +128,6 @@ export function createRunner(config: ResolvedConfig, processRunner: ProcessRunne
       const found = findMnemonCommand(config)
       return found !== undefined && isMnemonExecutable(found)
     },
-    config,
     async runJson(args, options) {
       const stdout = await execute(args, options)
       try {
@@ -164,9 +143,6 @@ export function createRunner(config: ResolvedConfig, processRunner: ProcessRunne
         for (const command of commands) outputs.push(await launch(command.args, command.options))
         return outputs
       })
-    },
-    withExclusive<T>(operation: () => T | Promise<T>): Promise<T> {
-      return withMemoryStorageLock(effectiveDataDir(), operation)
     },
     effectiveDataDir() {
       return effectiveDataDir()

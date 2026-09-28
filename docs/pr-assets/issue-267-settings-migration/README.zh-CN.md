@@ -53,7 +53,7 @@ DSH `0.1.7-alpha.1` 将动态 Settings 注册改为从各插件的静态 `Config
 
 ## 验证范围
 
-定向回归覆盖 [schema 与引用行为](../../../tests/live-config.spec.ts)、[所属实例隔离与脱敏](../../../tests/profile-settings.spec.ts)、[revision 冲突与已退役实例](../../../tests/profile-settings-revisions.spec.ts)、[纯迁移规划](../../../tests/legacy-settings-import.spec.ts)、[保留文件恢复与表达式](../../../tests/profile-settings-import.spec.ts)，以及[两代客户端图标](../../../tests/client-primitives-compat.spec.tsx)。
+定向回归覆盖 [schema 与引用行为](../../../tests/live-config.spec.ts)、[所属实例隔离与脱敏](../../../tests/profile-settings.spec.ts)、[revision 冲突与已退役实例](../../../tests/profile-settings-revisions.spec.ts)、[纯迁移规划](../../../tests/legacy-settings-import.spec.ts)、[保留文件恢复与表达式](../../../tests/profile-settings-import.spec.ts)，以及[两代客户端图标](https://github.com/omdsh-dev/dsh-mnemon/blob/65a14ddd2d83bd0850948dc915bc410552b545d9/tests/client-primitives-compat.spec.tsx)。
 
 制品夹具使用隔离测试数据，确定性模型端点仅绑定 `127.0.0.1`，不需要外部模型 API Key，也不会调用外部模型服务。启动认证 URL、`server.json`、原始 `web.log` 和模型请求日志均留在仓库外；公开证据不得包含凭据或私人数据。
 

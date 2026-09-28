@@ -359,7 +359,7 @@ describe('legacy Session copy repair', () => {
     expect(new Set(migrated.events.filter(event => event.type === 'tool/call').map(event => (event.data as any).callId))).toEqual(new Set(['provider-existing-id-251']))
     const toolResult = migrated.events.find(event => event.type === 'tool/result')!
     expect((toolResult.data as any).message.source.callId).toBe('provider-existing-id-251')
-    expect((toolResult.data as any).message.content[0]).toMatchObject({ toolCallId: 'provider-existing-id-251', content: [{ type: 'text', text: 'Synthetic tool response with the original provider ID.' }] })
+    expect((toolResult.data as any).message).toMatchObject({ toolCallId: 'provider-existing-id-251', content: [{ type: 'text', text: 'Synthetic tool response with the original provider ID.' }] })
     expect(after.split('\n').find(line => line.includes('synthetic-other-memory-source'))).toBe(text.split('\n').find(line => line.includes('synthetic-other-memory-source')))
     expect((await publishedLoad(join(root, 'after'), after)).events).toEqual(migrated.events)
     expect(await readFile(input)).toEqual(before)
@@ -497,11 +497,11 @@ describe('legacy Session copy repair', () => {
     const after = await readFile(output, 'utf8')
     const migrated = await publishedLoad(join(root, 'after'), after, 'write')
     const originals = nullFixture.trim().split('\n').map(line => JSON.parse(line))
-    for (const type of ['user/message', 'tool/call', 'tool/result']) {
-      expect(migrated.events.filter(event => event.type === type).map(event => event.data)).toEqual(originals.filter(event => event.type === type).map(event => event.data))
+    const reference = await publishedLoad(join(root, 'reference'), nullFixture.replaceAll('"name":null', '"name":""'))
+    for (const type of ['user/message', 'tool/call', 'tool/result', 'assistant/message']) {
+      expect(migrated.events.filter(event => event.type === type).map(event => event.data)).toEqual(reference.events.filter(event => event.type === type).map(event => event.data))
     }
     const assistants = migrated.events.filter(event => event.type === 'assistant/message')
-    expect(assistants.map(event => (event.data as any).message)).toEqual(originals.filter(event => event.type === 'assistant/message').map(event => event.data.message))
     expect(assistants.flatMap(event => expandAssistantStream((event.data as any).stream))).toEqual(originals.filter(event => event.type === 'assistant/chunk')
       .map(event => ({ time: event.time, chunk: event.data.chunk.name === null ? { ...event.data.chunk, name: '' } : event.data.chunk })))
     expect((await publishedLoad(join(root, 'after'), after)).events).toEqual(migrated.events)
@@ -947,8 +947,10 @@ describe('legacy Session copy repair', () => {
   it.each([
     { name: 'original Mnemon summaries', fixture, expected },
     { name: 'runtime summary and independent plugin', fixture: runtimeFixture, expected: runtimeExpected },
-  ].flatMap(value => (['none', 'zstd'] as const).map(compression => ({ ...value, compression }))))('unblocks the real published DSH v0 → v3 migration and cold reopen ($name, $compression)', async ({ fixture, expected, compression }) => {
+  ].flatMap(value => (['none', 'zstd'] as const).map(compression => ({ ...value, compression }))))('unblocks the real published DSH migration and cold reopen ($name, $compression)', async ({ fixture, expected, compression }) => {
     const root = await directory()
+    const reference = (await publishedLoad(join(root, 'reference'), expected)).events
+      .filter(event => event.type === 'user/message').map(event => event.data)
     const { id, cwd }: { id: string; cwd: string } = JSON.parse(fixture.split('\n')[0]!)
     const suffix = compression === 'none' ? '.jsonl' : '.jsonl.zstd'
     const sessionDir = join(root, `--${cwd.slice(1).replaceAll('/', '-')}--`, id)
@@ -977,14 +979,15 @@ describe('legacy Session copy repair', () => {
     try {
       const handle = await ctx.sessionPersistence.open(SessionId(id), 'write')
       const restored = await handle.read()
-      expect(restored.events.filter(event => event.type === 'user/message').map(event => event.data)).toEqual(expected.trim().split('\n').slice(1).map(line => JSON.parse(line)).filter(event => event.type === 'user/message').map(event => event.data))
+      expect(restored.events.filter(event => event.type === 'user/message').map(event => event.data)).toEqual(reference)
       await handle.close()
-      expect((await readdir(sessionDir)).some(name => name.startsWith('session.v3.'))).toBe(true)
+      // DSH writes the migrated generation beside the untouched source file.
+      expect((await readdir(sessionDir)).some(name => /^session\.v\d+\./u.test(name))).toBe(true)
     } finally { await ctx.fiber.dispose() }
     ctx = await backend()
     try {
       const handle = await ctx.sessionPersistence.open(SessionId(id), 'read')
-      expect((await handle.read()).events.filter(event => event.type === 'user/message').map(event => event.data)).toEqual(expected.trim().split('\n').slice(1).map(line => JSON.parse(line)).filter(event => event.type === 'user/message').map(event => event.data))
+      expect((await handle.read()).events.filter(event => event.type === 'user/message').map(event => event.data)).toEqual(reference)
       await handle.close()
     } finally { await ctx.fiber.dispose() }
     expect(await readFile(original)).toEqual(repairedV0)

@@ -3,6 +3,7 @@ import { AgentMemoryTurn } from '../src/host/agent-memory-turn.ts'
 import type { HostAgent } from '../src/host/dsh.ts'
 import { LiveMnemonRuntime } from '../src/host/runtime.ts'
 import { memoryGraphFixture } from './helpers/memory-graph.ts'
+import { sessionLog } from './fixtures/session-log.ts'
 
 const releases: Array<() => void> = []
 afterEach(() => { for (const release of releases.splice(0).reverse()) release() })
@@ -10,7 +11,7 @@ afterEach(() => { for (const release of releases.splice(0).reverse()) release() 
 function fixture() {
   const memory = memoryGraphFixture()
   const live = new LiveMnemonRuntime(memory.graph, undefined, undefined, memory.extensions)
-  const agent = { id: 'root', session: { header: {}, events: [] } } as unknown as HostAgent
+  const agent = { id: 'root', session: { header: {}, ...sessionLog() } } as unknown as HostAgent
   const owner = new AgentMemoryTurn(agent, live)
   releases.push(() => { owner.dispose(); live.dispose() })
   return { ...memory, live, agent, owner, signal: new AbortController().signal }

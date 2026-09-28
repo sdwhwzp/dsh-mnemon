@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import { SlotCore } from '@deepseek-ai/dsh-client-ui-slots'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import type { Config } from "../src/host/config.ts"
-import type { ClientSettingsScope, StatusView } from "../src/host/protocol.ts"
+import type { StatusView } from "../src/host/protocol.ts"
 import type { MnemonSourcePageOwnerProps } from "../src/client/dsh-context.ts"
 import { MnemonWorkbench } from '../src/client/MnemonWorkbench.tsx'
+import { MNEMON_COMPONENT_STATUS_SLOT } from '../src/client/component-ui.tsx'
 import { translateEn } from '../src/client/locales.ts'
 import {
   createMemorySourcePageDirectory,
@@ -14,6 +15,7 @@ import {
   MNEMON_SOURCE_PAGE_SLOT,
   type MemorySourcePageProps,
 } from '../src/client/source-pages.tsx'
+import { settingsScope } from './helpers/settings-scope.ts'
 
 class TestSlots {
   readonly core = new SlotCore()
@@ -65,12 +67,10 @@ function declareSourcePageSlot(slots: TestSlots): () => void {
 
 function Page(_props: MemorySourcePageProps): ReactNode { return null }
 
+const staticLocale = { getSnapshot: () => 'zh', subscribe: () => () => {} }
+
 const settingsSnapshot = { status: 'ready' as const, value: {}, revision: 1, writable: true, mode: 'host' as const }
-const settings: ClientSettingsScope<Config> = {
-  getSnapshot: () => settingsSnapshot,
-  subscribe: () => () => {},
-  set: async () => {}, unset: async () => {}, setPath: async () => {}, unsetPath: async () => {},
-}
+const settings = settingsScope<Config>(settingsSnapshot)
 
 const status: StatusView = {
   healthy: true,
@@ -97,7 +97,7 @@ describe('Source Client presentation conformance', () => {
     const slots = new TestSlots()
     const owner = declareSourcePageSlot(slots)
     const first = installMemorySourceUI({ slots } as never, { sourceTypeId: 'runtime', pages: [{ id: 'entries', label: 'First', component: Page }] })
-    const directory = createMemorySourcePageDirectory({ slots } as never)
+    const directory = createMemorySourcePageDirectory({ slots, locale: staticLocale } as never)
     expect(() => installMemorySourceUI({ slots } as never, { sourceTypeId: 'runtime', pages: [{ id: 'entries', label: 'Duplicate', component: Page }] })).toThrow()
     expect(directory.getSnapshot().map(entry => entry.label)).toEqual(['First'])
     first()
@@ -155,7 +155,7 @@ describe('Source Client presentation conformance', () => {
     const disposeOwner = declareSourcePageSlot(slots)
     const disposeGit = slots.register({ name: MNEMON_SOURCE_PAGE_SLOT, id: 'git/repository', label: () => { throw new Error('bad label') } }, Page)
     const disposeNotion = slots.register({ name: MNEMON_SOURCE_PAGE_SLOT, id: 'notion/notes', label: 'Notes' }, Page)
-    const directory = createMemorySourcePageDirectory({ slots } as never)
+    const directory = createMemorySourcePageDirectory({ slots, locale: staticLocale } as never)
     const first = directory.getSnapshot()
     expect(first).toEqual([
       expect.objectContaining({ id: 'git/repository', label: 'repository' }),
@@ -223,7 +223,7 @@ describe('Source Client presentation conformance', () => {
       if (endpoint === 'source-management-read') return { ok: true, value: { revision: 'read-r1', value: { branch: 'main' } } }
       if (endpoint === 'source-management-mutate') return { ok: true, value: { revision: 'write-r2', value: { updated: true } } }
       return { ok: false, error: { code: 'bad-request', message: `unexpected ${endpoint}`, details: { issues: [] } } }
-    }) } }
+    }) }, isLoopback: true }
     const directorySnapshot = [{ id: 'git/repository', sourceTypeId: 'git', pageId: 'repository', label: 'Repository', order: 1 }] as const
     const directory = {
       getSnapshot: () => directorySnapshot,
@@ -277,9 +277,61 @@ describe('Source Client presentation conformance', () => {
     ])))
   })
 
+  it('names tabs, Status cards and the header from the components, and shows the cards they contribute', async () => {
+    const management = (label: string) => ({ label })
+    const sources = [
+      { sourceInstanceKey: 'mnemon-source-runtime', sourceTypeId: 'runtime', packageName: 'dsh-mnemon-source-runtime', role: 'working-context', availability: 'ready', revision: 'r1', capabilities: ['read'], management: management('Runtime') },
+      { sourceInstanceKey: 'source:notes', sourceTypeId: 'notes', packageName: 'acme-memory-notes', role: 'notes', availability: 'ready', revision: 'r1', capabilities: ['read'], management: management('notes') },
+    ]
+    const component = (entryId: string, packageName: string, roles: string[], typeId: string, label: { en: string; 'zh-CN': string }, enabled = true) => ({
+      entryId, packageName, roles, ...enabled ? { typeId } : {}, label, description: { en: '', 'zh-CN': '' }, fields: [], provides: [], requires: [], requiredBy: [], enabled, active: enabled, writable: true, config: {},
+    })
+    const dashboard = {
+      revision: 'view-1', writable: true, strategyTypeId: 'general', sources: [], diagnostics: [], pluginInstallation: { supported: false, suggestions: [] },
+      entries: [
+        component('mnemon-strategy-general', 'dsh-mnemon-strategy-general', ['strategy'], 'general', { en: 'General strategy', 'zh-CN': '通用策略' }),
+        component('mnemon-source-runtime', 'dsh-mnemon-source-runtime', ['source'], 'runtime', { en: 'Runtime memory', 'zh-CN': '运行时记忆' }),
+        component('notes', 'acme-memory-notes', ['source'], 'notes', { en: 'Notes', 'zh-CN': '笔记' }),
+        // A Source switched off has registered nothing, yet still has its card.
+        component('drafts', 'acme-memory-drafts', ['source'], 'drafts', { en: 'Drafts', 'zh-CN': '草稿' }, false),
+      ],
+    }
+    const participation = { recall: 'automatic', write: 'automatic', projection: 'automatic', maintenance: 'automatic' }
+    const layer = { enabled: true, participation, adapterIds: [] }
+    const memorySystem = {
+      serving: true, strategyTypeId: 'general', sources: [],
+      evaluation: { state: 'ready', contributionRevision: 1, sourceInstanceKeys: [], diagnostics: [] },
+      configuration: { id: 'general', strategyId: 'general', layers: { runtime: layer, notes: layer } },
+    }
+    const connection = { rpc: { call: vi.fn(async (_channel: string, endpoint: string) => ({
+      ok: true, value: endpoint === 'source-management-catalog' ? { generationId: 'g1', sources } : endpoint === 'dashboard' ? dashboard : { ...status, memorySystem },
+    })) }, isLoopback: true }
+    const pages = [
+      { id: 'runtime/entries', sourceTypeId: 'runtime', pageId: 'entries', label: 'Runtime', order: 100 },
+      { id: 'notes/list', sourceTypeId: 'notes', pageId: 'list', label: 'Notes list', order: 1000 },
+    ]
+    // Notes contributes its card; Runtime memory contributes none here and says that it runs.
+    const renderSlot = ((name: string, _owner: unknown, options: { entryKey?: string; fallback?: ReactNode }) => name !== MNEMON_COMPONENT_STATUS_SLOT ? <div>page</div>
+      : options.entryKey === 'acme-memory-notes' ? <><strong>12 notes</strong><p>Synced a minute ago</p></> : options.fallback) as never
+    render(<MnemonWorkbench connection={connection as never} settingsScope={settings} t={translateEn} locale="en" sourcePageDirectory={{ getSnapshot: () => pages, subscribe: () => () => {} }} renderSlot={renderSlot} />)
+
+    // A Source's first page carries the component's declared name.
+    expect(await screen.findByRole('tab', { name: 'Notes' })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: 'Runtime memory' })).toBeTruthy()
+    const strip = screen.getByRole('region', { name: 'Mnemon runtime status' })
+    await waitFor(() => expect(within(strip).getByText('12 notes')).toBeTruthy())
+    const card = (name: string) => within(strip).getByText(name).closest('article') as HTMLElement
+    expect(within(card('Notes')).getByText('Synced a minute ago')).toBeTruthy()
+    expect(within(card('Runtime memory')).getByText('Running')).toBeTruthy()
+    expect(within(card('Drafts')).getByText('Off')).toBeTruthy()
+    expect(card('Drafts').getAttribute('data-component')).toBe('acme-memory-drafts')
+    // The header names the composing main Strategy as it declares itself.
+    expect(screen.getByRole('button', { name: 'Connected · General strategy' })).toBeTruthy()
+  })
+
   it('reveals only a connected Source element inside the owning canvas', async () => {
     const source = { sourceInstanceKey: 'source:git', sourceTypeId: 'git', packageName: 'dsh-mnemon-source-git', role: 'repository', availability: 'ready', revision: 'r1', capabilities: ['read'], management: { label: 'Repository' } }
-    const connection = { rpc: { call: vi.fn(async (_channel: string, endpoint: string) => ({ ok: true, value: endpoint === 'source-management-catalog' ? { generationId: 'g1', sources: [source] } : status })) } }
+    const connection = { rpc: { call: vi.fn(async (_channel: string, endpoint: string) => ({ ok: true, value: endpoint === 'source-management-catalog' ? { generationId: 'g1', sources: [source] } : status })) }, isLoopback: true }
     const pages = [{ id: 'git/repository', sourceTypeId: 'git', pageId: 'repository', label: 'Repository', order: 1 }]
     let owner: MemorySourcePageProps | undefined
     const renderSlot = ((_name: string, props: MemorySourcePageProps) => { owner = props; return <div data-testid="source-target">Source content</div> }) as never
@@ -311,7 +363,7 @@ describe('Source Client presentation conformance', () => {
     }))
     const connection = { rpc: { call: vi.fn(async (_channel: string, endpoint: string) => ({
       ok: true, value: endpoint === 'source-management-catalog' ? { generationId: 'g1', sources } : status,
-    })) } }
+    })) }, isLoopback: true }
     const runtimePages = [{ id: 'runtime/entries', sourceTypeId: 'runtime', pageId: 'entries', label: translateEn('nav.runtime'), order: 100 }]
     const renderSlot = ((_name: string, owner: MnemonSourcePageOwnerProps, options: { only?: string }) => options.only !== 'runtime/entries' ? null : <div>
       <span data-testid="runtime-selected-instance">{owner.management?.sourceInstanceKey}</span>
@@ -348,7 +400,7 @@ describe('Source Client presentation conformance', () => {
       if (endpoint === 'source-management-read') return { ok: true, value: { revision: 'health-r4', value: { values: { endpoint: 'https://health.example.test', token: 'server-secret-must-not-render' } } } }
       if (endpoint === 'source-management-mutate') return { ok: true, value: { revision: 'health-r5', value: { configured: true } } }
       return { ok: false, error: { code: 'bad-request', message: `unexpected ${endpoint}`, details: { issues: [] } } }
-    }) } }
+    }) }, isLoopback: true }
     const emptyPages = [] as const
 
     render(<MnemonWorkbench

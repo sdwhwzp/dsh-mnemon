@@ -144,10 +144,10 @@ describe('VersionUpdateManager', () => {
 
   it('finds beta updates without exposing prereleases to stable users', async () => {
     const beta = npmFixture('0.5.0-beta.1', { latest: '0.4.0', beta: '0.5.0-beta.2' })
-    expect((await beta.manager.check()).components[1]).toMatchObject({ current: '0.5.0-beta.1', latest: '0.5.0-beta.2', outdated: true })
+    expect((await beta.manager.check()).components.find(item => item.id === 'dsh-mnemon')).toMatchObject({ current: '0.5.0-beta.1', latest: '0.5.0-beta.2', outdated: true })
     expect(beta.fetch.mock.calls.map(call => call[1])).toEqual(['latest', 'beta'])
     const stable = npmFixture('0.4.0', { latest: '0.4.1', beta: '0.5.0-beta.2' })
-    expect((await stable.manager.check()).components[1]).toMatchObject({ latest: '0.4.1', outdated: true })
+    expect((await stable.manager.check()).components.find(item => item.id === 'dsh-mnemon')).toMatchObject({ latest: '0.4.1', outdated: true })
     expect(stable.fetch).toHaveBeenCalledTimes(1)
     expect(stable.fetch).toHaveBeenCalledWith('dsh-mnemon', 'latest')
     expect(stable.run).not.toHaveBeenCalled()
@@ -155,13 +155,13 @@ describe('VersionUpdateManager', () => {
 
   it('follows the rc channel for an installed release candidate', async () => {
     const candidate = npmFixture('0.5.0-rc.1', { latest: '0.4.7', rc: '0.5.0-rc.2' })
-    expect((await candidate.manager.check()).components[1]).toMatchObject({ current: '0.5.0-rc.1', latest: '0.5.0-rc.2', outdated: true })
+    expect((await candidate.manager.check()).components.find(item => item.id === 'dsh-mnemon')).toMatchObject({ current: '0.5.0-rc.1', latest: '0.5.0-rc.2', outdated: true })
     expect(candidate.fetch.mock.calls.map(call => call[1])).toEqual(['latest', 'rc'])
   })
 
   it('offers the final stable version to beta users but never downgrades to an older stable version', async () => {
     const beta = npmFixture('0.5.0-beta.1', { latest: '0.5.0', beta: '0.5.0-beta.2' })
-    expect((await beta.manager.check()).components[1]).toMatchObject({ latest: '0.5.0', outdated: true })
+    expect((await beta.manager.check()).components.find(item => item.id === 'dsh-mnemon')).toMatchObject({ latest: '0.5.0', outdated: true })
     const older = npmFixture('0.5.0-beta.1', { latest: '0.4.0' })
     await expect(older.manager.update('dsh-mnemon')).resolves.toMatchObject({ updated: false, currentVersion: '0.5.0-beta.1' })
     expect(older.run).not.toHaveBeenCalled()
@@ -169,7 +169,7 @@ describe('VersionUpdateManager', () => {
 
   it('rejects a mis-tagged prerelease instead of silently enrolling a stable user', async () => {
     const stable = npmFixture('0.4.0', { latest: '0.5.0-beta.2' })
-    expect((await stable.manager.check()).components[1]).toMatchObject({ outdated: false, checkError: 'latest-unavailable' })
+    expect((await stable.manager.check()).components.find(item => item.id === 'dsh-mnemon')).toMatchObject({ outdated: false, checkError: 'latest-unavailable' })
     await expect(stable.manager.update('dsh-mnemon')).rejects.toThrow('Unable to verify')
     expect(stable.run).not.toHaveBeenCalled()
   })
@@ -200,7 +200,7 @@ describe('VersionUpdateManager', () => {
     await expect(value.manager.update('dsh-mnemon')).rejects.toThrow('fixture network failure')
     expect(value.manager.currentDshMnemonVersion).toBe('0.5.0-beta.1')
     value.fetch.mockRejectedValue(new Error('registry unavailable'))
-    expect((await value.manager.check()).components[1]).toMatchObject({ outdated: false, checkError: 'latest-unavailable' })
+    expect((await value.manager.check()).components.find(item => item.id === 'dsh-mnemon')).toMatchObject({ outdated: false, checkError: 'latest-unavailable' })
   })
 
   function goFixture(location: 'gobin' | 'gopath' | 'download' = 'gobin') {
@@ -241,7 +241,7 @@ describe('VersionUpdateManager', () => {
 
   it.each(['gobin', 'gopath'] as const)('updates a Go install only at its actual %s output location', async location => {
     const value = goFixture(location)
-    expect((await value.manager.check()).components[0]).toMatchObject({ installMode: 'go', updateSupported: true, executablePath: value.command })
+    expect((await value.manager.check()).components.find(item => item.id === 'mnemon')).toMatchObject({ installMode: 'go', updateSupported: true, executablePath: value.command })
     expect(value.run.mock.calls.some(([, args]) => args[0] === 'install')).toBe(false)
     await expect(value.manager.update('mnemon')).resolves.toMatchObject({ previousVersion: '0.2.0', currentVersion: '0.3.0', updated: true })
     expect(value.run).toHaveBeenCalledWith('/fake/go', ['install', 'github.com/mnemon-dev/mnemon@latest'], expect.objectContaining({ timeoutMs: 600_000 }))
@@ -249,7 +249,7 @@ describe('VersionUpdateManager', () => {
 
   it('keeps downloaded Go binaries outside the install output directory manual', async () => {
     const value = goFixture('download')
-    expect((await value.manager.check()).components[0]).toMatchObject({ current: '0.2.0', outdated: true, installMode: 'manual', updateSupported: false })
+    expect((await value.manager.check()).components.find(item => item.id === 'mnemon')).toMatchObject({ current: '0.2.0', outdated: true, installMode: 'manual', updateSupported: false })
     await expect(value.manager.update('mnemon')).rejects.toThrow('cannot be updated automatically')
     expect(value.run.mock.calls.some(([, args]) => args[0] === 'install')).toBe(false)
   })
@@ -257,13 +257,13 @@ describe('VersionUpdateManager', () => {
   it('does not mistake a dependency for the main Go executable package', async () => {
     const value = goFixture()
     value.state.mainPath = 'example.com/other-tool'
-    expect((await value.manager.check()).components[0]).toMatchObject({ installMode: 'manual', updateSupported: false })
+    expect((await value.manager.check()).components.find(item => item.id === 'mnemon')).toMatchObject({ installMode: 'manual', updateSupported: false })
   })
 
   it('does not offer Go updates when cross compilation would change the output location', async () => {
     const value = goFixture()
     value.environment.GOARCH = process.arch === 'arm64' ? 'x64' : 'arm64'
-    expect((await value.manager.check()).components[0]).toMatchObject({ installMode: 'manual', updateSupported: false })
+    expect((await value.manager.check()).components.find(item => item.id === 'mnemon')).toMatchObject({ installMode: 'manual', updateSupported: false })
   })
 
   it.each(['0.2.0', 'unknown'])('does not report a successful CLI update when the active version is %s', async installed => {
@@ -327,7 +327,7 @@ describe('VersionUpdateManager', () => {
 
   it('detects the official npm launcher and updates through the CLI that DSH actually uses', async () => {
     const f = cliNpmFixture()
-    expect((await f.manager.check()).components[0]).toMatchObject({ installMode: 'npm', updateSupported: true, updateHint: 'npm', current: '0.2.8', latest: '0.2.9', executablePath: f.command })
+    expect((await f.manager.check()).components.find(item => item.id === 'mnemon')).toMatchObject({ installMode: 'npm', updateSupported: true, updateHint: 'npm', current: '0.2.8', latest: '0.2.9', executablePath: f.command })
     expect(f.run.mock.calls.some(([, args]) => args.includes('update'))).toBe(false)
     await expect(f.manager.update('mnemon')).resolves.toMatchObject({ currentVersion: '0.2.9', updated: true, restartRequired: false })
     expect(f.run).toHaveBeenCalledWith(process.execPath, [realpathSync(f.launcher), 'update'], expect.objectContaining({ timeoutMs: 600_000 }))
@@ -336,7 +336,7 @@ describe('VersionUpdateManager', () => {
   it('does not update a different Node/npm installation', async () => {
     const f = cliNpmFixture()
     f.state.globalRoot = directory('other-npm')
-    expect((await f.manager.check()).components[0]).toMatchObject({ installMode: 'npm', updateSupported: false, updateHint: 'npm-unmanaged' })
+    expect((await f.manager.check()).components.find(item => item.id === 'mnemon')).toMatchObject({ installMode: 'npm', updateSupported: false, updateHint: 'npm-unmanaged' })
     await expect(f.manager.update('mnemon')).rejects.toThrow('cannot be updated automatically')
     expect(f.run.mock.calls.some(([, args]) => args.includes('update'))).toBe(false)
   })
@@ -344,9 +344,9 @@ describe('VersionUpdateManager', () => {
   it('retains npm provenance when npm or the native binary is unavailable', async () => {
     const f = cliNpmFixture()
     f.state.npm = false
-    expect((await f.manager.check()).components[0]).toMatchObject({ installMode: 'npm', updateSupported: false, updateHint: 'npm-missing' })
+    expect((await f.manager.check()).components.find(item => item.id === 'mnemon')).toMatchObject({ installMode: 'npm', updateSupported: false, updateHint: 'npm-missing' })
     f.state.broken = true
-    const status = (await f.manager.check()).components[0]!
+    const status = (await f.manager.check()).components.find(item => item.id === 'mnemon')!
     expect(status).toMatchObject({ installMode: 'npm', updateSupported: false, updateHint: 'cli-unreadable' })
     expect(status.current).toBeUndefined()
   })
@@ -386,7 +386,8 @@ describe('VersionUpdateManager', () => {
     const manager = new VersionUpdateManager({ ...f.options,
       ...(windowsShims ? { mnemonCliPath: () => shim, resolveExecutable: (name: string) => name === shim ? shim : name === 'npm' ? npm : undefined } : {}),
     })
-    expect((await manager.check()).components[0]).toMatchObject({ current: '0.2.8', installMode: 'npm', updateSupported: true, updateHint: 'npm' })
+    expect((await manager.check()).components.find(item => item.id === 'mnemon')).toMatchObject({ current: '0.2.8', installMode: 'npm', updateSupported: true, updateHint: 'npm' })
+    expect((await manager.check()).components.map(item => item.id)).toEqual(['dsh-mnemon', 'mnemon'])
     await expect(manager.update('mnemon')).resolves.toMatchObject({ previousVersion: '0.2.8', currentVersion: '0.2.9', updated: true })
     const launcher = windowsShims ? f.launcher : realpathSync(f.launcher)
     const nodeCalls = f.run.mock.calls.filter(([command]) => command === process.execPath)
@@ -414,7 +415,7 @@ describe('VersionUpdateManager', () => {
 
   it('shows actual subpackage versions and separates Starter pins from direct Profile dependencies', async () => {
     const f = subpackageFixture()
-    const packages = (await f.manager.check()).components[1]!.packages!
+    const packages = (await f.manager.check()).components.find(item => item.id === 'dsh-mnemon')!.packages!
     expect(packages).toHaveLength(2)
     expect(packages.find(item => item.id === f.bundled)).toMatchObject({ kind: 'source', current: '0.5.1', expectedVersion: '0.5.1', latest: '0.5.3', managedBy: 'starter', updateSupported: false })
     expect(packages.find(item => item.id === f.direct)).toMatchObject({ kind: 'provider', current: '0.5.2', expectedVersion: '0.5.1', managedBy: 'profile', updateSupported: true })
@@ -427,7 +428,7 @@ describe('VersionUpdateManager', () => {
     await expect(f.manager.update(f.direct)).resolves.toMatchObject({ component: f.direct, previousVersion: '0.5.2', currentVersion: '0.5.3', restartRequired: true })
     expect(f.run).toHaveBeenCalledWith('/fake/pnpm', ['add', `${f.direct}@0.5.3`, '--save-exact'], expect.objectContaining({ cwd: f.profile }))
     expect(f.manager.currentDshMnemonVersion).toBe('0.5.2')
-    const main = (await f.manager.check()).components[1]!
+    const main = (await f.manager.check()).components.find(item => item.id === 'dsh-mnemon')!
     expect(main.restartRequired).toBe(true)
     expect(main.packages!.find(item => item.id === f.direct)).toMatchObject({ current: '0.5.3', outdated: false, restartRequired: true })
     expect(main.packages!.find(item => item.id === f.bundled)).toMatchObject({ current: '0.5.1', restartRequired: false })
@@ -438,7 +439,7 @@ describe('VersionUpdateManager', () => {
     await expect(f.manager.update(f.bundled)).rejects.toThrow('through its Starter')
     await expect(f.manager.update('dsh-mnemon-source-uninstalled')).rejects.toThrow('Unknown version component')
     json(join(f.profile, 'package.json'), { name: 'dsh-profile-web', dependencies: { 'dsh-mnemon': '0.5.2', [f.direct]: `link:${f.directRoot}` } })
-    expect((await f.manager.check()).components[1]!.packages!.find(item => item.id === f.direct)).toMatchObject({ installMode: 'link', updateSupported: false })
+    expect((await f.manager.check()).components.find(item => item.id === 'dsh-mnemon')!.packages!.find(item => item.id === f.direct)).toMatchObject({ installMode: 'link', updateSupported: false })
     await expect(f.manager.update(f.direct)).rejects.toThrow('original installation method')
     expect(f.run).not.toHaveBeenCalled()
   })
@@ -446,7 +447,7 @@ describe('VersionUpdateManager', () => {
   it('keeps other package versions available if one package registry request fails', async () => {
     const f = subpackageFixture()
     f.fetch.mockImplementation(async name => { if (name === f.direct) throw new Error('offline'); return '0.5.3' })
-    const main = (await f.manager.check()).components[1]!
+    const main = (await f.manager.check()).components.find(item => item.id === 'dsh-mnemon')!
     expect(main.latest).toBe('0.5.3')
     expect(main.packages!.find(item => item.id === f.direct)).toMatchObject({ current: '0.5.2', checkError: 'latest-unavailable' })
     expect(main.packages!.find(item => item.id === f.bundled)).toMatchObject({ latest: '0.5.3', outdated: true })

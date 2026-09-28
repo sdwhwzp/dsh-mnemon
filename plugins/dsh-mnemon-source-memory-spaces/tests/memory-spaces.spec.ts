@@ -3,10 +3,13 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { resolveMemorySpacesConfig } from "../src/config.ts"
-import { createRegistry } from './providers.ts'
+import { createRegistry, installedCliStub } from './providers.ts'
 import type { ProcessRunner } from '../src/providers/process.ts'
 import { MemoryProviderCatalog } from '../src/providers/catalog.ts'
 import { createRunner } from '../src/runner.ts'
+
+// The runner sees an installed Mnemon CLI; each test fakes the process it starts.
+const FAKE_CLI = installedCliStub()
 
 const temporaryDirectories: string[] = []
 
@@ -29,7 +32,7 @@ describe('MemorySpaceRegistry', () => {
     const original = { id: 'research', name: '研究记忆体', description: 'User-authored title, not product copy.', active: false,
       createdAt: '2026-08-13T00:00:00.000Z', updatedAt: '2026-08-13T00:00:00.000Z' }
     writeFileSync(join(dataDir, 'data', '.dsh-memory-bodies.json'), JSON.stringify({ version: 1, bodies: [original] }))
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true)
     expect(registry.get('research')).toMatchObject(original)
     registry.update('research', { active: true })
@@ -41,7 +44,7 @@ describe('MemorySpaceRegistry', () => {
 
   it('refreshes once per public metadata operation, not once per memory space or Provider descriptor', () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true)
     registry.syncProviderService('holographic', { dataPath: join(dataDir, 'facts.json') }, Array.from({ length: 128 }, (_, index) => ({
       externalId: `namespace-${index}`, name: `Namespace ${index}`, description: 'Real registry metadata fixture.', connection: {},
@@ -63,7 +66,7 @@ describe('MemorySpaceRegistry', () => {
 
   it('keeps an empty data directory at zero memory spaces instead of creating a phantom default', () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true)
 
     expect(registry.list()).toEqual([])
@@ -74,7 +77,7 @@ describe('MemorySpaceRegistry', () => {
     const dataDir = temporaryDirectory()
     mkdirSync(join(dataDir, 'data', 'project'), { recursive: true })
     writeFileSync(join(dataDir, 'data', 'project', 'mnemon.db'), 'existing database')
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir, store: 'project' }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir, store: 'project' }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true, () => new Date('2026-08-13T00:00:00.000Z'))
 
     expect(registry.list()).toEqual([
@@ -105,7 +108,7 @@ describe('MemorySpaceRegistry', () => {
         updatedAt: '2026-08-13T00:00:00.000Z',
       }],
     }))
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
 
     const registry = createRegistry(runner, true)
 
@@ -118,7 +121,7 @@ describe('MemorySpaceRegistry', () => {
   it('uses default for the first native Store and persists DSH metadata independently', async () => {
     const dataDir = temporaryDirectory()
     const process = vi.fn<ProcessRunner>(async () => ({ stdout: 'Created store', stderr: '', exitCode: 0 }))
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir, store: 'default' }), process)
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir, store: 'default' }), process)
     const registry = createRegistry(runner, true, () => new Date('2026-08-13T00:00:00.000Z'))
 
     const created = await registry.create({ name: '产品决策', description: '产品范围、取舍与稳定决策；规划或复盘产品方向时召回。' })
@@ -128,7 +131,7 @@ describe('MemorySpaceRegistry', () => {
 
     const reloaded = createRegistry(runner, true)
     expect(reloaded.get(created.id)).toMatchObject({ name: '产品决策', description: '稳定产品上下文；规划或复盘产品方向时召回。', active: true })
-    expect(process).toHaveBeenCalledWith('/fake/mnemon', expect.arrayContaining(['--store', 'default', 'store', 'create', 'default']), expect.anything())
+    expect(process).toHaveBeenCalledWith(FAKE_CLI, expect.arrayContaining(['--store', 'default', 'store', 'create', 'default']), expect.anything())
   })
 
   it('removes the native store before deleting its catalog entry', async () => {
@@ -142,12 +145,12 @@ describe('MemorySpaceRegistry', () => {
       if (args.includes('remove')) rmSync(storeDirectory, { recursive: true, force: true })
       return { stdout: 'Removed store', stderr: '', exitCode: 0 }
     })
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir, store: 'project' }), process)
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir, store: 'project' }), process)
     const registry = createRegistry(runner, true)
 
     await expect(registry.remove('project')).resolves.toMatchObject({ id: 'project', name: 'project' })
     expect(registry.list()).toEqual([expect.objectContaining({ id: 'default' })])
-    expect(process).toHaveBeenCalledWith('/fake/mnemon', ['--data-dir', dataDir, '--store', 'default', 'store', 'remove', 'project'], expect.anything())
+    expect(process).toHaveBeenCalledWith(FAKE_CLI, ['--data-dir', dataDir, '--store', 'default', 'store', 'remove', 'project'], expect.anything())
   })
 
   it('switches Mnemon away from a deactivated default Store before deleting it', async () => {
@@ -163,7 +166,7 @@ describe('MemorySpaceRegistry', () => {
       if (args[operation + 1] === 'remove') rmSync(join(dataDir, 'data', String(args[operation + 2])), { recursive: true, force: true })
       return { stdout: '', stderr: '', exitCode: 0 }
     })
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), process)
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), process)
     const registry = createRegistry(runner, true)
     registry.setActive('default', false)
     registry.setActive('research', true)
@@ -183,7 +186,7 @@ describe('MemorySpaceRegistry', () => {
     mkdirSync(join(dataDir, 'data', 'default'), { recursive: true })
     writeFileSync(join(dataDir, 'data', 'default', 'mnemon.db'), 'default database')
     const process = vi.fn<ProcessRunner>()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), process)
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), process)
     const registry = createRegistry(runner, true)
     registry.setActive('default', false)
 
@@ -195,7 +198,7 @@ describe('MemorySpaceRegistry', () => {
   it('requires a routing description and never derives a new id from model-authored text', async () => {
     const dataDir = temporaryDirectory()
     const process = vi.fn<ProcessRunner>(async () => ({ stdout: 'Created store', stderr: '', exitCode: 0 }))
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir, store: 'default' }), process)
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir, store: 'default' }), process)
     const registry = createRegistry(runner, true)
 
     await expect(registry.create({ name: '含义不足', description: '' })).rejects.toThrow('description is required')
@@ -208,7 +211,7 @@ describe('MemorySpaceRegistry', () => {
   it('registers an OpenViking memory space without creating or deleting a native Store', async () => {
     const dataDir = temporaryDirectory()
     const process = vi.fn<ProcessRunner>()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), process)
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), process)
     const registry = createRegistry(runner, true, () => new Date('2026-08-16T00:00:00.000Z'))
 
     const created = await registry.create({
@@ -241,7 +244,7 @@ describe('MemorySpaceRegistry', () => {
         capabilities: expect.objectContaining({ graph: false, remember: true, writeMode: 'exact' }),
       },
     })
-    expect(registry.openVikingConnection(created.id)).toMatchObject({ apiKey: 'secret-token' })
+    expect(registry.providerConnection(created.id, 'openviking')).toMatchObject({ apiKey: 'secret-token' })
     expect(JSON.parse(readFileSync(registry.registryPath, 'utf8'))).toEqual({ version: 1, bodies: [] })
     expect(JSON.parse(readFileSync(registry.providerRegistryPath, 'utf8'))).toMatchObject({
       version: 4,
@@ -262,13 +265,13 @@ describe('MemorySpaceRegistry', () => {
 
   it('keeps provider service settings separate from Memory Space scope settings', async () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true)
 
     await expect(registry.create({
       name: '团队记忆', description: '团队共享内容。', providerId: 'openviking',
       connection: { targetUri: 'viking://user/team/memories', user: 'alice' },
-    })).rejects.toThrow('enable it in Settings first')
+    })).rejects.toThrow('enable it on the dsh-mnemon page under Plugins first')
 
     const service = registry.updateProviderService('openviking', { endpoint: 'http://127.0.0.1:1933', apiKey: 'service-secret', account: 'team' })
     expect(service).toEqual({ providerId: 'openviking', enabled: true, configured: true, settings: { endpoint: 'http://127.0.0.1:1933', account: 'team' }, configuredSecrets: ['apiKey'] })
@@ -289,7 +292,7 @@ describe('MemorySpaceRegistry', () => {
 
   it('derives third-party card location from its descriptor instead of built-in field names', async () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const catalog = new MemoryProviderCatalog([{
       id: 'vector-store', label: 'Vector Store', kind: 'remote', workspaceBinding: 'provider-global',
       summary: 'Fixture vector store.', origin: 'third-party',
@@ -312,7 +315,7 @@ describe('MemorySpaceRegistry', () => {
 
   it('keeps third-party providers off by default and removes local Memory Space projections when disabled', async () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true)
 
     expect(registry.providerServices().items.every(service => !service.enabled && !service.configured)).toBe(true)
@@ -349,7 +352,7 @@ describe('MemorySpaceRegistry', () => {
         createdAt: '2026-08-16T00:00:00.000Z', updatedAt: '2026-08-16T00:00:00.000Z',
       }],
     }))
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true)
 
     expect(registry.list()).toEqual([])
@@ -358,7 +361,7 @@ describe('MemorySpaceRegistry', () => {
 
   it('atomically maps provider discovery metadata and removes namespaces missing from the next sync', () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true, () => new Date('2026-08-17T00:00:00.000Z'))
     const service = registry.resolveProviderService('hindsight', { endpoint: 'http://127.0.0.1:18889', apiKey: 'secret' })
 
@@ -404,7 +407,7 @@ describe('MemorySpaceRegistry', () => {
 
   it('fills missing provider metadata from the nearest namespace fields and bounded defaults', () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true)
     const longTitle = 'T'.repeat(120)
     const longDescription = 'D'.repeat(1_200)
@@ -422,7 +425,7 @@ describe('MemorySpaceRegistry', () => {
 
   it('promotes a discovered ByteRover directory into reusable service configuration', () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true)
     const service = registry.resolveProviderService('byterover', { cliPath: 'brv' })
 
@@ -441,7 +444,7 @@ describe('MemorySpaceRegistry', () => {
 
   it('commits validated AI metadata as one batch without partially applying invalid output', async () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>(async () => ({ stdout: '', stderr: '', exitCode: 0 })))
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>(async () => ({ stdout: '', stderr: '', exitCode: 0 })))
     const registry = createRegistry(runner, true)
     const first = await registry.create({ name: 'First', description: 'First durable scope.' })
     const second = await registry.create({ name: 'Second', description: 'Second durable scope.' })
@@ -464,7 +467,7 @@ describe('MemorySpaceRegistry', () => {
   it('persists an audited automatic placement and refuses to create before placement resolves', async () => {
     const dataDir = temporaryDirectory()
     const process = vi.fn<ProcessRunner>(async () => ({ stdout: 'Created store', stderr: '', exitCode: 0 }))
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), process)
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), process)
     const registry = createRegistry(runner, true, () => new Date('2026-08-16T00:00:00.000Z'))
     const request = {
       name: '本地产品决策',
@@ -498,7 +501,7 @@ describe('MemorySpaceRegistry', () => {
 
   it('keeps candidate credentials out of placement metadata and persists only the selected provider connection', async () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true, () => new Date('2026-08-16T00:00:00.000Z'))
     const request = {
       name: '用户偏好',
@@ -552,7 +555,7 @@ describe('MemorySpaceRegistry', () => {
         createdAt: '2026-08-16T00:00:00.000Z', updatedAt: '2026-08-16T00:00:00.000Z',
       }],
     }))
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
 
     const body = createRegistry(runner, true).get('default')
     expect(body).toMatchObject({ id: 'default', name: 'Local', provider: { id: 'mnemon-native' } })
@@ -570,7 +573,7 @@ describe('MemorySpaceRegistry', () => {
         { id: 'openviking-legacy', name: 'Remote', description: 'Remote data.', active: true, providerId: 'openviking', openViking: { endpoint: 'https://memory.example.com', targetUri: 'viking://user/team/memories', apiKey: 'legacy-secret', account: '', user: '', actorPeerId: '' }, createdAt: '2026-08-16T00:00:00.000Z', updatedAt: '2026-08-16T00:00:00.000Z' },
       ],
     }))
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
 
     const registry = createRegistry(runner, true)
 
@@ -581,7 +584,7 @@ describe('MemorySpaceRegistry', () => {
 
   it('rejects OpenViking targets outside the user memory namespace', async () => {
     const dataDir = temporaryDirectory()
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon', dataDir }), vi.fn<ProcessRunner>())
+    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir }), vi.fn<ProcessRunner>())
     const registry = createRegistry(runner, true)
 
     await expect(registry.create({

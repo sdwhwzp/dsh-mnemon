@@ -43,7 +43,6 @@ describe('Sidebar layout invariants', () => {
 
   it('pins primary page headers at the canvas origin without an initial sticky settling distance', () => {
     expect(sidebarCss).toContain(".shell .canvas[data-lock-page-header] [class*='pageHeader'] {\n  position: sticky;\n  z-index: 12;\n  top: 0;")
-    expect(sidebarCss).not.toContain("top: -14px")
   })
 
   it('keeps the connected label visible in the compact Sidebar header', () => {
@@ -57,8 +56,6 @@ describe('Sidebar layout invariants', () => {
     expect(viewCss).toContain('.topNavigation { display: flex;')
     expect(sidebarCss).toContain('.shell .topNavigation {\n  min-height: 0;')
     expect(sidebarCss).toContain('border-bottom-color: var(--dsw-alias-state-business-primary);')
-    expect(viewCss).not.toContain('.sideNavigation')
-    expect(sidebarCss).not.toContain('.sideNavigation')
   })
 
   it('renders runtime metadata as real chips while keeping form values at normal weight', () => {

@@ -308,12 +308,3 @@ export class ProfileMnemonSettings implements HostSettingsService {
     })
   }
 }
-
-export function createHostSettings(ctx: HostContextShape, config: unknown): HostSettingsService {
-  return typeof ctx.settings.register === 'function' ? ctx.settings : new ProfileMnemonSettings(ctx, config)
-}
-
-export function subscribeSettings(ctx: HostContextShape, settings: HostSettingsService, listener: SettingsListener): () => unknown {
-  return settings instanceof ProfileMnemonSettings ? settings.onUpdated(listener)
-    : ctx.on('settings/updated', listener as never)
-}

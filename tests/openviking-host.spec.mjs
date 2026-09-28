@@ -6,6 +6,7 @@ import { MnemonSubagentCoordinator } from '../src/host/subagent.ts'
 import { SourceSession } from '../src/host/source-session.ts'
 import { registerTools } from '../src/host/tools.ts'
 import { agentScope } from '../src/host/runtime.ts'
+import { sessionLog } from './fixtures/session-log.ts'
 
 const releases = []
 afterEach(async () => {
@@ -33,7 +34,7 @@ async function fixture() {
   const personal = select('personal-openviking')
   expect(work).toBeDefined()
   expect(personal).toBeDefined()
-  const agent = { id: 'openviking-root', session: { header: { cwd: f.workspace }, events: [] } }
+  const agent = { id: 'openviking-root', session: { header: { cwd: f.workspace }, ...sessionLog() } }
   const planning = { action: 'planned', summary: 'Synthetic cold index preserving the exact original.', memoryBodyId: work.id }
   const host = { list: () => ['spawn'], getProvider: () => ({ capabilities: { outputSchema: true, depthLimit: true, toolFilter: true, persona: true } }),
     start: vi.fn(async () => ({ id: 'archive-planner', result: Promise.resolve({ output: [], structured: planning, stopReason: 'completed' }), dispose() {} })) }
@@ -47,7 +48,7 @@ describe('OpenViking writes through composed Host and Sources', () => {
     const f = await fixture()
     const tools = new Map()
     registerTools({ tools: { register: tool => tools.set(tool.name, tool) } }, f.live, f.coordinator)
-    const child = { id: 'openviking-child', session: { header: { cwd: f.workspace, origin: 'subagent', parentSession: f.agent.id }, events: [] } }
+    const child = { id: 'openviking-child', session: { header: { cwd: f.workspace, origin: 'subagent', parentSession: f.agent.id }, ...sessionLog() } }
     const turn = await f.graph.composableTurns.beginTurn(f.agent.id + ':1', agentScope(f.agent, f.config))
     f.graph.composableTurns.pinTurn(child.id + ':1', agentScope(child, f.config), turn.view.id)
     const content = 'Synthetic work release canary.\n逐字读回。'

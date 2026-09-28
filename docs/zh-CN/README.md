@@ -2,7 +2,7 @@
 
 **简体中文** | [English](../en/README.md) | [项目首页](../../README.zh-CN.md)
 
-从默认三层工作流开始即可。实现是可组合的，日常使用不要求管理插件。
+从默认的分层策略开始即可。实现是可组合的，日常使用不要求管理插件。
 
 ## 使用记忆系统
 
@@ -34,7 +34,7 @@
 | 构建、测试与真实 WebUI 截图 | [开发与验证](./development/README.md) |
 | 为独立包管理版本和发布 | [发布流程](./development/releasing.md) |
 
-Source 拥有记忆及其操作，Strategy 组合选中的 Source，Core 为执行回合校验出一个不可变 View。默认三层是一种组合，不是 Core 强制的记忆类型。Memory Spaces Provider 是这个 Source 内部的子模块。
+Source 拥有记忆及其操作，Strategy 组合选中的 Source，Core 为执行回合校验出一个不可变 View。分层策略是一种组合，不是 Core 强制的记忆类型。Memory Spaces Provider 是这个 Source 内部的子模块。
 
 [发布历史](./releases/README.md) · [路线图](./roadmap.md) · [历史验收证据](../pr-assets/README.md)
 

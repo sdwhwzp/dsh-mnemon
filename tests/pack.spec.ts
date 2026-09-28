@@ -101,6 +101,14 @@ describe('Mnemon Pack', () => {
     })
   })
 
+  it('names the root it reads and writes, and the default one the global scope would use', () => {
+    const root = temporary('pack-target')
+    const defaults = temporary('pack-default')
+    vi.stubEnv('MNEMON_DATA_DIR', defaults)
+    const created = runner(root)
+    expect(new MnemonPackManager(created.runner, created.config).target()).toEqual({ root, scope: 'custom', defaultRoot: defaults })
+  })
+
   it('exports each component independently with the same Pack envelope', async () => {
     const source = await fixture('pack-parts', 2)
     for (const scope of ['runtime', 'documents', 'memory-spaces'] as const) {

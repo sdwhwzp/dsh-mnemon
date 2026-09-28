@@ -1,6 +1,6 @@
 # dsh-mnemon-strategy-light-context
 
-Optional additive projection cap for `dsh-mnemon-strategy-default-three-tier`.
+Optional additive projection cap for any Mnemon main Strategy that accepts Core's standard `projection` slot, including the Layered and General strategies.
 
 ```yaml
 - id: mnemon-strategy-light-context
@@ -13,7 +13,7 @@ The cap is shared by all selected Sources and can only narrow the Host turn budg
 
 ## Installation and verification
 
-The default Starter already installs this package as a disabled Entry. Use its switch under **Settings → Memory System → Memory enhancements**; do not add a second copy of the same Entry. The configuration example above is for an explicitly composed custom Profile.
+The default Starter already installs this package as a disabled Entry. Use its switch on the `dsh-mnemon` page under **Plugins**; do not add a second copy of the same Entry. The configuration example above is for an explicitly composed custom Profile.
 
 Installing an npm package is not the same as activating a contribution. From a source checkout, run `pnpm verify` with declared public peers installed; use a packed peer for unreleased SDK work.
 

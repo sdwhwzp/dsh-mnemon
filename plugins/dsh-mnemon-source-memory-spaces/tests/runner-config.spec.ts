@@ -127,26 +127,4 @@ describe('Source-owned CLI configuration and serialization', () => {
 
     await expect(runner.runText(['status'])).rejects.toThrow('MNEMON_CLI_PATH or mnemon.cliPath')
   })
-
-  it('holds the CLI queue across one exclusive Pack operation', async () => {
-    const events: string[] = []
-    const process = vi.fn<ProcessRunner>(async (_command, args) => {
-      events.push(`cli:${args.at(-1)}:start`)
-      await Promise.resolve()
-      events.push(`cli:${args.at(-1)}:end`)
-      return { stdout: '{}', stderr: '', exitCode: 0 }
-    })
-    const runner = createRunner(resolveMemorySpacesConfig({ cliPath: '/fake/mnemon' }), process)
-
-    const first = runner.runText(['first'])
-    const exclusive = runner.withExclusive(async () => {
-      events.push('pack:start')
-      await Promise.resolve()
-      events.push('pack:end')
-    })
-    const second = runner.runText(['second'])
-    await Promise.all([first, exclusive, second])
-
-    expect(events).toEqual(['cli:first:start', 'cli:first:end', 'pack:start', 'pack:end', 'cli:second:start', 'cli:second:end'])
-  })
 })

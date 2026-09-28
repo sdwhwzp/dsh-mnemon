@@ -211,7 +211,7 @@ namespaces: mnemon, mnemon-ui
 endpoints: get, mutate
 ```
 
-mutation 使用 settings revision 防止覆盖并发编辑。`mnemon` 管理 Host / 存储设置；`mnemon-ui` 管理 `turnBar` 与 `saveAction`。
+mutation 使用 settings revision 防止覆盖并发编辑。`mnemon` 管理 Host / 存储设置；`mnemon-ui` 管理 `turnBar` 与 `saveAction`。“插件”中的 `dsh-mnemon` 页面（`plugins.bundle.config`）在回环页面和远程页面上都通过该通道读写。回环页面还会跟随 DSH `ctx.configForms` 中 `mnemon` 条目的 revision，在其他页面或 profile 重新加载改动它时重新读取该通道。
 
 Mnemon 对两代 transport 使用同一种注册调用：始终传入 rc.2 authority 对象，DSH 0.1.2 将其作为额外 JavaScript 参数忽略。因此稳定版 DSH 0.1.2-rc.1 与它的 alpha.5 前序版本使用同一浏览器会话认证完整 Host API，rc.2 回滚则保留逐方法 trust 层；整个过程没有运行时版本或函数参数数量分支。
 
@@ -234,4 +234,4 @@ Core 发布 `ctx.mnemonMemory: MnemonMemoryService`，实际服务只提供 `ins
 
 ## 国际化范围
 
-主要 Sidebar 工作台、设置与对话内入口支持中文和英文，并跟随 DSH locale 实时切换。品牌名、工具名和配置键不翻译。`/mnemon` 命令、模型工具卡、部分 Host 错误与兼容元数据尚未完全国际化。
+主要 Sidebar 工作台、插件页中的配置与对话内入口支持中文和英文，并跟随 DSH locale 实时切换。品牌名、工具名和配置键不翻译。`/mnemon` 命令、模型工具卡、部分 Host 错误与兼容元数据尚未完全国际化。

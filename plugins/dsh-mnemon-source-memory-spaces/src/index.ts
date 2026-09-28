@@ -1,5 +1,5 @@
 import type { Context } from '@deepseek-ai/cordis'
-import z from 'schemastery'
+import z from '@deepseek-ai/schemastery'
 import { defineMemoryPlugin, installMemory, memoryConfigurationDigest } from 'dsh-mnemon/extension-sdk'
 import { createMemorySpacesSource } from './source.ts'
 import { PrivateMemorySpaceProviderHost } from './providers/host.ts'
@@ -15,7 +15,7 @@ export const inject = ['mnemonMemory']
 export const memoryPlugin = defineMemoryPlugin({
   packageName: name,
   label: { en: 'Memory Spaces', 'zh-CN': '记忆空间' },
-  description: { en: 'Durable evidence backed by explicitly configured Provider children.', 'zh-CN': '由显式配置的 Provider 子插件承载的长期证据。' },
+  description: { en: 'Provider-backed durable evidence recalled on demand across tasks and sessions.', 'zh-CN': '由 Provider 支撑的持久证据，按需跨任务与会话召回。' },
   roles: ['source'],
   provides: [{ id: 'source' }, { id: 'source.durable-evidence' }],
 })
@@ -35,24 +35,19 @@ export const Config = z.intersect([MemorySpacesConfig, z.object({
   providers: z.array(z.union([z.string(), MemorySpaceProviderDeclarationSchema] as const)).default([]),
 })]) as unknown as z<Config>
 
+/** DSH's cordis-plugin-loader always provides these members. */
 interface LoaderLike {
   locate(fiber?: unknown): string | undefined
-  import?(specifier: string): Promise<unknown>
-  unwrapExports?(module: unknown): unknown
-}
-
-interface EntryLike {
-  options?: { id?: unknown }
+  import(specifier: string): Promise<unknown>
+  unwrapExports(module: unknown): unknown
 }
 
 function sourceInstanceId(ctx: Context, explicit?: string): string {
   const configured = explicit?.trim()
   if (configured !== undefined && configured !== '') return configured
-  const loader = typeof ctx.get === 'function' ? ctx.get('loader', false) as LoaderLike | undefined : undefined
+  const loader = ctx.get('loader', false) as LoaderLike | undefined
   const located = loader?.locate(ctx.fiber)?.trim()
   if (located !== undefined && located !== '') return located
-  const entryId = (ctx.fiber as unknown as { entry?: EntryLike }).entry?.options?.id
-  if (typeof entryId === 'string' && entryId.trim() !== '') return entryId.trim()
   throw new Error('Memory Spaces requires a stable Loader Entry id; pass instanceId for a direct mount')
 }
 
@@ -71,8 +66,7 @@ export interface MemorySpaceProviderDeclaration {
 }
 
 function importedProviderModule(loader: LoaderLike, value: unknown, specifier: string): MemorySpaceProviderModule<unknown> {
-  const unwrapped = loader.unwrapExports?.(value)
-    ?? (typeof value === 'object' && value !== null && 'default' in value ? (value as { default: unknown }).default : value)
+  const unwrapped = loader.unwrapExports(value)
   if (typeof unwrapped !== 'object' || unwrapped === null) {
     throw new Error(`Memory Space Provider module ${specifier} did not export a typed child module`)
   }
@@ -85,13 +79,13 @@ export async function resolveMemorySpaceProviderEntries(
   declarations: readonly (string | MemorySpaceProviderDeclaration)[],
 ): Promise<MemorySpaceProviderEntry[]> {
   if (declarations.length === 0) throw new Error('Memory Spaces requires at least one explicit Provider child')
-  const loader = typeof ctx.get === 'function' ? ctx.get('loader', false) as LoaderLike | undefined : undefined
+  const loader = ctx.get('loader', false) as LoaderLike | undefined
   const entries: MemorySpaceProviderEntry[] = []
   const instanceIds = new Set<string>()
   for (const declaration of declarations) {
     const use = (typeof declaration === 'string' ? declaration : declaration.use).trim()
     if (use === '') throw new Error('Memory Space Provider declaration use is required')
-    if (loader?.import === undefined) throw new Error('cannot resolve installed Memory Space Provider module without the DSH Loader: ' + use)
+    if (loader === undefined) throw new Error('cannot resolve installed Memory Space Provider module without the DSH Loader: ' + use)
     const module = importedProviderModule(loader, await loader.import(use), use)
     const entry: MemorySpaceProviderEntry = {
       instanceId: typeof declaration === 'string' ? module.id : declaration.instanceId?.trim() || module.id,

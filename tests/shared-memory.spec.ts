@@ -114,7 +114,7 @@ describe('shared memory permission comes from the principal', () => {
   it('grants write to an admin and withholds it from a member, ignoring the plugin config', () => {
     const { accounts, shared } = dirs()
     // The plugin config asks for write access for everyone; only the role decides.
-    const hosts = new MnemonAccounts(hostContext(), accounts, { sharedMemoryDir: shared, sharedMemoryWritable: true } as never)
+    const hosts = new MnemonAccounts(hostContext(), accounts, { sharedMemoryDir: shared, sharedMemoryWritable: true } as never, memorySettings())
     expect(hosts.config(admin).sharedMemoryWritable).toBe(true)
     expect(hosts.config(member).sharedMemoryWritable).toBeUndefined()
     expect(hosts.config(admin).sharedMemoryDir).toBe(shared)
@@ -123,7 +123,7 @@ describe('shared memory permission comes from the principal', () => {
 
   it('keeps every account directory separate from the shared one', () => {
     const { accounts, shared } = dirs()
-    const hosts = new MnemonAccounts(hostContext(), accounts, { sharedMemoryDir: shared } as never)
+    const hosts = new MnemonAccounts(hostContext(), accounts, { sharedMemoryDir: shared } as never, memorySettings())
     const adminDir = hosts.config(admin).dataDir
     const memberDir = hosts.config(member).dataDir
     expect(adminDir).not.toBe(memberDir)

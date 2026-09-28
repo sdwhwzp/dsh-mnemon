@@ -9,7 +9,7 @@
 ## 已交付的基础
 
 - 独立 Source、Strategy、Provider 包，小型公共贡献服务、Source 自有页面，以及每个执行回合唯一的不可变 View。
-- 默认三层 Starter 与三个可组合的可选增强。
+- 以分层策略为默认主策略的 Starter，以及三个可组合的可选增强。
 - Source 内部的 Provider 描述符、连接 schema、脱敏和子 Fiber 注册。
 - 公开契约测试、仓库外独立制品验证、隔离 Headless/WebUI 夹具，以及选择性包发布。
 

@@ -69,7 +69,7 @@ describe('selective, channel-safe official release', () => {
   it('validates every real package without requiring one shared version', async () => {
     const packages = await readReleasePackages(root)
     const plan = createReleasePlan(packages)
-    expect(plan.composition).toHaveLength(17)
+    expect(plan.composition).toHaveLength(18)
     expect(plan.distTag).toBe('dsh')
     expect(plan.composition.at(-1).manifest.name).toBe('dsh-mnemon')
     for (const { directory, manifest } of packages.filter(packageItem => packageItem.manifest.name.startsWith('dsh-mnemon-provider-'))) {
@@ -161,6 +161,7 @@ describe('selective, channel-safe official release', () => {
       '.github/workflows/ci.yml',
       'src/index.ts',
     ])).toEqual(new Set(['dsh-mnemon-provider-example', 'dsh-mnemon']))
+    expect(publicationInputsChanged(plan, ['bin/repair-legacy-session.mjs'])).toEqual(new Set(['dsh-mnemon']))
     expect(() => assertVersionedPublicationChanges(plan, ['plugins/dsh-mnemon-source-memory-spaces/src/source.ts']))
       .toThrow('dsh-mnemon-source-memory-spaces')
     expect(() => assertVersionedPublicationChanges(plan, ['plugins/dsh-mnemon-source-memory-spaces/tests/source.spec.ts']))

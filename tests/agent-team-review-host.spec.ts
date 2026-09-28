@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, realpathSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { expect, it } from 'vitest'
 import * as scoped from 'dsh-mnemon-strategy-scoped'
@@ -12,26 +12,30 @@ import { MnemonSubagentCoordinator } from '../src/host/subagent.ts'
 import { registerTools } from '../src/host/tools.ts'
 import { compositionFixture } from './fixtures/composition.ts'
 
-// Optional published-package matrix: no aliases, source overlay, or DSH edits.
+// Published-package matrix: DSH loads through its package exports only, with no
+// aliases, source overlay or DSH edits. MNEMON_TEAM_TEST_PROFILE points it at
+// another installation instead of the pinned development host.
+const pinned = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).devDependencies['@deepseek-ai/dsh'] as string
 const profile = process.env.MNEMON_TEAM_TEST_PROFILE
+const hostRoot = profile === undefined
+  ? dirname(realpathSync(new URL('../node_modules/@deepseek-ai/dsh/package.json', import.meta.url)))
+  : resolve(profile)
 
-it.skipIf(!profile)('runs guarded Team review against the isolated published DSH cohort (issue 275)', async () => {
-  const require = createRequire(join(resolve(profile!), 'package.json'))
+it('runs guarded Team review against the published DSH cohort (issue 275)', async () => {
+  const require = createRequire(join(hostRoot, 'package.json'))
   const load = async (name: string) => import(pathToFileURL(require.resolve(`@deepseek-ai/${name}`)).href)
-  const [cordis, agent, loop, llm, session, persistence, projection, query, subagent, fork, spawn, prompt, tools, team, teamTools, worker] = await Promise.all([
+  const [cordis, agent, loop, llm, session, persistence, projection, query, subagent, fork, spawn, prompt, tools, team, teamTools, ptc] = await Promise.all([
     'cordis', 'dsh-agent', 'dsh-agent-loop', 'dsh-llm', 'dsh-session', 'dsh-session-persistence-jsonl',
     'dsh-session-projection', 'dsh-session-query-sqlite', 'dsh-subagent', 'dsh-subagent-fork-in-process',
     'dsh-subagent-spawn-in-process', 'dsh-system-prompt', 'dsh-tools', 'dsh-experimental-agent-team',
-    'dsh-experimental-tool-agent-team', 'dsh-code-runtime-worker-thread',
+    'dsh-experimental-tool-agent-team', 'dsh-ptc-runtime-node',
   ].map(load))
-  const legacy = process.env.MNEMON_TEAM_TEST_LEGACY === '1'
   const versions = Object.fromEntries(['dsh', 'dsh-agent', 'dsh-tools', 'dsh-subagent', 'dsh-experimental-agent-team', 'dsh-experimental-tool-agent-team'].map(name => {
     const version = JSON.parse(readFileSync(require.resolve(`@deepseek-ai/${name}/package.json`), 'utf8')).version
-    expect(version).toBe(legacy ? name.includes('experimental-') ? '0.1.5-alpha.2' : '0.1.5-rc.2' : '0.1.7-rc.1')
+    expect(version).toBe(pinned)
     return [name, version]
   }))
-  const ptc = legacy ? undefined : await load('dsh-ptc-runtime-node')
-  const ptcServices = legacy ? [] : await Promise.all(['dsh-fs-local', 'dsh-subprocess-local', 'dsh-sandbox-local', 'dsh-sandbox-policy'].map(load))
+  const ptcServices = await Promise.all(['dsh-fs-local', 'dsh-subprocess-local', 'dsh-sandbox-local', 'dsh-sandbox-policy'].map(load))
   type Reply = string | { name: string; args: Record<string, unknown> }
   class Adapter extends llm.LlmAdapter {
     constructor(private readonly respond: (options: Record<string, any>) => Reply) { super() }
@@ -77,8 +81,7 @@ it.skipIf(!profile)('runs guarded Team review against the isolated published DSH
         if (mode === 'ptc') for (const [index, service] of ptcServices.entries()) {
           await ctx.plugin(service.default, index === 0 ? { cwd: f.workspace } : index === 3 ? { mode: 'read-only', workspaceRoot: f.workspace } : {})
         }
-        if (mode === 'ptc') await ctx.plugin(worker.default)
-        if (mode === 'ptc' && ptc) await ctx.plugin(ptc.default)
+        if (mode === 'ptc') await ctx.plugin(ptc.default)
         await ctx.plugin(tools.default, { mode: mode === 'ptc' ? 'both' : 'native' })
         await ctx.plugin(agent.default)
         await ctx.plugin(loop.default, { agents: [] })
@@ -134,10 +137,6 @@ it.skipIf(!profile)('runs guarded Team review against the isolated published DSH
           await expect(review).resolves.toMatchObject({ delegated: false })
           expect(children).toHaveLength(0)
           expect(childCalls).toBe(0)
-        } else if (legacy && teams === 'tools') {
-          await expect(review).rejects.toThrow(/TEAM_NOT_MEMBER|not a member/u)
-          expect(childCalls).toBe(1)
-          expect(coordinator.snapshot()).toMatchObject({ reviews: 0, failures: 1 })
         } else {
           await expect(review).resolves.toMatchObject({ delegated: true, provider, action: 'added' })
           expect(children).toHaveLength(1)
@@ -171,5 +170,5 @@ it.skipIf(!profile)('runs guarded Team review against the isolated published DSH
       } finally { stop?.(); await ctx.fiber.dispose(); await f.dispose() }
     }
   }
-  console.log(JSON.stringify({ versions, reports }))
+  if (profile !== undefined) console.log(JSON.stringify({ versions, reports }))
 }, 90_000)

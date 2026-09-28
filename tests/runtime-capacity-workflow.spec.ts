@@ -18,6 +18,7 @@ import { MnemonSubagentCoordinator, type RuntimeMaintenanceTaskRunner } from '..
 import { registerTools } from '../src/host/tools.ts'
 import { createWriteHandler } from '../src/host/rpc.ts'
 import { compositionFixture } from './fixtures/composition.ts'
+import { sessionLog } from './fixtures/session-log.ts'
 
 const runtimeKey = 'source:mnemon-source-runtime'
 const spacesKey = 'source:mnemon-source-memory-spaces'
@@ -38,8 +39,8 @@ async function fixture(taskRunner?: RuntimeMaintenanceTaskRunner, config: Config
   const lifecycle = { manageSource: coordinator.manageSource.bind(coordinator), workspaceRoot: () => f.workspace,
     snapshot: () => ({ taskAgentAvailable: false }) } as unknown as MnemonLifecycle
   const write = createWriteHandler(f.live, lifecycle)
-  const root = { id: 'capacity-root', session: { header: { cwd: f.workspace }, events: [] } } as unknown as HostAgent
-  const child = { id: 'capacity-child', session: { header: { cwd: f.workspace, origin: 'subagent', parentSession: root.id }, events: [] } } as unknown as HostAgent
+  const root = { id: 'capacity-root', session: { header: { cwd: f.workspace }, ...sessionLog() } } as unknown as HostAgent
+  const child = { id: 'capacity-child', session: { header: { cwd: f.workspace, origin: 'subagent', parentSession: root.id }, ...sessionLog() } } as unknown as HostAgent
   const begin = async () => {
     const graph = f.live.snapshot()
     const turn = await graph.composableTurns.beginTurn(root.id + ':1', agentScope(root, graph.config))
@@ -448,7 +449,7 @@ describe('default Runtime capacity workflow across Host entry points', () => {
     mkdirSync(otherWorkspace)
     workspaces.set('first', { id: 'first', title: 'First', path: f.workspace })
     workspaces.set('second', { id: 'second', title: 'Second', path: otherWorkspace })
-    parent = { id: 'unrelated-conversation', session: { header: { cwd: f.workspace }, events: [] } } as unknown as HostAgent
+    parent = { id: 'unrelated-conversation', session: { header: { cwd: f.workspace }, ...sessionLog() } } as unknown as HostAgent
     await f.graph.source('runtime').mutate('mutate', { action: 'add', target: 'memory', content: saved })
     const route = await f.live.route({ workspaceId: 'second', sessionId: parent.id })
     expect(route.aligned).toBe(false)

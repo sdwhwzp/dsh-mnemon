@@ -7,6 +7,11 @@ export {
   type MemorySourcePageProps, type MemorySourceUIContribution, type MemorySourceUIContext, type MemorySourcePageNavigation,
 } from './source-pages.tsx'
 export type { MnemonSourceManagementClient, MemorySourcePageInstance } from './source-contracts.ts'
+export {
+  installMemoryComponentUI, MNEMON_COMPONENT_SETTINGS_SLOT, MNEMON_COMPONENT_STATUS_SLOT,
+  type MemoryComponentSettingsComponent, type MemoryComponentSettingsProps, type MemoryComponentStatusComponent, type MemoryComponentStatusProps,
+  type MemoryComponentUIContext, type MemoryComponentUIContribution,
+} from './component-ui.tsx'
 export * from './page-kit.tsx'
 export * from './page-client.tsx'
 export { MnemonDialog, type MnemonDialogProps } from './MnemonDialog.tsx'

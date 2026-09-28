@@ -69,7 +69,7 @@ export function ProgressiveFooter(props: { visible: number; total: number; pageS
 /** DSH-style action dialog shared by Sidebar add/write flows. */
 export function SidebarModal(props: Omit<MnemonDialogProps, 'closeLabel'>): JSX.Element {
   const t = useT()
-  return <MnemonDialog {...props} closeLabel={t('common.cancel')} />
+  return <MnemonDialog {...props} closeLabel={t('common.close')} />
 }
 
 export function EmptyState(props: { glyph: string; title: string; children: string }): JSX.Element {

@@ -80,24 +80,16 @@ const server = createServer(async (request, response) => {
       'cache-control': 'no-cache',
       connection: 'keep-alive',
     })
-    if (request.url?.endsWith('/messages')) {
-      const events = [
-        { type: 'message_start', message: { id: `msg_${requests.length}`, model: requests.at(-1).model, usage: { input_tokens: 10, output_tokens: 0 } } },
-        { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
-        { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: marker } },
-        { type: 'content_block_stop', index: 0 },
-        { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 3 } },
-        { type: 'message_stop' },
-      ]
-      for (const event of events) response.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
-      response.end()
-      return
-    }
-    const id = `chatcmpl-${requests.length}`
-    response.write(`data: ${JSON.stringify({ id, choices: [{ index: 0, delta: { role: 'assistant', content: marker }, finish_reason: null }] })}\n\n`)
-    response.write(`data: ${JSON.stringify({ id, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] })}\n\n`)
-    response.write(`data: ${JSON.stringify({ id, choices: [], usage: { prompt_tokens: 10, completion_tokens: 3, total_tokens: 13 } })}\n\n`)
-    response.end('data: [DONE]\n\n')
+    // DSH's DeepSeek adapter speaks the Messages streaming protocol.
+    const model = requests.at(-1).model
+    const event = value => response.write(`event: ${value.type}\ndata: ${JSON.stringify(value)}\n\n`)
+    event({ type: 'message_start', message: { id: `msg-${requests.length}`, type: 'message', role: 'assistant', model, content: [], usage: { input_tokens: 10, output_tokens: 0 } } })
+    event({ type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } })
+    event({ type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: marker } })
+    event({ type: 'content_block_stop', index: 0 })
+    event({ type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 3 } })
+    event({ type: 'message_stop' })
+    response.end()
   } catch (error) {
     response.writeHead(500, { 'content-type': 'application/json' })
     response.end(JSON.stringify({ error: { message: error instanceof Error ? error.message : String(error) } }))
@@ -128,7 +120,8 @@ try {
   }
 
   const settingsPath = join(dshHome, 'settings.yaml')
-  await writeFile(settingsPath, '# Legacy placement migration fixture\nmnemon:\n  displayMode: buildin\n  timeoutMs: 25000\n')
+  const legacySettings = '# Legacy placement migration fixture\nmnemon:\n  displayMode: buildin\n  timeoutMs: 25000\n'
+  await writeFile(settingsPath, legacySettings)
 
   let upgradeMemory
   if (options.has('--upgrade-from')) {
@@ -174,7 +167,13 @@ try {
   disabled: true
 - id: tool-fs-search
   disabled: true
-`.trimStart() + (separatePtcRuntime ? ['ptc-runtime', 'workflow-ptc', 'tool-workflow'].map(id => `- id: ${id}\n  disabled: true\n`).join('') : '') + (!extensionsEnabled ? '' : extensionNames.map(name =>
+- id: ptc-runtime
+  disabled: true
+- id: workflow-ptc
+  disabled: true
+- id: tool-workflow
+  disabled: true
+`.trimStart() + (!extensionsEnabled ? '' : extensionNames.map(name =>
     `- id: ${name.slice(4)}\n  disabled: false\n`,
   ).join(''))
   await writeFile(profilePatchPath, profileOverrides)
@@ -188,7 +187,7 @@ try {
 
   const toolRequest = requests.find(request => Array.isArray(request.tools) && request.tools.length > 0)
   if (toolRequest === undefined) throw new Error('Headless model request did not expose any tools')
-  const toolNames = new Set(toolRequest.tools.map(tool => (tool?.function?.name ?? tool?.name)).filter(name => typeof name === 'string'))
+  const toolNames = new Set(toolRequest.tools.map(tool => tool?.name).filter(name => typeof name === 'string'))
   const required = ['mnemon_status', 'mnemon_recall', 'mnemon_document_search', 'mnemon_document_create', 'mnemon_runtime_memory', 'mnemon_remember', 'mnemon_view_route', 'mnemon_view_action']
   const missing = required.filter(name => !toolNames.has(name))
   if (missing.length > 0) throw new Error(`Headless model request is missing Mnemon tools: ${missing.join(', ')}`)
@@ -201,13 +200,23 @@ try {
   if (!existsSync(join(storageRoot, 'runtime', 'memories.json'))) throw new Error('Headless plugin did not initialize isolated runtime memory')
   if (upgradeMemory !== undefined && await readFile(join(storageRoot, 'runtime', 'memories.json'), 'utf8') !== upgradeMemory) throw new Error('Package upgrade changed existing Runtime Memory bytes')
 
-  const canonicalSettings = await readFile(settingsPath, 'utf8')
-  if (!canonicalSettings.includes('displayMode: builtin') || canonicalSettings.includes('displayMode: buildin')) throw new Error('Headless did not persist the canonical builtin displayMode')
-  if (!canonicalSettings.includes('# Legacy placement migration fixture') || !canonicalSettings.includes('timeoutMs: 25000')) throw new Error('Placement migration changed unrelated configuration or comments')
-  const restarted = await run(['--profile', 'headless', 'Verify that normalized Mnemon settings survive a restart.'], { cwd: workspaceRoot, env })
-  assertSuccess('restarting Headless with normalized Mnemon settings', restarted)
-  if (!restarted.stdout.includes(marker)) throw new Error('Restarted Headless did not complete its test turn')
-  if (await readFile(settingsPath, 'utf8') !== canonicalSettings) throw new Error('Canonical placement was rewritten on restart')
+  // DSH imports the legacy settings file into the profile and keeps it unchanged as a backup.
+  if (existsSync(settingsPath) || await readFile(`${settingsPath}.imported`, 'utf8') !== legacySettings) throw new Error('DSH did not retain the legacy settings file as its import backup')
+  const imported = await readFile(profilePatchPath, 'utf8')
+  if (!imported.includes('displayMode: builtin') || imported.includes('displayMode: buildin')) throw new Error('Headless did not persist the canonical builtin displayMode')
+  if (!imported.includes('timeoutMs: 25000')) throw new Error('Placement migration changed unrelated configuration')
+  // The next start recovers Mnemon's retained preferences once; later starts change nothing.
+  let recovered
+  for (const label of ['recovering retained Mnemon settings', 'restarting Headless with recovered Mnemon settings']) {
+    const restarted = await run(['--profile', 'headless', 'Verify that normalized Mnemon settings survive a restart.'], { cwd: workspaceRoot, env })
+    assertSuccess(label, restarted)
+    if (!restarted.stdout.includes(marker)) throw new Error('Restarted Headless did not complete its test turn')
+    const current = await readFile(profilePatchPath, 'utf8')
+    if (recovered === undefined) {
+      if (!current.includes('legacySettingsImported: true') || !current.includes('displayMode: builtin')) throw new Error('Mnemon did not recover retained legacy settings on restart')
+      recovered = current
+    } else if (current !== recovered) throw new Error('Recovered Mnemon settings were rewritten on restart')
+  }
 
   requests.length = 0
   await writeFile(profilePatchPath, profileOverrides + '- id: mnemon\n  disabled: true\n')
@@ -220,14 +229,14 @@ try {
   const pendingEntries = disabledExecution.stderr.split(/\r?\n/u).filter(line => line.includes('waiting for service:'))
   if (pendingEntries.length > 0) throw new Error(`Mnemon-disabled Headless left dependent Entries pending:\n${pendingEntries.join('\n')}`)
   const disabledToolNames = new Set(requests.flatMap(request => Array.isArray(request.tools)
-    ? request.tools.map(tool => (tool?.function?.name ?? tool?.name)).filter(name => typeof name === 'string')
+    ? request.tools.map(tool => tool?.name).filter(name => typeof name === 'string')
     : []))
   const leakedMnemonTools = [...disabledToolNames].filter(name => name.startsWith('mnemon_')).sort()
   if (leakedMnemonTools.length > 0) throw new Error(`Mnemon-disabled Headless exposed Mnemon tools: ${leakedMnemonTools.join(', ')}`)
 
   console.log(`Verified Headless profile activation with ${toolNames.size} total tools and ${required.length} representative Mnemon tools.`)
   if (options.has('--upgrade-from')) console.log(`Verified an isolated ${options.get('--upgrade-from')} to ${options.get('--package')} package upgrade without changing Runtime Memory bytes.`)
-  console.log('Verified buildin-to-builtin persistence, preservation of unrelated settings/comments, and an idempotent Headless restart.')
+  console.log('Verified the legacy settings import with buildin-to-builtin persistence, unrelated settings, retained-backup recovery and an idempotent Headless restart.')
   console.log('Verified that disabling the legacy mnemon Entry disables the complete Starter without blocking DSH startup.')
   if (extensionsEnabled) console.log('Verified simultaneous activation of scoped, light-context and auto-capture Entries without changing the default Strategy.')
 } finally {

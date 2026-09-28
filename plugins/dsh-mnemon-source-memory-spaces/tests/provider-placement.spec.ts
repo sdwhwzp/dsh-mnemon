@@ -3,9 +3,8 @@ import {
   finalizeLlmPlacement,
   prepareMemoryPlacement,
   rulesOnlyPlacement,
-  type MemoryPlacementCandidate,
 } from '../src/provider-placement.ts'
-import type { MemoryPlacementCapability } from "../src/contracts.ts"
+import type { MemoryPlacementCandidate, MemoryPlacementCapability } from "../src/contracts.ts"
 
 const candidates: MemoryPlacementCandidate[] = [
   {

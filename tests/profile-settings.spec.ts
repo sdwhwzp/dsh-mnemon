@@ -1,11 +1,11 @@
 import { Context, type Fiber } from '@deepseek-ai/cordis'
 import { createVolatile } from '@deepseek-ai/cosmokit'
-import z from 'schemastery'
+import z from '@deepseek-ai/schemastery'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Config, InteractionConfig } from '../src/host/config.ts'
 import type { HostContextShape, HostSettingsService } from '../src/host/dsh.ts'
 import type { SettingsOperation } from '../src/host/protocol.ts'
-import { createHostSettings, ProfileMnemonSettings, subscribeSettings } from '../src/host/settings-service.ts'
+import { ProfileMnemonSettings } from '../src/host/settings-service.ts'
 import { legacySchema, schema as ViewSchema } from '../src/host/view-preferences.ts'
 
 type Descriptor = ReturnType<HostSettingsService['describe']>[number]
@@ -43,7 +43,7 @@ function fixture(options: { editor?: boolean } = {}) {
       apply(child: Context, _config: Record<string, unknown>) {
         ctx = child
         if (attachEntry) (child.fiber as Fiber & { entry?: Entry }).entry = entry
-        settings = createHostSettings(child as unknown as HostContextShape, config) as ProfileMnemonSettings
+        settings = new ProfileMnemonSettings(child as unknown as HostContextShape, config)
       },
     }, config)
     return { ctx, fiber, entry, settings }
@@ -97,31 +97,6 @@ describe('profile settings compatibility facade', () => {
     expect(() => target.settings.register('mnemon-account-invalid', Config, { base: {}, applies: 'live' })).toThrow('Unsupported')
   })
 
-  it('preserves a legacy service and its committed-update subscription', async () => {
-    const root = new Context()
-    roots.push(root)
-    const legacy = {
-      writable: true,
-      register: vi.fn(), describe: vi.fn(() => []), mutate: vi.fn(), configure: vi.fn(),
-    } as unknown as HostSettingsService & { configure: ReturnType<typeof vi.fn> }
-    root.provide('settings', legacy)
-    const listener = vi.fn()
-    let selected!: HostSettingsService
-    let unsubscribe!: () => unknown
-    await root.plugin({ inject: ['settings'], apply(ctx: Context) {
-      const host = ctx as unknown as HostContextShape
-      selected = createHostSettings(host, {})
-      unsubscribe = subscribeSettings(host, selected, listener)
-    } })
-    expect(selected).toBe(legacy)
-    expect(legacy.configure).not.toHaveBeenCalled()
-    root.events.emit('settings/updated', 'mnemon', { displayMode: 'builtin' })
-    expect(listener).toHaveBeenCalledWith('mnemon', { displayMode: 'builtin' })
-    unsubscribe()
-    root.events.emit('settings/updated', 'mnemon', { displayMode: 'sidebar' })
-    expect(listener).toHaveBeenCalledTimes(1)
-  })
-
   it('maps virtual namespaces to the exact owning entry and preserves operations and revision fences', async () => {
     const f = fixture()
     const first = await f.mount('first-mnemon')
@@ -155,7 +130,7 @@ describe('profile settings compatibility facade', () => {
     const target = await f.mount()
     registerNamespaces(target)
     const listener = vi.fn()
-    subscribeSettings(target.ctx as unknown as HostContextShape, target.settings, listener)
+    target.settings.onUpdated(listener)
     const conflict = Object.assign(new Error('stale form'), { code: 'SETTINGS_CONFLICT', expected: 4, actual: 5 })
     f.forms.mutate.mockRejectedValueOnce(conflict)
     await expect(target.settings.mutate('mnemon-ui', [{ op: 'set', path: ['turnBar'], value: false }], 4)).rejects.toBe(conflict)
@@ -212,8 +187,8 @@ describe('profile settings compatibility facade', () => {
     registerNamespaces(second)
     const firstListener = vi.fn()
     const secondListener = vi.fn()
-    subscribeSettings(first.ctx as unknown as HostContextShape, first.settings, firstListener)
-    subscribeSettings(second.ctx as unknown as HostContextShape, second.settings, secondListener)
+    first.settings.onUpdated(firstListener)
+    second.settings.onUpdated(secondListener)
     const config = {
       displayMode: createVolatile('builtin'),
       conversationInteraction: createVolatile({ turnBar: false, saveAction: true }),
@@ -243,11 +218,11 @@ describe('profile settings compatibility facade', () => {
     expect(f.forms.configure).toHaveBeenCalledExactlyOnceWith({ auto: false }, target.fiber)
     const disposePresentation = f.forms.configure.mock.results[0]!.value
     const listener = vi.fn()
-    const stop = subscribeSettings(target.ctx as unknown as HostContextShape, target.settings, listener)
+    const stop = target.settings.onUpdated(listener)
     stop()
     f.commit(target, { displayMode: 'builtin' }, [['displayMode']])
     expect(listener).not.toHaveBeenCalled()
-    subscribeSettings(target.ctx as unknown as HostContextShape, target.settings, listener)
+    target.settings.onUpdated(listener)
     await target.fiber.dispose()
     expect(disposePresentation).toHaveBeenCalledTimes(1)
     f.commit(target, { displayMode: 'sidebar' }, [['displayMode']])
@@ -325,8 +300,8 @@ describe('profile settings compatibility facade', () => {
     registerNamespaces(target)
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const listener = vi.fn()
-    subscribeSettings(target.ctx as unknown as HostContextShape, target.settings, () => { throw new Error('Fixture subscriber failed') })
-    subscribeSettings(target.ctx as unknown as HostContextShape, target.settings, listener)
+    target.settings.onUpdated(() => { throw new Error('Fixture subscriber failed') })
+    target.settings.onUpdated(listener)
     try {
       expect(() => f.commit(target, {}, [[]])).not.toThrow()
       expect(listener.mock.calls.map(([namespace]) => namespace)).toEqual(['mnemon', 'mnemon-ui', viewNamespace])

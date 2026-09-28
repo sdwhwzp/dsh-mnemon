@@ -33,4 +33,4 @@ export function installDocumentsMemoryUI(ctx: Parameters<typeof installMemorySou
 }
 
 export const inject = ['slots', 'locale']
-export function apply(ctx: Parameters<typeof installMemorySourceUI>[0]): void { installDocumentsMemoryUI(ctx, ctx.locale?.bind('mnemon') ?? translateEn) }
+export function apply(ctx: Parameters<typeof installMemorySourceUI>[0]): void { installDocumentsMemoryUI(ctx, ctx.locale!.bind('mnemon')) }

@@ -51,6 +51,7 @@ describe('Memory Spaces configuration rules', () => {
     }).persistenceStrategy).toEqual({
       mode: 'automatic',
       providerId: 'mnemon-native',
+      providerDefaulted: true,
       prompt: 'Prefer shared project memory.',
       rules: {
         allowedProviderIds: ['mnemon-native', 'openviking'],
@@ -60,5 +61,10 @@ describe('Memory Spaces configuration rules', () => {
       },
       providerConnections: { openviking: { targetUri: 'viking://resources/team' } },
     })
+  })
+
+  it('marks only an unchosen persistence provider as the default', () => {
+    expect(resolveConfig({}).persistenceStrategy).toMatchObject({ mode: 'manual', providerId: 'mnemon-native', providerDefaulted: true })
+    expect(resolveConfig({ persistenceStrategy: { providerId: 'mnemon-native' } }).persistenceStrategy).not.toHaveProperty('providerDefaulted')
   })
 })

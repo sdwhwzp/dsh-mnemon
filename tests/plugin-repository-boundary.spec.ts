@@ -9,8 +9,10 @@ const root = fileURLToPath(new URL('../', import.meta.url))
 const pluginNames = readdirSync(join(root, 'plugins')).filter(name => name.startsWith('dsh-mnemon-')).sort()
 const coreImports = new Set(['dsh-mnemon/contracts', 'dsh-mnemon/extension-sdk', 'dsh-mnemon/testing', 'dsh-mnemon/client'])
 const providerImports = new Set(['dsh-mnemon-source-memory-spaces/provider-sdk', 'dsh-mnemon-source-memory-spaces/testing'])
-const threeTierExtensions = new Set(['dsh-mnemon-strategy-auto-capture', 'dsh-mnemon-strategy-light-context', 'dsh-mnemon-strategy-scoped'])
+// Standard-slot extensions follow any main Strategy, so they do not depend on one.
+const viewExtensions = new Set(['dsh-mnemon-strategy-auto-capture', 'dsh-mnemon-strategy-light-context', 'dsh-mnemon-strategy-scoped'])
 const threeTierOwner = 'dsh-mnemon-strategy-default-three-tier'
+const mainStrategies = [threeTierOwner, 'dsh-mnemon-strategy-general']
 
 function inside(directory: string, path: string): boolean {
   const child = relative(directory, path)
@@ -40,11 +42,11 @@ function packageName(specifier: string): string {
 }
 
 describe('standalone plugin repository boundary', () => {
-  it('keeps three Sources, one complete Strategy, three optional contributions and nine private Providers explicit', () => {
+  it('keeps three Sources, two main Strategies, three optional contributions and nine private Providers explicit', () => {
     expect(pluginNames.filter(name => name.startsWith('dsh-mnemon-source-'))).toEqual([
       'dsh-mnemon-source-documents', 'dsh-mnemon-source-memory-spaces', 'dsh-mnemon-source-runtime',
     ])
-    expect(pluginNames.filter(name => name.startsWith('dsh-mnemon-strategy-'))).toEqual([...threeTierExtensions, threeTierOwner].sort())
+    expect(pluginNames.filter(name => name.startsWith('dsh-mnemon-strategy-'))).toEqual([...viewExtensions, ...mainStrategies].sort())
     expect(pluginNames.filter(name => name.startsWith('dsh-mnemon-provider-'))).toHaveLength(9)
   })
 
@@ -66,8 +68,8 @@ describe('standalone plugin repository boundary', () => {
     const provider = name.startsWith('dsh-mnemon-provider-')
     expect(manifest.peerDependencies[provider ? 'dsh-mnemon-source-memory-spaces' : 'dsh-mnemon']).toBeTruthy()
     if (provider) expect(manifest.peerDependencies['dsh-mnemon']).toBeUndefined()
-    if (threeTierExtensions.has(name)) {
-      expect(manifest.peerDependencies[threeTierOwner]).toBeTruthy()
+    if (viewExtensions.has(name)) {
+      expect(manifest.peerDependencies[threeTierOwner]).toBeUndefined()
       expect(manifest.dsh?.bundle?.patch).toBe('./cordis.patch.yml')
       const patch = readFileSync(join(directory, 'cordis.patch.yml'), 'utf8')
       expect(patch).toContain(`name: ${name}`)
@@ -87,9 +89,8 @@ describe('standalone plugin repository boundary', () => {
         if (isBuiltin(specifier)) continue
         if (packageName(specifier) === name && Object.hasOwn(manifest.exports, '.' + specifier.slice(name.length))) continue
         if (!Object.hasOwn(dependencies, packageName(specifier))) violations.push(`${relative(root, file)} has undeclared dependency ${specifier}`)
-        const ownerContract = threeTierExtensions.has(name) && specifier === threeTierOwner + '/extension-sdk'
-        const testOwner = threeTierExtensions.has(name) && file.includes(`${sep}tests${sep}`) && specifier === threeTierOwner
-        if (specifier.startsWith('dsh-mnemon') && !(provider ? providerImports : coreImports).has(specifier) && !ownerContract && !testOwner && !(file.includes(`${sep}tests${sep}`) && /^dsh-mnemon-provider-[a-z0-9-]+$/u.test(specifier))) {
+        const testOwner = viewExtensions.has(name) && file.includes(`${sep}tests${sep}`) && specifier === threeTierOwner
+        if (specifier.startsWith('dsh-mnemon') && !(provider ? providerImports : coreImports).has(specifier) && !testOwner && !(file.includes(`${sep}tests${sep}`) && /^dsh-mnemon-provider-[a-z0-9-]+$/u.test(specifier))) {
           violations.push(`${relative(root, file)} crosses its public contract: ${specifier}`)
         }
       }

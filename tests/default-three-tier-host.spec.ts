@@ -9,6 +9,7 @@ import { MnemonSubagentCoordinator } from '../src/host/subagent.ts'
 import { registerTools } from '../src/host/tools.ts'
 import { modelMemoryWake } from '../src/host/view-presentation.ts'
 import { compositionFixture } from './fixtures/composition.ts'
+import { sessionLog } from './fixtures/session-log.ts'
 
 const fixtures: Awaited<ReturnType<typeof compositionFixture>>[] = []
 afterEach(async () => { for (const f of fixtures.splice(0)) await f.dispose() })
@@ -67,7 +68,7 @@ describe('default three-tier Host presentation and shared execution', () => {
   it.each(['named-first', 'generic-first'])('shares one Documents policy across both real tool entries (%s)', async order => {
     const f = await fixture()
     await f.graph.source('documents').mutate<DocumentMutationResult>('mutate', { action: 'create', title: 'Protocol record', content: 'protocol-token '.repeat(1_000) })
-    const agent = { id: 'root', session: { header: { cwd: f.workspace }, events: [] } } as unknown as HostAgent
+    const agent = { id: 'root', session: { header: { cwd: f.workspace }, ...sessionLog() } } as unknown as HostAgent
     const registered = new Map<string, ToolDefinition>()
     const coordinator = new MnemonSubagentCoordinator({} as never, f.live)
     registerTools({ tools: { register: (tool: ToolDefinition) => { registered.set(tool.name, tool) } } } as unknown as HostContextShape, f.live, coordinator)
@@ -95,7 +96,7 @@ describe('default three-tier Host presentation and shared execution', () => {
     const f = await fixture()
     const body = await f.memorySpace()
     await f.graph.source('memory-spaces').mutate('remember', { memoryBodyId: body.id, content: 'The protocol-token is a saved durable fact.', category: 'fact', source: 'external' })
-    const agent = { id: 'root', session: { header: { cwd: f.workspace }, events: [] } } as unknown as HostAgent
+    const agent = { id: 'root', session: { header: { cwd: f.workspace }, ...sessionLog() } } as unknown as HostAgent
     const registered = new Map<string, ToolDefinition>()
     const coordinator = new MnemonSubagentCoordinator({} as never, f.live)
     registerTools({ tools: { register: (tool: ToolDefinition) => { registered.set(tool.name, tool) } } } as unknown as HostContextShape, f.live, coordinator)

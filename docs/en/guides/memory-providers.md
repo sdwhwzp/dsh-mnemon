@@ -24,7 +24,7 @@ The Host exposes only capabilities an adapter can honor. UI actions and Agent to
 
 ## Service and Memory Space fields
 
-| Provider | Workspace behavior | Service configuration in Settings | Instance configuration in Memory Spaces |
+| Provider | Workspace behavior | Service configuration on the plugin page | Instance configuration in Memory Spaces |
 |---|---|---|---|
 | OpenViking | Keeps the provider-global scope | `endpoint`, `apiKey`, `account`, optional `discoveryUser` | `targetUri`, `user`, `actorPeerId` |
 | Honcho | Keeps the provider-global scope | `endpoint`, `apiKey` | `workspace`, `userId`, `agentId` |
@@ -35,7 +35,7 @@ The Host exposes only capabilities an adapter can honor. UI actions and Agent to
 | ByteRover | Follows by default; directory can override | `cliPath`, `apiKey`, `defaultDirectory` | `workingDirectory` |
 | Supermemory | Keeps the provider-global scope | `endpoint`, `apiKey` | `containerTag`, `searchMode` |
 
-**Settings → Memory System** owns reusable provider service configuration. Enabling or saving a provider performs authoritative discovery and synchronizes every visible provider-native namespace into the Memory Space directory—for example banks, projects, workspaces, users, or container tags. Provider titles and descriptions become the local routing metadata. **Memory Spaces → Overview** controls DSH activation and shows the synchronized instance scope. The Host merges both layers immediately before calling an adapter. Secrets stay in `<storageRoot>/state/memory-providers.json` with mode `0600`; the WebUI represents configured secrets only as a mask, and entering a new value replaces the saved secret.
+**Memory providers**, on Memory Spaces' page (open **Plugins → dsh-mnemon** and select Memory Spaces), owns reusable provider service configuration. Enabling or saving a provider performs authoritative discovery and synchronizes every visible provider-native namespace into the Memory Space directory—for example banks, projects, workspaces, users, or container tags. Provider titles and descriptions become the local routing metadata. **Memory Spaces → Overview** controls DSH activation and shows the synchronized instance scope. The Host merges both layers immediately before calling an adapter. Secrets stay in `<storageRoot>/state/memory-providers.json` with mode `0600`; the WebUI represents configured secrets only as a mask, and entering a new value replaces the saved secret.
 
 DSH workspace mode does not rewrite every provider namespace. Mnemon Native follows the workspace automatically. Holographic and ByteRover default to workspace-local paths but allow explicit path overrides. Remote providers continue to use the URI, workspace, user, bank, project, or container configured on the Memory Space; switching DSH workspaces never rewrites those identities implicitly.
 

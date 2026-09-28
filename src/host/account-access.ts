@@ -2,7 +2,6 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import type { HostAgent, HostContextShape, HostPrincipal, HostPreStepDecision, HostRpcHandler, HostSettingsService, ToolExecution } from './dsh.ts'
-import { hostSessionEvents } from './session-events.ts'
 import { Config, InteractionConfig, resolveConfig, type ResolvedConfig } from './config.ts'
 
 interface AccountContext { principal: HostPrincipal; sessions: ReadonlySet<string>; workspaces: ReadonlySet<string> }
@@ -22,7 +21,7 @@ export class MnemonAccounts {
   private readonly executions = new WeakMap<ToolExecution, ToolExecution>()
   private readonly base: Config
 
-  constructor(private readonly ctx: HostContextShape, readonly directory: string, config: Config, private readonly accountSettings: HostSettingsService = ctx.settings) {
+  constructor(private readonly ctx: HostContextShape, readonly directory: string, config: Config, private readonly accountSettings: HostSettingsService) {
     // `sharedMemoryWritable` has exactly one source: the principal's role.
     // Dropping it here keeps a plugin-config value from granting every account
     // write access to the shared instance.
@@ -49,7 +48,7 @@ export class MnemonAccounts {
     agent = this.originals.get(agent) ?? agent
     const bound = this.agents.get(agent)
     if (bound !== undefined) return bound.principal
-    const events = hostSessionEvents(agent.session)
+    const events = agent.session.snapshotEvents()
     for (let index = events.length - 1; index >= 0; index--) {
       const event = events[index]!
       if (event.type === 'turn/start') return event.data.principal as HostPrincipal | undefined
@@ -125,8 +124,20 @@ export class MnemonAccounts {
       ['mnemon', 'mnemon-account-' + this.key(principal)],
       ['mnemon-ui', 'mnemon-account-ui-' + this.key(principal)],
     ])
+    const redact = (value: unknown) => {
+      if (value === null || typeof value !== 'object') return value
+      const config = value as Config
+      return config.embedding === undefined ? value : { ...config, embedding: { ...config.embedding, apiKey: '' } }
+    }
     return {
       writable: this.accountSettings.writable,
+      onUpdated: listener => {
+        const mapped = names(this.require())
+        return this.accountSettings.onUpdated((namespace, value) => {
+          const ns = [...mapped].find(([, stored]) => stored === namespace)?.[0]
+          if (ns !== undefined) listener(ns, redact(value))
+        })
+      },
       register() { throw new Error('Account settings are registered by the Host') },
       describe: options => {
         const principal = this.require()
@@ -135,11 +146,6 @@ export class MnemonAccounts {
         return this.accountSettings.describe(options).flatMap(value => {
           const ns = [...mapped].find(([, stored]) => stored === value.ns)?.[0]
           if (ns === undefined) return []
-          const redact = (value: unknown) => {
-            if (value === null || typeof value !== 'object') return value
-            const config = value as Config
-            return config.embedding === undefined ? value : { ...config, embedding: { ...config.embedding, apiKey: '' } }
-          }
           return [{ ...value, ns, value: redact(value.value), base: redact(value.base), user: redact(value.user) }]
         })
       },

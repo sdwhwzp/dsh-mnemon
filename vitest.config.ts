@@ -33,6 +33,7 @@ export default defineConfig({
       'dsh-mnemon-strategy-light-context': fileURLToPath(new URL('./plugins/dsh-mnemon-strategy-light-context/src/index.ts', import.meta.url)),
       'dsh-mnemon-strategy-auto-capture': fileURLToPath(new URL('./plugins/dsh-mnemon-strategy-auto-capture/src/index.ts', import.meta.url)),
       'dsh-mnemon-strategy-default-three-tier': fileURLToPath(new URL('./plugins/dsh-mnemon-strategy-default-three-tier/src/index.ts', import.meta.url)),
+      'dsh-mnemon-strategy-general': fileURLToPath(new URL('./plugins/dsh-mnemon-strategy-general/src/index.ts', import.meta.url)),
       'dsh-mnemon-provider-mnemon-native': fileURLToPath(new URL('./plugins/dsh-mnemon-provider-mnemon-native/src/index.ts', import.meta.url)),
       'dsh-mnemon-provider-openviking': fileURLToPath(new URL('./plugins/dsh-mnemon-provider-openviking/src/index.ts', import.meta.url)),
       'dsh-mnemon-provider-honcho': fileURLToPath(new URL('./plugins/dsh-mnemon-provider-honcho/src/index.ts', import.meta.url)),
@@ -43,8 +44,7 @@ export default defineConfig({
       'dsh-mnemon-provider-byterover': fileURLToPath(new URL('./plugins/dsh-mnemon-provider-byterover/src/index.ts', import.meta.url)),
       'dsh-mnemon-provider-supermemory': fileURLToPath(new URL('./plugins/dsh-mnemon-provider-supermemory/src/index.ts', import.meta.url)),
     }).map(([name, replacement]) => ({ find: new RegExp('^' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), replacement })),
-    // Source-linked DSH workspaces resolve through their real paths. Keep UI
-    // packages on Mnemon's React instance just as the browser bundle does.
+    // Keep UI packages on Mnemon's React instance just as the browser bundle does.
     dedupe: ['react', 'react-dom'],
   },
   test: {

@@ -13,7 +13,7 @@
 </p>
 
 <p align="center"><strong>面向 DeepSeek Harness 的可组合视图记忆。</strong></p>
-<p align="center">记忆来源与策略可插拔，开箱即用提供三层记忆。</p>
+<p align="center">记忆来源与策略可插拔，开箱即用提供分层记忆。</p>
 
 <p align="center">
   <a href="https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/guides/ui-guide.md">
@@ -47,21 +47,22 @@ Sidebar、对话工具与 Headless 使用同一套数据。全局、工作区、
 
 ## 从默认组合开始
 
-先准备兼容的 DSH 宿主（Host）。**Mnemon Native 还需要单独安装 `mnemon` CLI**；npm 默认安装包不包含这个二进制，也不会安装三方后端服务。参见[各平台安装步骤](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/guides/getting-started.md)和[已验证的兼容基线](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/reference/compatibility.md)。
+先准备兼容的 DSH 宿主（Host）。运行时记忆与项目档案开箱即用。记忆空间使用你设置好的任一 Provider：**Mnemon Native 使用单独安装的 `mnemon` CLI**，其他 Provider 连接各自的服务。npm 默认安装包两者都不包含。参见[各平台安装步骤](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/guides/getting-started.md)和[已验证的兼容基线](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/reference/compatibility.md)。
 
 ```sh
-mnemon --version
 dsh plugin --profile web add dsh-mnemon
 dsh web
 ```
+
+如需使用 Mnemon Native，用 `npm install --global @mnemon-dev/mnemon` 安装它的 CLI，并用 `mnemon --version` 确认。
 
 Headless 使用同一个包：`dsh plugin --profile headless add dsh-mnemon`。
 
 打开**记忆系统 → 状态**，然后添加一条运行时记忆。创建档案前先选择 DSH 工作区，全局存储也需要工作区身份。需要长期沉淀时，人工选择 Provider 并创建记忆空间。默认以 Sidebar 展示，可选 Builtin 使用同一组页面。
 
-从 v0.4 升级保留熟悉的配置、数据与工作流。三个可选增强仅在**设置 → 记忆系统**中透出，不增加 View 页或通用记忆插件管理器。[升级清单](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/reference/compatibility.md)。
+从 v0.4 升级保留熟悉的配置、数据与工作流。配置位于**插件 → 可组合记忆**页面，DSH 0.1.7 把插件设置统一放在“插件”中；主策略与三个可选增强也在这里选择，不增加 View 页或通用记忆插件管理器。[升级清单](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/reference/compatibility.md)。
 
-锁定的开发基线为 DSH `0.1.5-rc.1`；其他经过验证的版本记录在[兼容性矩阵](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/reference/compatibility.md)。现有会话若报 `source summary requires notice form`，需要显式执行 `dsh-mnemon-repair-session --input FILE --output NEW_FILE` 生成修复副本；替换任何文件前请阅读[旧会话恢复流程](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/guides/operations.md#dsh-015-兼容与旧会话恢复)。
+dsh-mnemon 支持 DSH `0.1.7-rc.2`，即锁定的开发基线；更早的宿主请继续使用 `v0.5.16`。参见[兼容性矩阵](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/reference/compatibility.md)。现有会话若报 `source summary requires notice form`，需要显式执行 `dsh-mnemon-repair-session --input FILE --output NEW_FILE` 生成修复副本；替换任何文件前请阅读[旧会话恢复流程](https://github.com/omdsh-dev/dsh-mnemon/blob/main/docs/zh-CN/guides/operations.md#dsh-015-兼容与旧会话恢复)。
 
 ## Source + Strategy → View
 
@@ -77,19 +78,20 @@ View 不仅包含上下文，也包含 LLM 接下来可以使用的限定范围�
 
 ## 官方插件
 
-Starter 随附 **3 个 Source、1 个默认 Strategy、3 个可选策略贡献、9 个 Provider**。各包独立版本、独立发布；Starter 固定经过测试的精确组合。
+Starter 随附 **3 个 Source、2 个主策略（同一时间选中一个）、3 个可选增强、9 个 Provider**。各包独立版本、独立发布；Starter 固定经过测试的精确组合。
 
 | 包 | 职责 | 默认状态 |
 |---|---|---|
 | [dsh-mnemon-source-runtime](https://github.com/omdsh-dev/dsh-mnemon/blob/main/plugins/dsh-mnemon-source-runtime/README.md) | USER / MEMORY、修订与本地热记忆 | 启用 |
 | [dsh-mnemon-source-documents](https://github.com/omdsh-dev/dsh-mnemon/blob/main/plugins/dsh-mnemon-source-documents/README.md) | Markdown、搜索、修订与归档 | 启用 |
 | [dsh-mnemon-source-memory-spaces](https://github.com/omdsh-dev/dsh-mnemon/blob/main/plugins/dsh-mnemon-source-memory-spaces/README.md) | 长期证据及 Source 自有 Provider 子模块 | 启用 |
-| [dsh-mnemon-strategy-default-three-tier](https://github.com/omdsh-dev/dsh-mnemon/blob/main/plugins/dsh-mnemon-strategy-default-three-tier/README.md) | 默认三层 View 与回合检索策略 | 选中 |
+| [dsh-mnemon-strategy-default-three-tier](https://github.com/omdsh-dev/dsh-mnemon/blob/main/plugins/dsh-mnemon-strategy-default-three-tier/README.md) | 分层策略：默认的 View 与回合检索策略 | 选中 |
+| [dsh-mnemon-strategy-general](https://github.com/omdsh-dev/dsh-mnemon/blob/main/plugins/dsh-mnemon-strategy-general/README.md) | 全部可用 Source 共享一份预算，由模型决定如何使用 | 关闭 |
 | [dsh-mnemon-strategy-auto-capture](https://github.com/omdsh-dev/dsh-mnemon/blob/main/plugins/dsh-mnemon-strategy-auto-capture/README.md) | 当前回合中主动记录有用事实的指引 | 关闭 |
 | [dsh-mnemon-strategy-light-context](https://github.com/omdsh-dev/dsh-mnemon/blob/main/plugins/dsh-mnemon-strategy-light-context/README.md) | 所有选中 Source 共享的常驻投影上限 | 关闭 |
 | [dsh-mnemon-strategy-scoped](https://github.com/omdsh-dev/dsh-mnemon/blob/main/plugins/dsh-mnemon-strategy-scoped/README.md) | 有序选择 Source，并限定可写子集 | 关闭 |
 
-三个增强使用默认 Strategy 的不同槽，可以共存，最终仍输出一个 View。主动记录是指引，不是自主记录器；投影上限不是 token 计费或增量注入；范围组合不创建存储。
+在**插件 → 可组合记忆**页面选择一个主策略及任意增强。增强使用 Core 的标准 selection、projection 与 capture 槽，因此适用于任一主策略并可共存，最终仍输出一个 View。主动记录是指引，不是自主记录器；投影上限不是 token 计费或增量注入；范围组合不创建存储。
 
 Memory Spaces 可使用以下 Provider 插件：
 

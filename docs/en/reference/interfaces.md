@@ -211,7 +211,7 @@ namespaces: mnemon, mnemon-ui
 endpoints: get, mutate
 ```
 
-Mutations use settings revisions to prevent overwriting concurrent edits. `mnemon` owns Host/storage settings; `mnemon-ui` owns `turnBar` and `saveAction`.
+Mutations use settings revisions to prevent overwriting concurrent edits. `mnemon` owns Host/storage settings; `mnemon-ui` owns `turnBar` and `saveAction`. The `dsh-mnemon` page under Plugins (`plugins.bundle.config`) reads and writes through this channel on loopback and remote pages alike. On loopback pages it also follows DSH's `ctx.configForms` revision of the `mnemon` entry and re-reads the channel when another page or a profile reload changes it.
 
 Mnemon uses one registration call shape for both transport generations: it always supplies the rc.2 authority object, which DSH 0.1.2 ignores as an extra JavaScript argument. Thus stable DSH 0.1.2-rc.1 and its alpha.5 predecessor authenticate the complete Host API with one browser session, while the rc.2 rollback retains method-specific trust tiers. No runtime version or function-arity branch is used.
 
@@ -234,4 +234,4 @@ Generic model tools `mnemon_view_route` and `mnemon_view_action` execute only ro
 
 ## Internationalization
 
-The main Sidebar workbench, settings, and conversation entries support Chinese and English and follow DSH locale live. Brand names, tool names, and configuration keys are not translated. `/mnemon` commands, model-tool cards, some Host errors, and compatibility metadata remain partially untranslated.
+The main Sidebar workbench, the configuration page under Plugins, and conversation entries support Chinese and English and follow DSH locale live. Brand names, tool names, and configuration keys are not translated. `/mnemon` commands, model-tool cards, some Host errors, and compatibility metadata remain partially untranslated.

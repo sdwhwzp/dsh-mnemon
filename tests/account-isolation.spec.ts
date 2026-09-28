@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { memorySettings } from './helpers/account-settings.ts'
 import { MnemonAccounts } from '../src/host/account-access.ts'
-import type { HostAgent, HostContextShape, HostPrincipal, HostRpcHandler, ToolDefinition, ToolExecution } from '../src/host/dsh.ts'
+import type { HostAgent, HostContextShape, HostPrincipal, HostRpcHandler, HostSession, HostSessionEvent, ToolDefinition, ToolExecution } from '../src/host/dsh.ts'
 import { createReadHandler, createWriteHandler } from '../src/host/rpc.ts'
 import { LiveMnemonRuntime } from '../src/host/runtime.ts'
 import { createSettingsHandler } from '../src/host/settings.ts'
@@ -16,8 +16,13 @@ const cleanups: Array<() => unknown> = []
 afterEach(async () => { for (const cleanup of cleanups.splice(0).reverse()) await cleanup() })
 
 
-function agent(id: string, principal: HostPrincipal, cwd: string): HostAgent {
-  return { id, status: 'idle', session: { header: { cwd }, events: [{ type: 'turn/start', data: { turn: 1, principal } }] },
+function agent(id: string, principal: HostPrincipal, cwd: string): HostAgent & { session: HostSession & { events: HostSessionEvent[] } } {
+  const session = {
+    header: { cwd }, events: [{ type: 'turn/start', data: { turn: 1, principal } }] as HostSessionEvent[],
+    snapshotEvents(from = 0, to?: number) { return this.events.slice(from, to) },
+    eventAt(seq: number) { return this.events[seq] }, surface: { nodes: [] },
+  }
+  return { id, status: 'idle', session,
     ctx: { on: vi.fn(), effect: vi.fn() }, followup: vi.fn(), steer: vi.fn(), inject: vi.fn() }
 }
 
@@ -31,9 +36,10 @@ async function fixture() {
   const active = new Set(['1', '2'])
   const tools: ToolDefinition[] = []
   const on = vi.fn()
+  const accountSettings = memorySettings()
   const ctx = {
     on,
-    settings: memorySettings(),
+    settings: accountSettings,
     agents: { get: (id: string) => sessions.find(value => value.id === id), roots: () => sessions,
       create: vi.fn(async ({ sessionId }: { sessionId: string }) => {
         const value = agent(sessionId, alice, composition.workspace)
@@ -50,7 +56,7 @@ async function fixture() {
       readableWorkspaceIds: new Set(input.workspaceIds.filter(id => id === 'shared' || principal.id === '2' && id === 'bob-only')),
     }) } : undefined,
   } as unknown as HostContextShape
-  const accounts = new MnemonAccounts(ctx, join(root, 'accounts'), { accountDataDir: join(root, 'accounts'), cliPath: process.env.MNEMON_NATIVE_TEST_CLI ?? '/fake/mnemon' })
+  const accounts = new MnemonAccounts(ctx, join(root, 'accounts'), { accountDataDir: join(root, 'accounts'), cliPath: process.env.MNEMON_NATIVE_TEST_CLI ?? '/fake/mnemon' }, accountSettings)
   const scoped = accounts.wrapContext()
   const stored = new Map(sessions.map(session => [session.id, { header: { cwd: session.session.header!.cwd! } }]))
   const stat = vi.fn(async (id: string) => stored.get(id))
@@ -173,6 +179,25 @@ describe('authenticated Mnemon account memory', () => {
       expect(await f.settings('mutate', { ops: [{ op: 'set', path: [key], value }] }, undefined, alice)).toMatchObject({ ok: false })
     }
     expect(await f.settings('get', { namespace: 'mnemon-account-' + f.accounts.key(bob) }, undefined, alice)).toMatchObject({ ok: false })
+  })
+
+  it('publishes settings updates only to the subscribing account and stops after disposal', async () => {
+    const f = await fixture()
+    const listener = vi.fn()
+    let stop = () => {}
+    const subscribe = f.accounts.handler(async () => {
+      stop = f.accounts.settingsService(() => {}).onUpdated(listener)
+      return { ok: true, value: null }
+    }, 'settings')
+    expect(await subscribe('subscribe', {}, undefined, alice)).toMatchObject({ ok: true })
+    cleanups.push(() => stop())
+    expect(await f.settings('mutate', { ops: [{ op: 'set', path: ['defaultRecallLimit'], value: 4 }] }, undefined, bob)).toMatchObject({ ok: true })
+    expect(listener).not.toHaveBeenCalled()
+    expect(await f.settings('mutate', { ops: [{ op: 'set', path: ['defaultRecallLimit'], value: 5 }] }, undefined, alice)).toMatchObject({ ok: true })
+    expect(listener).toHaveBeenCalledExactlyOnceWith('mnemon', expect.objectContaining({ defaultRecallLimit: 5 }))
+    stop()
+    expect(await f.settings('mutate', { ops: [{ op: 'set', path: ['defaultRecallLimit'], value: 6 }] }, undefined, alice)).toMatchObject({ ok: true })
+    expect(listener).toHaveBeenCalledTimes(1)
   })
 
   it('uses account ownership for registered model tools and rejects a forged execution owner', async () => {

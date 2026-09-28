@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type JSX } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type JSX, type ReactNode } from 'react'
+import { Button, IconChevronDownOutlineRegular, Switch } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {
   ClientConnectionHandle,
   MemoryProviderConfigField,
@@ -12,6 +13,8 @@ import { GlobalLocationSetting } from './GlobalLocationSetting.tsx'
 import css from './MnemonSettingsCard.module.css'
 import { useRequestVersion } from './use-request-version.ts'
 import type { MnemonKey, MnemonTranslate } from './locales.ts'
+import { message } from './page-kit.tsx'
+import { Reveal } from './feedback.tsx'
 import { ProviderIcon } from './ProviderIcon.tsx'
 import {
   providerFieldLabel,
@@ -29,6 +32,14 @@ interface ProviderSettingsSectionProps {
   disabled: boolean
   scopeChanging: boolean
   t: MnemonTranslate
+  /** Rendered first in the list; Settings puts Mnemon Native here as a peer of the others. */
+  leading?: ReactNode
+  /** Why the other Providers cannot be listed now; they are not read while it is set. */
+  blocked?: ReactNode
+  /** Whether it is not yet known if the Providers can be listed; they are read once it is. */
+  pending?: boolean
+  /** Why the listed Providers cannot be switched; rendered above them. */
+  notice?: ReactNode
 }
 
 interface ServiceDraft {
@@ -61,10 +72,6 @@ function cacheCatalog(connection: ClientConnectionHandle | undefined, key: strin
     providerCatalogCache.set(connection, routes)
   }
   routes.set(key, catalog)
-}
-
-function message(reason: unknown): string {
-  return reason instanceof Error ? reason.message : String(reason)
 }
 
 function stabilizeProviderCard(element: HTMLElement): void {
@@ -245,7 +252,7 @@ function ProviderServiceForm(props: {
     </div>
     <div className={`${css.memoryConfigFooter} ${css.providerServiceFooter}`}>
       <div className={css.configFeedback} aria-live="polite">{failed !== null && <span className={css.error}>{props.t('config.providerSaveFailed', { error: failed })}</span>}{saved && <span className={css.packSuccess}>{props.t('config.providerServiceSaved')}</span>}</div>
-      <button type="submit" className={css.primaryPill} disabled={props.disabled || saving || !formComplete}>{saving ? props.t('config.saving') : props.t(props.service.configured ? 'config.saveProviderService' : 'config.enableProvider')}</button>
+      <Button type="submit" variant="primary" size="sm" disabled={props.disabled || saving || !formComplete}>{saving ? props.t('config.saving') : props.t(props.service.configured ? 'config.saveProviderService' : 'config.enableProvider')}</Button>
     </div>
   </form>
 }
@@ -330,15 +337,12 @@ function ProviderPanel(props: {
     <div className={css.providerRowHeader}>
       <button type="button" className={css.providerDisclosure} aria-expanded={expanded} disabled={!enabled || controlDisabled} onClick={toggleExpanded}>
         <span className={css.providerIdentity}><ProviderIcon providerId={props.provider.id} icon={props.provider.icon} className={css.providerMark} /><span><strong>{props.provider.label}</strong><small>{providerSummary(props.t, props.provider)}</small></span></span>
-        {enabled && <i className={css.providerChevron} aria-hidden="true">›</i>}
+        {enabled && <IconChevronDownOutlineRegular className={css.providerChevron} size={14} />}
       </button>
       <div className={css.providerEnableControl}>
         <span className={css.providerScopeTag} data-scope={providerScope}>{props.t(`config.${providerScope}`)}</span>
         <span className={css.providerState} data-enabled={enabled || undefined}>{props.t(stateKey)}</span>
-        <label className={css.providerToggle}>
-          <input type="checkbox" aria-label={props.t('config.providerToggleAria', { provider: props.provider.label })} checked={enabled} disabled={controlDisabled} onChange={event => void toggle(event.target.checked)} />
-          <span aria-hidden="true"><i /></span>
-        </label>
+        <Switch className={css.providerToggle} checked={enabled} label={props.t('config.providerToggleAria', { provider: props.provider.label })} disabled={controlDisabled} onChange={next => void toggle(next)} />
       </div>
     </div>
     {failed !== null && <p className={css.providerToggleError} role="alert">{props.t('config.providerToggleFailed', { error: failed })}</p>}
@@ -373,12 +377,20 @@ export function ProviderSettingsSection(props: ProviderSettingsSectionProps): JS
     }
   }, [client, loadRequests, props.connection, routeKey])
 
+  const blocked = props.blocked !== undefined
+  const pending = props.pending === true
   useEffect(() => {
+    if (blocked || pending) {
+      loadRequests.begin()
+      setLoading(pending)
+      setFailed(null)
+      return
+    }
     const cached = cachedCatalog(props.connection, routeKey)
     setCatalog(cached ?? EMPTY_PROVIDER_CATALOG)
     setLoading(client !== null && cached === undefined)
     void load(cached !== undefined)
-  }, [client, load, props.connection, props.refreshKey, routeKey])
+  }, [blocked, client, load, loadRequests, pending, props.connection, props.refreshKey, routeKey])
 
   const acceptService = useCallback((service: MemoryProviderServiceView): void => {
     setCatalog(current => {
@@ -405,12 +417,15 @@ export function ProviderSettingsSection(props: ProviderSettingsSectionProps): JS
   }
 
   const disabled = props.disabled || props.scopeChanging || client === null || loading || catalog.generatedAt === ''
+  // Explanations slide in and out, so the list does not jump when a dependency changes.
+  if (blocked) return <><Reveal>{props.blocked}</Reveal><div className={css.providerList}>{props.leading}</div></>
   return <>
+    <Reveal>{props.notice ?? null}</Reveal>
     {props.scopeChanging && <p className={css.scopeChanging} role="status">{props.t('config.saveScopeBeforeProviders')}</p>}
     {props.workspaceLabel !== undefined && <p className={css.providerTarget}>{props.t('config.providerTargetWorkspace', { workspace: props.workspaceLabel })}</p>}
     {loading && <span className={css.visuallyHidden} role="status">{props.t('config.loadingProviders')}</span>}
-    {failed !== null && <div className={css.providerLoadError}><span className={css.error}>{props.t('config.providerLoadFailed', { error: failed })}</span><button type="button" className={css.textButton} onClick={() => void load()}>{props.t('config.retryProviders')}</button></div>}
-    <div className={css.providerList} aria-busy={loading}>{catalog.providers.map(provider => {
+    {failed !== null && <div className={css.providerLoadError}><span className={css.error}>{props.t('config.providerLoadFailed', { error: failed })}</span><Button variant="ghost" size="sm" onClick={() => void load()}>{props.t('config.retryProviders')}</Button></div>}
+    <div className={css.providerList} aria-busy={loading}>{props.leading}{catalog.providers.map(provider => {
       const service = catalog.items.find(item => item.providerId === provider.id) ?? { providerId: provider.id, enabled: false, configured: false, settings: {}, configuredSecrets: [] }
       return <ProviderPanel key={provider.id} provider={provider} service={service} disabled={disabled} activeScope={props.activeScope} t={props.t} onSave={save} onToggle={toggle} />
     })}</div>

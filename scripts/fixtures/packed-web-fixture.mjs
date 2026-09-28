@@ -51,8 +51,14 @@ export async function servePackedWebFixture(scenario) {
     assert(!packages.has(manifest.name), `Duplicate packed package: ${manifest.name}`)
     packages.set(manifest.name, { manifest, path, integrity: `sha512-${createHash('sha512').update(bytes).digest('base64')}`, sha256: createHash('sha256').update(bytes).digest('hex') })
   }
-  assert.equal(packages.size, 17, 'Use Root and all sixteen packed plugin artifacts')
   assert(packages.has('dsh-mnemon'), 'Packed Root is required')
+  const expected = ['dsh-mnemon', ...Object.keys(packages.get('dsh-mnemon').manifest.dependencies)
+    .filter(name => name.startsWith('dsh-mnemon-'))].sort()
+  assert.deepEqual([...packages.keys()].sort(), expected, 'Use the complete packed Starter composition')
+  for (const name of expected.filter(name => name !== 'dsh-mnemon')) {
+    assert.equal(packages.get(name).manifest.version, packages.get('dsh-mnemon').manifest.dependencies[name],
+      `${name}: packed version must match the Starter pin`)
+  }
   let registryUrl
   const registry = createServer((request, response) => {
     const name = decodeURIComponent(new URL(request.url, 'http://localhost').pathname).slice(1)

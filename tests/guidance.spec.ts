@@ -23,9 +23,12 @@ describe('Source-neutral View guidance', () => {
 
   it('registers only View-based guidance and respects the existing preference', () => {
     const section = vi.fn()
-    const ctx = { get: () => ({ section }) } as unknown as HostContextShape
+    const prompted = { get: (name: string) => name === 'systemPrompt' ? { section } : undefined }
+    const inject = vi.fn((_services: string[], callback: (ctx: unknown) => void) => callback(prompted))
+    const ctx = { inject } as unknown as HostContextShape
     const preference = { routingGuidance: true }
     registerGuidance(ctx, preference)
+    expect(inject).toHaveBeenCalledWith(['systemPrompt'], expect.any(Function))
     const render = section.mock.calls[0]![0].text
     expect(render()).toContain('only for offered ids')
     expect(render()).toContain('An action offer is not authorization')

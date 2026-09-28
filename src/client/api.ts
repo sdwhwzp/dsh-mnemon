@@ -18,6 +18,7 @@ import {
   type MnemonPackExport,
   type MnemonPackImportResult,
   type MnemonPackPreview,
+  type MnemonPackTarget,
   type MnemonEmbeddingStatus,
   type StatusView,
   type TaskAgentModelCatalog,
@@ -158,7 +159,7 @@ export class MnemonClient {
     return this.call(MNEMON_WRITE_CHANNEL, 'supervise', this.scoped({ content, ...(idempotencyKey === undefined ? {} : { idempotencyKey }) }))
   }
 
-  packTarget(): Promise<{ root: string; scope: 'global' | 'workspace' | 'custom' }> {
+  packTarget(): Promise<MnemonPackTarget> {
     return this.call(MNEMON_PACK_CHANNEL, 'target', this.scoped())
   }
 

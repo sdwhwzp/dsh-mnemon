@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { reviewCheckpoint } from '../src/host/review-checkpoint.ts'
 import type { HostSessionEvent } from '../src/host/dsh.ts'
+import { sessionLog } from './fixtures/session-log.ts'
 
 describe('bounded review checkpoint', () => {
   it('uses whole visible messages and excludes rewound, plugin and unfinished evidence', () => {
@@ -12,7 +13,7 @@ describe('bounded review checkpoint', () => {
       message(2, 'Please remember the explicit decision to use SQLite.'), message(3, 'oversized '.repeat(500)),
       message(4, 'bounded artifact', 'assistant/message'), message(5, 'successful tool evidence', 'tool/result'),
       { seq: 6, type: 'turn/end', data: {} }, message(7, 'unfinished fact')]
-    const prompt = reviewCheckpoint({ events, surface: { nodes: [1, 2, 3, 4, 5, 7] } }, 1_000)
+    const prompt = reviewCheckpoint({ ...sessionLog(events), surface: { nodes: [1, 2, 3, 4, 5, 7] } }, 1_000)
     expect(prompt.length).toBeLessThanOrEqual(1_000)
     expect(prompt).toContain('Please remember the explicit decision to use SQLite.')
     expect(prompt).toContain('bounded artifact')
@@ -36,14 +37,13 @@ describe('bounded review checkpoint', () => {
       event(7, 'No known source.'),
       { seq: 8, type: 'turn/end', data: {} },
     ]
-    const checkpoint = reviewCheckpoint({ events, surface: { nodes: events.map(event => event.seq!) } }, 2_000)
+    const checkpoint = reviewCheckpoint({ ...sessionLog(events), surface: { nodes: events.map(event => event.seq!) } }, 2_000)
     expect(checkpoint).toContain('[user/message; checkpoint event 0]\nRemember the explicit SQLite project decision.')
     expect(checkpoint).toContain('[user/message; checkpoint event 1]\nDo not write this checkpoint to memory. 不记录本轮的临时诊断信息。')
     expect(checkpoint).not.toMatch(/Injected|wrapper|Runtime policy|Compacted|No known source/u)
   })
 
-  it('does not reconstruct discarded context when the current public surface is unavailable', () => {
-    expect(reviewCheckpoint({ events: [] }, 1_000)).toContain('Skip this review without a mutation')
-    expect(reviewCheckpoint({ events: [], surface: { nodes: [] } }, 1_000)).toContain('No completed checkpoint')
+  it('skips review before any completed checkpoint', () => {
+    expect(reviewCheckpoint(sessionLog(), 1_000)).toContain('No completed checkpoint')
   })
 })

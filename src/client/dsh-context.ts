@@ -6,16 +6,19 @@
  */
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
 import type { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
+import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
 import type { Context } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-client-ui-chat/client'
+import type {} from '@deepseek-ai/dsh-client-ui-plugin-manager/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
-import type {} from '@deepseek-ai/dsh-client-ui-tool/client'
 import type { MnemonKey } from './locales.ts'
 import type { MemorySourcePageProps } from './source-contracts.ts'
+import type { MemoryComponentSettingsProps, MemoryComponentStatusProps } from './component-ui.tsx'
 export type { MnemonSourceManagementClient } from './source-contracts.ts'
 export type MnemonSourcePageOwnerProps = MemorySourcePageProps
 
@@ -30,6 +33,18 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
       kind: 'list'
       scope: 'root'
       owner: MnemonSourcePageOwnerProps
+    }
+    /** A component's own settings on its page, keyed by the component's package name. */
+    'mnemon.component.settings': {
+      kind: 'keyed'
+      scope: 'root'
+      owner: MemoryComponentSettingsProps
+    }
+    /** A component's card on the Memory System's Status page, keyed by the component's package name. */
+    'mnemon.component.status': {
+      kind: 'keyed'
+      scope: 'root'
+      owner: MemoryComponentStatusProps
     }
   }
 }
@@ -46,26 +61,25 @@ export interface MnemonSessionListState {
   [key: string]: unknown
 }
 
-export interface MnemonWorkspaceSummary {
+interface MnemonWorkspaceSummary {
   workspaceId: unknown
   title: string
   path: string
 }
 
-export interface MnemonWorkspaceListState {
+interface MnemonWorkspaceListState {
   items: MnemonWorkspaceSummary[]
   [key: string]: unknown
 }
 
-interface SnapshotStore<State> {
-  getSnapshot(): State
-  subscribe(listener: () => void): () => void
-}
-
-/** Context shared by the released client runtime and the 0.1.2 controller split. */
+/**
+ * DSH client Context as Mnemon's apply receives it. The session and workspace
+ * controller packages are not dependencies, so their list states are narrowed
+ * locally to the fields Mnemon reads.
+ */
 export type MnemonClientContext = Context & {
   connection: ConnectionHandle
   locale: LocaleRuntime
-  sessions: { list: SnapshotStore<MnemonSessionListState> }
-  workspaces: { list: SnapshotStore<MnemonWorkspaceListState> }
+  sessions: { list: ObservableSnapshot<MnemonSessionListState> }
+  workspaces: { list: ObservableSnapshot<MnemonWorkspaceListState> }
 }

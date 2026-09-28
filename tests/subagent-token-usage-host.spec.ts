@@ -1,12 +1,10 @@
 import { Context } from '@deepseek-ai/cordis'
-import SessionStore, { SessionId, type Session, type SessionEvent } from '@deepseek-ai/dsh-session'
+import SessionStore, { SessionId, SessionLogOffset, type Session } from '@deepseek-ai/dsh-session'
 import { createAssistantMessage } from '@deepseek-ai/dsh-llm'
 import SessionProjectionRegistry, {
   type ProjectionCheckpoint,
   type ProjectionDefinition,
-  type ProjectionSnapshot,
 } from '@deepseek-ai/dsh-session-projection'
-import LegacySessionProjectionRegistry, { type ProjectionDefinition as LegacyProjectionDefinition } from '@deepseek-ai/dsh-session-projection-legacy'
 import { snapshotSubagentDescriptor } from '@deepseek-ai/dsh-subagent'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -15,8 +13,6 @@ import {
   type MnemonSubagentTokenUsageState,
   type MnemonTokenUsageProjection,
 } from '../src/host/subagent-token-usage.ts'
-import type { HostSession } from '../src/host/dsh.ts'
-import { hostSessionEvents } from '../src/host/session-events.ts'
 
 declare module '@deepseek-ai/dsh-session-projection' {
   interface SessionProjectionMap {
@@ -27,61 +23,8 @@ declare module '@deepseek-ai/dsh-session-projection' {
   }
 }
 
-declare module '@deepseek-ai/dsh-session-projection-legacy' {
-  interface SessionProjectionMap {
-    mnemonSubagentTokenUsage: MnemonTokenUsageProjection | null
-  }
-}
-
-// Check the published contracts as well as their actual runtime consumers.
-const currentDefinition = projection satisfies ProjectionDefinition<typeof key, MnemonSubagentTokenUsageState>
-const legacyDefinition = projection satisfies LegacyProjectionDefinition<typeof key, MnemonSubagentTokenUsageState>
-
-// The source overlay and npm fixture carry distinct nominal Context/Session
-// types. These registry operations only consume their shared public surface.
-interface TestRegistry {
-  register(definition: typeof projection): () => void
-  snapshot(session: Session): ProjectionSnapshot
-  checkpoint(session: Session): ProjectionCheckpoint
-  restoreFloor(checkpoint: ProjectionCheckpoint): number | undefined
-  viewCheckpoint(checkpoint: ProjectionCheckpoint): ProjectionSnapshot['values']
-  restore(
-    checkpoint: ProjectionCheckpoint,
-    events: readonly SessionEvent[],
-    baseSeq: number,
-    header: Session['header'],
-  ): { snapshot: ProjectionSnapshot; checkpoint: ProjectionCheckpoint }
-  onChanged(listener: (session: Session, key: string, value: unknown, seq: number) => void): () => void
-}
-
-function sessionEvents(session: Session): readonly SessionEvent[] {
-  return hostSessionEvents(session as unknown as HostSession) as readonly SessionEvent[]
-}
-
-type TestRegistryConstructor = new (ctx: Context) => TestRegistry
-
-// Alpha needs restore's trailing header; the released implementations ignore it.
-const LegacyRegistry = LegacySessionProjectionRegistry as unknown as TestRegistryConstructor
-const ActiveRegistry = SessionProjectionRegistry as unknown as TestRegistryConstructor
-
-const generations = [
-  {
-    name: 'DSH 0.1.0-rc.8 (schema/view)',
-    create(ctx: Context) {
-      const registry = new LegacyRegistry(ctx)
-      registry.register(legacyDefinition)
-      return registry
-    },
-  },
-  {
-    name: 'active DSH (stateSchema/wire)',
-    create(ctx: Context) {
-      const registry = new ActiveRegistry(ctx)
-      registry.register(currentDefinition)
-      return registry
-    },
-  },
-] as const
+// Check the published contract as well as its runtime consumer.
+const definition = projection satisfies ProjectionDefinition<typeof key, MnemonSubagentTokenUsageState>
 
 const contexts: Context[] = []
 
@@ -89,20 +32,13 @@ afterEach(async () => {
   for (const ctx of contexts.splice(0).reverse()) await ctx.fiber.dispose()
 })
 
-function harness(generation: typeof generations[number]) {
+function harness() {
   const ctx = new Context()
   contexts.push(ctx)
   const sessions = new SessionStore(ctx)
-  const registry = generation.create(ctx)
+  const registry = new SessionProjectionRegistry(ctx)
+  registry.register(definition)
   const session = sessions.create(SessionId('projection-fixture'))
-  // The legacy registry owns a stable-rc Session reader. When the active
-  // source overlay supplies an alpha Session, expose its equivalent snapshot.
-  if (generation === generations[0] && !('events' in session)) {
-    Object.defineProperty(session, 'events', {
-      configurable: true,
-      get: () => sessionEvents(session),
-    })
-  }
   return { ctx, registry, session }
 }
 
@@ -129,18 +65,18 @@ const expectedUsage = {
   cacheWriteTokens: 8,
 }
 
-describe.each(generations)('Mnemon projection with $name', (generation) => {
+describe('Mnemon subagent token usage projection', () => {
   it('serves empty and ordinary session history without child usage', () => {
-    const { registry, session } = harness(generation)
+    const { registry, session } = harness()
     expect(registry.snapshot(session)).toEqual({ asOfSeq: -1, values: { [key]: null } })
 
     usage(session, 0, 1_000, 100)
     expect(registry.snapshot(session)).toEqual({ asOfSeq: 0, values: { [key]: null } })
-    expect(registry.restore({}, sessionEvents(session), 0, session.header).snapshot).toEqual(registry.snapshot(session))
+    expect(registry.restore({}, session.snapshotEvents(), SessionLogOffset(0), session.header, session.inheritedEventCount).snapshot).toEqual(registry.snapshot(session))
   })
 
   it('serves attached and detached child history without counting inherited usage', () => {
-    const { registry, session } = harness(generation)
+    const { registry, session } = harness()
     usage(session, 0, 1_000, 100)
     descriptor(session)
     usage(session, 0, 100, 10)
@@ -151,11 +87,11 @@ describe.each(generations)('Mnemon projection with $name', (generation) => {
 
     const expected = { asOfSeq: session.seq - 1, values: { [key]: expectedUsage } }
     expect(registry.snapshot(session)).toEqual(expected)
-    expect(registry.restore({}, sessionEvents(session), 0, session.header).snapshot).toEqual(expected)
+    expect(registry.restore({}, session.snapshotEvents(), SessionLogOffset(0), session.header, session.inheritedEventCount).snapshot).toEqual(expected)
   })
 
   it('restores JSON checkpoints and replaces a same-step sample after restart', () => {
-    const { registry, session } = harness(generation)
+    const { registry, session } = harness()
     descriptor(session)
     usage(session, 0, 10, 2)
     const checkpoint = JSON.parse(JSON.stringify(registry.checkpoint(session)))
@@ -165,9 +101,9 @@ describe.each(generations)('Mnemon projection with $name', (generation) => {
 
     usage(session, 0, 12, 5)
     usage(session, 1, 7, 1)
-    const restarted = harness(generation).registry
+    const restarted = harness().registry
     const floor = restarted.restoreFloor(checkpoint)!
-    const restored = restarted.restore(checkpoint, sessionEvents(session).slice(floor), floor, session.header)
+    const restored = restarted.restore(checkpoint, session.snapshotEvents().slice(floor), floor, session.header, session.inheritedEventCount)
 
     expect(restored.snapshot).toEqual({ asOfSeq: session.seq - 1, values: { [key]: expectedUsage } })
     expect(restored.checkpoint).toEqual(registry.checkpoint(session))
@@ -179,7 +115,7 @@ describe.each(generations)('Mnemon projection with $name', (generation) => {
   })
 
   it('emits validated child-local changes without duplicate streaming samples', () => {
-    const { registry, session } = harness(generation)
+    const { registry, session } = harness()
     const changed = vi.fn()
     registry.onChanged(changed)
     usage(session, 0, 1_000, 100)
@@ -195,7 +131,7 @@ describe.each(generations)('Mnemon projection with $name', (generation) => {
   })
 
   it('refolds the complete log when a checkpoint version is obsolete', () => {
-    const { registry, session } = harness(generation)
+    const { registry, session } = harness()
     descriptor(session)
     usage(session, 0, 12, 5)
     usage(session, 1, 7, 1)
@@ -205,25 +141,6 @@ describe.each(generations)('Mnemon projection with $name', (generation) => {
 
     expect(registry.restoreFloor(checkpoint)).toBe(0)
     expect(registry.viewCheckpoint(checkpoint)).toEqual({})
-    expect(registry.restore(checkpoint, sessionEvents(session), 0, session.header).snapshot.values).toEqual({ [key]: expectedUsage })
+    expect(registry.restore(checkpoint, session.snapshotEvents(), SessionLogOffset(0), session.header, session.inheritedEventCount).snapshot.values).toEqual({ [key]: expectedUsage })
   })
-})
-
-describe('Mnemon projection checkpoints across DSH generations', () => {
-  for (const [source, target] of [[generations[0], generations[1]], [generations[1], generations[0]]] as const) {
-    it(`preserves state from ${source.name} to ${target.name}`, () => {
-      const { registry, session } = harness(source)
-      descriptor(session)
-      usage(session, 0, 10, 2)
-      const checkpoint = JSON.parse(JSON.stringify(registry.checkpoint(session)))
-      usage(session, 0, 12, 5)
-      usage(session, 1, 7, 1)
-
-      const targetRegistry = harness(target).registry
-      const floor = targetRegistry.restoreFloor(checkpoint)!
-      const restored = targetRegistry.restore(checkpoint, sessionEvents(session).slice(floor), floor, session.header)
-      expect(restored.snapshot).toEqual({ asOfSeq: session.seq - 1, values: { [key]: expectedUsage } })
-      expect(restored.checkpoint).toEqual(registry.checkpoint(session))
-    })
-  }
 })

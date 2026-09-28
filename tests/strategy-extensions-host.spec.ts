@@ -12,6 +12,7 @@ import { MnemonSubagentCoordinator } from '../src/host/subagent.ts'
 import { registerTools } from '../src/host/tools.ts'
 import { modelMemoryWake } from '../src/host/view-presentation.ts'
 import { compositionFixture } from './fixtures/composition.ts'
+import { sessionLog } from './fixtures/session-log.ts'
 
 const fixtures: Awaited<ReturnType<typeof compositionFixture>>[] = []
 afterEach(async () => { for (const fixture of fixtures.splice(0)) await fixture.dispose() })
@@ -21,7 +22,7 @@ async function fixture(options: Parameters<typeof compositionFixture>[0] = {}) {
   return value
 }
 function agent(f: Awaited<ReturnType<typeof fixture>>) {
-  return { id: 'root', session: { header: { cwd: f.workspace }, events: [] } } as unknown as HostAgent
+  return { id: 'root', session: { header: { cwd: f.workspace }, ...sessionLog() } } as unknown as HostAgent
 }
 const runtimeKey = 'source:mnemon-source-runtime'
 const documentsKey = 'source:mnemon-source-documents'

@@ -31,7 +31,3 @@ export class RecallQualityPolicyRegistry {
 }
 
 export const recallQualityPolicies = new RecallQualityPolicyRegistry()
-
-export function registerRecallQualityPolicy(policy: RecallQualityPolicy): () => void {
-  return recallQualityPolicies.register(policy)
-}

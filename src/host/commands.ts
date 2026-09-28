@@ -42,12 +42,14 @@ async function execute(serviceOrSource: MnemonAgentRuntimeSource, coordinator: M
       const status = await source.read<MemorySpacesStatus>('status', null, invocation.signal)
       if (!status.healthy) return { kind: 'error', text: `Mnemon 不可用：${status.error ?? '未知错误'}` }
       const stats = status.stats
+      // Mnemon Native is optional: without its CLI the other providers still serve memory.
+      const nativeInstalled = status.commandFound !== false
       return {
         kind: 'success',
         text: [
-          `Mnemon ${status.version ?? ''} · default=${status.mnemonDefaultStore}`.trim(),
+          nativeInstalled ? `Mnemon ${status.version ?? ''} · default=${status.mnemonDefaultStore}`.trim() : 'Mnemon Native: 未安装 CLI（可选，其他 Provider 不受影响）',
           `DSH 已激活: ${status.dshActiveStores.join(', ') || 'none'}`,
-          `CLI: ${status.cliPath}`,
+          ...(nativeInstalled ? [`CLI: ${status.cliPath}`] : []),
           `数据目录: ${status.dataDir}`,
           `有效记忆: ${stats?.totalInsights ?? 0} · 连接: ${stats?.edgeCount ?? 0} · 已删除: ${stats?.deletedInsights ?? 0}`,
           `模式: ${status.writeEnabled ? '读写' : '只读'} · 默认召回: ${status.defaultRecallLimit}`,

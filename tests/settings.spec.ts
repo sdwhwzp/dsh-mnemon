@@ -4,16 +4,6 @@ import { createSettingsHandler, registerSettingsRpc } from "../src/host/settings
 import { MNEMON_SETTINGS_CHANNEL } from "../src/host/protocol.ts"
 
 describe('Mnemon settings bridge', () => {
-  it('supplies the rc.2 authority object accepted and ignored by the alpha API', () => {
-    const settings = {} as HostSettingsService
-    const handle = vi.fn()
-    const connection = { rpc: { handle } } as unknown as HostConnectionHandle
-    registerSettingsRpc(connection, settings)
-    registerSettingsRpc(connection, settings, 'trusted-host')
-    expect(handle).toHaveBeenNthCalledWith(1, MNEMON_SETTINGS_CHANNEL, expect.any(Function), { authority: 'loopback' })
-    expect(handle).toHaveBeenNthCalledWith(2, MNEMON_SETTINGS_CHANNEL, expect.any(Function), { authority: 'trusted-host' })
-  })
-
   it('exposes and mutates only the Mnemon namespace through a revision fence', async () => {
     let revision = 2
     let value = { store: 'base', timeoutMs: 10000 }
@@ -130,7 +120,7 @@ describe('Mnemon settings bridge', () => {
     ], undefined)
   })
 
-  it('keeps the startup-only rc.2 authority setting immutable from the Web bridge', async () => {
+  it('keeps the startup-only remote access setting immutable from the Web bridge', async () => {
     const settings = {
       writable: true,
       register: vi.fn(),

@@ -1,14 +1,14 @@
 import type {
   AutomaticMemoryPlacementRequest,
+  LlmMemoryPlacementSelection,
+  MemoryPlacementCandidate,
   MemoryPlacementCapability,
   MemoryPlacementDecision,
   MemoryPlacementPreference,
   MemoryProviderCapabilities,
   MemoryProviderId,
+  PreparedMemoryPlacement,
 } from './contracts.ts'
-
-import type { MemoryPlacementCandidate, PreparedMemoryPlacement, LlmMemoryPlacementSelection } from './contracts.ts'
-export type { MemoryPlacementCandidate, PreparedMemoryPlacement, LlmMemoryPlacementSelection } from './contracts.ts'
 
 const CAPABILITY_LABELS: Record<MemoryPlacementCapability, string> = {
   graph: 'typed graph',

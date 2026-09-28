@@ -2,7 +2,7 @@
 
 [简体中文](../../zh-CN/guides/ui-guide.md) | **English** | [Documentation hub](../README.md)
 
-The default entry is Sidebar. Optional Builtin placement embeds the same pages in a conversation. v0.5 keeps the familiar workflow and adds three Memory enhancement switches under **Settings → Memory System**, not a View page or generic plugin manager.
+The default entry is Sidebar. Optional Builtin placement embeds the same pages in a conversation. v0.5 keeps the familiar workflow and adds a main Strategy choice and three Memory enhancement switches, not a View page or generic plugin manager. All configuration is on the `dsh-mnemon` page under **Plugins**, where DSH 0.1.7 keeps plugin settings. The interface uses the DSH theme tokens and component specifications: buttons, switches, selectors, tags, status dots and dialogs match DSH's own pages, and the configuration is organized as DSH preference rows.
 
 ## See it in use
 
@@ -16,18 +16,18 @@ Older media remain available with their original version labels in [historical e
 
 The Memory System sidebar entry uses the same native DSH row as Plugins, including its skin, selected state and collapsed icon. Selecting Plugins, another native panel or New Session leaves the memory workspace; Back to conversation and Escape return to the current conversation. Clicking Memory System again keeps its current page open, and returning after Task Board or SSH restores it.
 
-With `displayMode: builtin`, open Memory System from the conversation's tabs instead; the Sidebar entry is absent. The header omits storage-mode and workspace-selection controls because the Host uses the owning session's global, workspace, centralized workspaces or custom scope. All Source pages and dialogs below are shared, and conversation shortcuts open the matching tab. See [scope mapping](../reference/configuration.md#entry-placement-displaymode-and-tabenabled).
+With `displayMode: builtin`, open Memory System from the conversation's tabs instead; the Sidebar entry is absent. The header omits storage-scope and workspace-selection controls because the Host uses the owning session's global, workspace, centralized workspaces or custom scope. All Source pages and dialogs below are shared, and conversation shortcuts open the matching tab. See [scope mapping](../reference/configuration.md#entry-placement-displaymode-and-tabenabled).
 
 While Memory System is displayed in Builtin, its owning conversation's width resize handles are hidden. The resident composer remains usable; switching to Chat or another view restores normal width dragging. This applies only to the owning conversation, including when other plugins render adjacent or nested conversations.
 
-Primary pages remain **Status, Runtime, Documents, Memory Spaces**. Memory Spaces adds **Overview, Recall, Content, Entities**, with **Remember** and **Distillation strategy** at the top right. A generated View is an internal per-turn runtime artifact, not a navigation page; Status does not own plugin discovery or installation.
+Primary pages remain **Status, Runtime memory, Project Documents, Memory Spaces**: each Source's page carries the name its component declares, as the configuration shows it, and an installed Source's page joins them the same way. Memory Spaces adds **Overview, Recall, Content, Entities**, with **Remember** and **Distillation strategy** at the top right. A generated View is an internal per-turn runtime artifact, not a navigation page; Status does not own plugin discovery or installation.
 
 All four pages use the same content inset and one page scroll area. Their primary headers remain visible while scrolling; Memory Spaces keeps its title, actions and internal tabs together. Changing a primary page or a Memory Spaces tab starts at the top without moving the conversation or other plugin panels. Opening related memories reveals their heading and close button below the fixed header. Document readers, related-memory readers and dialogs retain their own bounded scrolling.
 
 | Visible action | What happens after the click | Independent task Agent? |
 |---|---|---|
 | Refresh status, synchronize now, click a Memory Space card | The Host reads asynchronously; one region spinner or the card's state dot shows progress | No |
-| Toggle a Memory enhancement | Enable or disable one shipped behavior for future turns | No |
+| Choose a main Strategy or toggle a Memory enhancement | Switch how future turns compose memory, or enable or disable one shipped behavior | No |
 | Direct search, browse Content, inspect Entities | Provider-native read contracts run concurrently and render progressively | No |
 | Agent query | Recall runs first; bounded evidence goes to a clean top-level task Agent | Yes, read-only |
 | Remember / Save to memory | An editable confirmation precedes qualification, deduplication, distillation, routing, and writing | Starts after confirmation |
@@ -38,9 +38,11 @@ All four pages use the same content inset and one page scroll area. Their primar
 
 ![Current status and Native readiness](../../assets/webui-v0.5.4/en/status.jpg)
 
-The top Memory Engine area shows only dsh-mnemon. Mnemon Native has its own status bar; its failure does not become a global banner. External Providers appear below with enabled, health, and connection state.
+The top Memory Engine area shows only dsh-mnemon. The Memory providers list shows Mnemon Native as its first row (while its CLI is installed or a Native space exists), followed by the other Providers with enabled, health, and connection state. A failure is marked on its own row and never becomes a global banner.
 
-The page loads concurrently and progressively. Only one region-level spinner remains while work is pending; returned data appears immediately. Status also summarizes Runtime, Documents, Memory Spaces, storage root, and dsh-mnemon / Mnemon versions.
+The page loads concurrently and progressively. Only one region-level spinner remains while work is pending; returned data appears immediately. After the engine, every Source component has a card named as it declares itself: what it contributed (Runtime memory's entries, Project Documents' active and archived documents, Memory Spaces' active spaces), or that it runs, for an installed Source that contributed nothing. Status also shows the storage root, whose areas carry the same names, and dsh-mnemon / Mnemon versions. The header names the composing main Strategy the same way.
+
+A notice above the pages, with **Open configuration**, says when memory needs attention: **Memory not in use** while no main Strategy runs (conversations continue without memory), **The latest component change did not take effect** while a rejected change leaves the previous composition serving, and **The selected main strategy is not running** while a fallback Strategy composes. A layer card whose layer is off, whose Source component is off, or that nothing composes says so instead of waiting for data.
 
 ### Check versions
 
@@ -54,13 +56,16 @@ Expand **Subpackage versions** under dsh-mnemon to inspect Sources, Strategies, 
 
 ![Default memory layers and three optional enhancements](../../assets/webui-v0.5.4/en/enhancements.jpg)
 
-There is no standalone View page, and Status exposes no plugin catalog, dependency graph, or installation flow. The Starter ships three disabled enhancements using the same switches as other settings under **Settings → Memory System → Memory enhancements**:
+There is no standalone View page, and Status exposes no plugin catalog, dependency graph, or installation flow. Memory is composed on the `dsh-mnemon` page under **Plugins**, in one **Memory composition** board drawn from what the installed components declare. Shipped components and installed extensions are named, related and configured the same way:
 
-- **Active capture** identifies and records facts worth retaining from the current conversation;
-- **Light context** reduces resident content while preserving on-demand reads;
-- **Scoped composition** combines the currently available memory sources in stable order.
+- **Main strategy** is one selector, whatever the number installed, listing each main Strategy with its description. The Starter ships the **Layered strategy** (Runtime memory resident, Documents and Memory Spaces read on demand, with the automatic maintenance of earlier releases) and **General strategy** (every available Source in one budget; the model decides how to use each one, without automatic review or capacity maintenance);
+- one group per role the other components declare, with a count of the switches that are on: **Memory sources**, **Enhancements**, and a group of its own for any new role. Each row has the component's name and description, its state as DSH's component list shows it, a gear when it has settings of its own, and its switch; the gear and the name open its page. Link chips name the components a row relates to, the one it needs or the one that depends on it, and open their pages. Enhancements written for another main Strategy wait in a closed group;
+- a problem line appears only while memory is not composed as chosen, with the one switch that fixes it: turning the selected main Strategy back on, using the one that stands in for it, turning off a second main Strategy left running unused, or turning on a Source when none runs;
+- once many components are installed, a search filters the rows by name, description or package.
 
-A switch applies immediately to future turns; it never rewrites a turn that already pinned its View. All three may be enabled together, and disabling one never deletes Source data. The UI describes observable behavior only—never package names, Entries, dependencies, or conflicts. Third-party Sources and Strategies continue to use DSH Profile/Loader installation and composition; see [Building Memory Plugins](../development/extensions.md) for the author contract and contribution path.
+Every switch applies at once to future turns; it never rewrites a turn that already pinned its View. Turning a component on also turns on what it needs and turns off what cannot run beside it (two components claiming the same capability or enhancement slot); turning one off also turns off what depends on it; choosing a main Strategy turns the others off, with whatever only they could take. The last running Source stays on. While the selected main Strategy is not running, the other switches wait, because the Host validates every change against it. A switch that moves only its own row says nothing more; one that moved other components, switched the main Strategy or changed what composes memory is reported in a DSH toast with **Undo**; a change made elsewhere, such as DSH's component list further down the page, with **Show**; a refused one with **Retry**.
+
+A component's page opens from its gear, from the gear beside **Main strategy** (the selected Strategy's page), and from the component's name wherever it appears: a row, a chip, a Storage chip, or a name on another page, which opens in place with **Back**. The page shows its state and switch, whether it ships with dsh-mnemon or came from an installed package, what it needs, what depends on it and what cannot run beside it, what its switch would also move, its options, and the settings it contributes. Options come from the component's own field declarations (numbers, text, lists and Source choices) and are checked against the limits the Host applies; **Apply** appears once one changes, and the page stays open after it. An option left at its default is not written, and **Reset to default** puts one back. Third-party Sources and Strategies install through DSH's Plugins list and appear on the board once loaded; see [Building Memory Plugins](../development/extensions.md) for how their declarations and contributions shape it.
 
 ## 2. Runtime: maintain every-turn context
 
@@ -134,13 +139,13 @@ The UI never fabricates unsupported relationships, entities, deletion, or browse
 
 ![Create a named memory space with a Provider](../../assets/webui-v0.5.4/en/space-create.jpg)
 
-Clicking Create always asks the user to choose a Provider explicitly. Only services enabled in Settings appear. Provider-specific fields use a vertical layout to avoid alignment drift. The new instance enters catalog, activation, and recall only after creation.
+Clicking Create always asks the user to choose a Provider explicitly. Only services enabled on the `dsh-mnemon` page under **Plugins** appear. Provider-specific fields use a vertical layout to avoid alignment drift. The new instance enters catalog, activation, and recall only after creation.
 
 ### Distillation strategy: manual or smart
 
 Distillation strategy routes later Agent writes; it does not change manual creation:
 
-- **Manual** uses an explicitly constrained target;
+- **Manual** uses an explicitly constrained target. Until one is saved, it uses the first ready Provider: Mnemon Native while its CLI is installed, otherwise another enabled Provider;
 - **Smart selection** treats data boundary and required capabilities as hard rules, then uses local/shared preference and a prompt as soft policy. A model runs only when several candidates remain eligible.
 
 The receipt keeps decision source, confidence, and reason. Provider credentials never enter model context.
@@ -179,39 +184,50 @@ The [entity view](../../assets/webui-v0.5.4/en/entities.jpg) shows the same impo
 
 The 390 × 844 captures cover [directory navigation](../../assets/webui-v0.5.4/en/spaces-mobile.jpg), [long-name cards](../../assets/webui-v0.5.4/en/space-directory-mobile.jpg), the [creation sheet](../../assets/webui-v0.5.4/en/space-create-mobile.jpg) and [version maintenance](../../assets/webui-v0.5.4/en/versions-mobile.jpg). Long card names and some metrics truncate at this width. These browser captures do not establish complete phone or Host-settings compatibility; see [known limits](../reference/compatibility.md).
 
-## 5. Settings: services are not Memory Space instances
+<a id="5-settings-services-are-not-memory-space-instances"></a>
 
-Settings centralizes stable user choices and reusable **service configuration**:
+## 5. Configuration: services are not Memory Space instances
 
-- Memory Source cards come from the live Catalog. Runtime, Documents, and Memory Spaces each have one master switch, with no additional participation-mode controls;
-- Memory enhancements provide three shipped switches—Active capture, Light context, and Scoped composition—disabled by default and applied immediately to future turns;
-- every external Provider has its own switch and is off by default;
-- endpoint, API Key, and Provider-specific fields appear only after enabling;
+DSH 0.1.7 edits a plugin's configuration on its own page under **Plugins**; Settings keeps DSH's own sections and the read-only plugin inventory. Open **Plugins → dsh-mnemon**, which the Chinese interface titles 可组合记忆, or select **Configure** (the gear) in the Memory System header while the Plugins page is available. The page shows the plugin's title and description, the configuration, and then the components the Starter includes, each under the name and description it declares. A component's name in that list opens DSH's page for it, which carries the same component page as the board: its state and switch, relations, options and its own settings, with related components opening over it. **Open Memory System** at the head of the page leads back to the workspace.
+
+The configuration uses DSH preference rows: a name and description on the left, a selector, switch or button on the right. It keeps what belongs to no component; each component's own settings are on its page:
+
+| Where | Contains | Applies |
+|---|---|---|
+| Memory composition | Main strategy, one switch per memory Source, one per enhancement | At once, to future turns |
+| Storage | Storage scope, Data directory, Backup and migration | Scope and directory with their **Apply**; ZIP import and export at once |
+| Interface | Memory System opens in (Sidebar / Conversation tab), Turn memory bar, Save to memory action | At once |
+| Runtime Memory's page | User profile scope | At once |
+| Memory Spaces' page | Memory providers and the Mnemon Native embedding | Switches at once; typed connections with their **Apply** or service form |
+| Layered strategy's page | Task Agent model, Idle review | Choices at once; review limits with their **Apply** |
+
+Switches and selectors apply when they change, and show the saved value again beside the reason if a write fails. Typed values wait for their group's **Apply**, which appears once something changed. A save from another window, or an edit of the profile, shows up without a reload. Health belongs on Status and instances belong on Overview; the configuration never waits for discovery or recall.
+
+- **Storage** names the components that keep their data in its directory; each opens its page.
+- **Storage scope** is Global, Workspace, or Centralized · isolated by workspace. Its Apply line says what applying does: memory reads and writes the new location, and existing data is never migrated, merged or deleted.
+- **Data directory** is **Default** or **Custom**, and shows the one directory memory uses. **Default** is `MNEMON_DATA_DIR` or `~/.mnemon`, shown under the title; with Centralized, the title shows this workspace's directory under the default root instead. **Custom** opens a field for an absolute path or one starting with `~/`: with Global, the directory itself (the `custom` scope in configuration, an explicit-path global scope); with Centralized, the central root, where each workspace keeps its data in `workspaces/<workspace-path-hash>/`. An empty field is not the default: it waits for a path, and **Default** is chosen on its own. Workspace needs no directory and shows the workspace's `.mnemon`.
+- **User profile scope**, on Runtime Memory's page, is independent: **Shared globally** combines global USER.md with workspace/custom MEMORY.md without moving either source.
+- **Backup and migration** exports or imports the current data directory as a ZIP with the components Storage names (Runtime memory, Project Documents and Mnemon Native memory spaces), without third-party Provider data or credentials.
+- A memory layer and the Source component serving it share one switch; “on” permits on-demand use and does not force Recall on every turn. A layer an earlier configuration turned off comes back on through the same switch. When the components cannot be read, the board still lists the saved layers and switches them.
+- Memory providers are on Memory Spaces' page and are read while it is on; otherwise the page says to turn it on with its own switch, the same switch as its row in Memory composition. While dsh-mnemon is read-only (`writeEnabled: false`), Provider switches are disabled with that reason.
+- Provider cards match DSH's model provider cards. Mnemon Native is the first card and, when expanded, holds only the local embedding settings it alone reads. Every third-party Provider has its own switch and is off by default; endpoint, API Key, and Provider-specific fields appear only after enabling.
+- The Global / Workspace tag on each card shows its effective scope; Providers with the same scope semantics reuse Mnemon's configuration framework.
 - OpenViking's optional **User key owner (skip admin)** field selects one user namespace for keys without Admin API access; fill the account and user key as well. A rejected data-plane check leaves the previous service configuration unchanged. [Setup and limits](./memory-providers.md#operational-boundaries);
-- API Keys use a conventional password field whose eye button toggles visible/hidden; there is no clear-credential checkbox, dedicated Remove row, or saved-secret caption;
-- the three enhancement switches apply immediately; the footer Save action persists all other changes without waiting for discovery or recall. Health belongs on Status and instances belong on Overview;
-- global / workspace / custom tags show effective scope; Providers with the same scope semantics reuse Mnemon's configuration framework.
-- Choose **Settings → Memory System → Memory scope → Centralized · isolated by workspace** to collect project-isolated memory in one directory. Its optional **Central root directory** field is in the same section; leave it empty for `MNEMON_DATA_DIR` or `~/.mnemon`. The independent **Global user profile** option remains available.
-
-- User profile scope is independent: **Global user profile** combines global USER.md with workspace/custom MEMORY.md without moving either source.
-
-Each default layer has one master switch. “On” permits on-demand use; it does not force Recall on every turn.
-
-Mnemon-specific custom directory, backup, and migration remain in Mnemon's own expandable area. Custom is an explicit-path global scope.
+- API Keys use a conventional password field whose eye button toggles visible/hidden; there is no clear-credential checkbox, dedicated Remove row, or saved-secret caption.
 
 ### Mnemon Native embedding bridge
 
-**Manage embedding settings in DSH** makes the saved endpoint, model, protocol and optional API key authoritative for Mnemon child processes, including Desktop launches that do not inherit shell startup files. Automatic protocol selection treats an endpoint ending in `/v1` as OpenAI-compatible; other compatible endpoints require explicit protocol selection. The URL rejects embedded credentials, queries and fragments. Memory and query text are sent to the configured service. **Test status** checks saved values, not an unsaved draft. See [embedding configuration and safety](../reference/configuration.md) before enabling it.
+Expand the Mnemon Native card on Memory Spaces' page. **Manage embedding settings in DSH** applies at once and makes the saved endpoint, model, protocol and optional API key authoritative for Mnemon child processes, including Desktop launches that do not inherit shell startup files; while it is on, those fields appear and apply together with their **Apply**. Automatic protocol selection treats an endpoint ending in `/v1` as OpenAI-compatible; other compatible endpoints require explicit protocol selection. The URL rejects embedded credentials, queries and fragments. Memory and query text are sent to the configured service. **Test status** checks saved values, not an unsaved draft. See [embedding configuration and safety](../reference/configuration.md) before enabling it.
 
-Disabling a Source does not delete data. Its Sidebar tab remains visible with an Off badge and opens a reversible disabled-state explanation without reading the data plane; re-enabling restores the existing data. A newly contributed extension Source starts disabled. The current runtime generation keeps serving until the candidate validates and swaps, so a rejected candidate never leaves a partial configuration active.
+Switching a memory layer off does not delete data. Its Sidebar tab remains visible with an Off badge and opens a reversible disabled-state explanation without reading the data plane; re-enabling restores the existing data. A layer whose Source component is off keeps its tab and place, marked **Not running**, and every layer is marked **Not in use** while no main Strategy runs; each page explains why, links to the configuration, and returns to the layer's own page once the Source runs again. Source management and assistance refuse a layer that is off. A newly contributed extension Source starts disabled. The current runtime generation keeps serving until the candidate validates and swaps, so a rejected candidate never leaves a partial configuration active.
 
-### Background task Agent model route
+### Task Agent model
 
-**Follow main route** uses DSH's default for a new session. **Choose model provider** stores a complete Provider + Model route. It affects AI metadata, Agent Query, Remember, smart Provider selection, and Document archive only; it never changes the current main conversation model. Reasoning strength depends on both selected Provider capability and DSH route support.
+On the Layered strategy's page, under Background tasks, **Task Agent model** set to **Follow the main route** uses DSH's default for a new session. **Choose a model** applies at once with DSH's default route and shows the model provider and model selectors; each applies when chosen, a Provider starting from its first model, and two Providers with the same name show their ids. The route is always a complete Provider + Model pair. It affects AI metadata, Agent Query, Remember, smart Provider selection, and Document archive only; it never changes the current main conversation model. Reasoning strength depends on both selected Provider capability and DSH route support.
 
 The picker displays the capabilities reported by DSH. An **Image input** label describes the selected model's capability; current Mnemon background jobs still send text-only prompts.
 
-Switches, radio options, and eye buttons tolerate repeated clicks—including clicking the already-selected value—without unmounting or blanking the page.
+Switches, selector options, and eye buttons tolerate repeated clicks—including choosing the already-selected value—without unmounting or blanking the page.
 
 ## 6. In-conversation interaction
 
@@ -223,7 +239,7 @@ Turn memory appears only on completed turns with memory activity. Expand or coll
 
 Save to memory sits in the native action strip for finalized replies. The first click only reads that reply and opens an editable dialog. Cancel has no data effect. Only **Confirm and send to independent task Agent** starts distillation.
 
-Both conversation controls are on by default and can be changed independently under **Settings → Memory System → Conversation interface**. Saving applies live.
+Both conversation controls are on by default and can be changed independently under **Interface** on the `dsh-mnemon` page under **Plugins**. Saving applies live.
 
 In Builtin mode, automatic shortcuts require one unambiguous Memory System tab in the main conversation. If split panes expose multiple eligible conversation tabs, the shortcut stays pending; open Memory System in the intended conversation manually. Each Builtin view retains its owning session.
 
@@ -268,7 +284,7 @@ These properties inherit into workspace descendants that consume them. Body-port
 
 ## Common rules
 
-- Solid blue means primary action; blue outline usually means Edit; red is reserved for Delete, Disconnect, Archive, or Forget; neutral actions are View, Copy, and Cancel.
+- Primary actions use the DSH primary button (black in the light theme, white in the dark theme); secondary actions such as Edit use outline buttons; red text is reserved for Delete, Disconnect, Archive, or Forget; neutral actions are View, Copy, and Cancel.
 - A Memory Space toggle controls only whether dsh-mnemon includes it in read routing. It is not the Mnemon CLI default Store.
 - Mnemon Native physical deletion requires confirmation. External spaces use Disconnect and leave Provider data untouched.
 - Pages load by region; a local error never blocks unrelated data or creates a wall of spinners.
@@ -278,4 +294,4 @@ Next: [Capability map](./capabilities.md) · [Getting Started](./getting-started
 
 ## Idle review controls
 
-Settings includes **Idle review**: enable it independently, choose bounded spawn or full-context fork, and set the interval, attempt cap, checkpoint size and output budget. Changes respect the existing Host settings grant; read-only clients cannot save them. Agent Teams compatibility defaults to **Pause review**. With DSH and official Teams 0.1.7-rc.1, select **Scoped child review** to keep both features enabled with the same mandatory tool restrictions. The Memory System shows the configured Team pause or partial-write receipts after failure. Refresh status to read current state. See [configuration](../reference/configuration.md#provider-requirements) for retention and restart limits.
+**Background tasks** on the Layered strategy's page includes **Idle review**. Its switch, the review method (bounded spawn or full-context fork; a fork also chooses what to do when its context is unavailable) and Agent Teams compatibility apply at once; the interval (in seconds), attempt cap, checkpoint size and output budget under **Review limits** apply with their **Apply**. Review runs only after turns that Layered strategy composed. Changes respect the existing Host settings grant; read-only clients cannot save them. Agent Teams compatibility defaults to **Pause review**, which skips review while Agent Teams runs. With DSH and official Teams 0.1.7-rc.2, **Scoped child review** keeps both features enabled with the same mandatory tool restrictions. The Memory System shows the configured Team pause or partial-write receipts after failure. Refresh status to read current state. See [configuration](../reference/configuration.md#provider-requirements) for retention and restart limits.

@@ -446,22 +446,6 @@ export class VersionUpdateManager {
       checkedAt: new Date().toISOString(),
       components: [
         {
-          id: 'mnemon',
-          name: 'Mnemon CLI',
-          ...(mnemonLocal.install.command === undefined ? {} : { executablePath: mnemonLocal.install.command }),
-          ...(mnemonLocal.current === undefined ? {} : { current: mnemonLocal.current }),
-          ...(mnemonLatest === undefined ? {} : { latest: mnemonLatest }),
-          outdated: mnemonOutdated,
-          installMode: mnemonLocal.install.mode,
-          updateSupported: mnemonSupported,
-          updateHint: mnemonLocal.install.hint ?? (mnemonLocal.install.mode === 'homebrew'
-            ? mnemonSupported ? 'brew' : 'brew-missing'
-            : mnemonLocal.install.mode === 'go'
-              ? 'go'
-              : mnemonLocal.install.mode === 'missing' ? 'install' : 'manual'),
-          ...(mnemonLatest === undefined ? { checkError: 'latest-unavailable' } : {}),
-        },
-        {
           id: 'dsh-mnemon',
           name: 'dsh-mnemon',
           ...(dshInstall.profileName === undefined ? {} : { installProfile: dshInstall.profileName }),
@@ -477,6 +461,22 @@ export class VersionUpdateManager {
             ? dshSupported ? 'pnpm' : 'pnpm-missing'
             : dshInstall.mode === 'link' ? 'link' : 'manual',
           ...(dshLatest === undefined ? { checkError: 'latest-unavailable' } : {}),
+        },
+        {
+          id: 'mnemon',
+          name: 'Mnemon CLI',
+          ...(mnemonLocal.install.command === undefined ? {} : { executablePath: mnemonLocal.install.command }),
+          ...(mnemonLocal.current === undefined ? {} : { current: mnemonLocal.current }),
+          ...(mnemonLatest === undefined ? {} : { latest: mnemonLatest }),
+          outdated: mnemonOutdated,
+          installMode: mnemonLocal.install.mode,
+          updateSupported: mnemonSupported,
+          updateHint: mnemonLocal.install.hint ?? (mnemonLocal.install.mode === 'homebrew'
+            ? mnemonSupported ? 'brew' : 'brew-missing'
+            : mnemonLocal.install.mode === 'go'
+              ? 'go'
+              : mnemonLocal.install.mode === 'missing' ? 'install' : 'manual'),
+          ...(mnemonLatest === undefined ? { checkError: 'latest-unavailable' } : {}),
         },
       ],
     }

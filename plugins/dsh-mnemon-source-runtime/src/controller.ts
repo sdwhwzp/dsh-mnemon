@@ -22,6 +22,7 @@ import type {
   RuntimeMemoryCompactedEntry,
   RuntimeMemoryEntry,
   RuntimeMemoryImportance,
+  RuntimeMemoryMaintenancePlan,
   RuntimeMemoryMutation,
   RuntimeMemoryMutationResult,
   RuntimeMemorySnapshot,
@@ -29,22 +30,7 @@ import type {
   RuntimeMemoryTargetView,
   RuntimeMemoryUsage,
 } from './contracts.ts'
-
-export type {
-  RuntimeMemoryAction,
-  RuntimeMemoryCompactedEntry,
-  RuntimeMemoryEntry,
-  RuntimeMemoryImportance,
-  RuntimeMemoryMutation,
-  RuntimeMemoryMutationResult,
-  RuntimeMemorySnapshot,
-  RuntimeMemoryTarget,
-  RuntimeMemoryTargetView,
-  RuntimeMemoryUsage,
-} from './contracts.ts'
-
 import { RUNTIME_MEMORY_VERSION, RUNTIME_ENTRY_DELIMITER, RUNTIME_MEMORY_LIMITS, type RuntimeMemoryLimits } from './contracts.ts'
-export { RUNTIME_MEMORY_VERSION, RUNTIME_ENTRY_DELIMITER, RUNTIME_MEMORY_LIMITS, type RuntimeMemoryLimits } from './contracts.ts'
 
 export interface RuntimeMemoryContextProjection {
   revision: string
@@ -75,10 +61,6 @@ interface PreparedRuntimeMemoryMutation {
   excludedEntry?: RuntimeMemoryEntry
   fields: RuntimeMemoryResultFields
 }
-
-/** Host-only plan for capacity maintenance; this is not exposed as a Tool or RPC action. */
-import type { RuntimeMemoryMaintenancePlan } from './contracts.ts'
-export type { RuntimeMemoryMaintenancePlan } from './contracts.ts'
 
 export class RuntimeMemoryCapacityError extends Error {
   readonly code = 'runtime-capacity' as const
@@ -411,10 +393,6 @@ export class RuntimeMemoryController {
     })
   }
 
-  contextText(branch?: string): string {
-    return this.contextProjection(branch).text
-  }
-
   /**
    * Read the exact Runtime revision and its prompt projection from each
    * configured authority root.
@@ -571,6 +549,8 @@ ${memory || '(empty)'}
       if (prepared.excludedEntry !== undefined && replacements.some(entry => entry.content === prepared.excludedEntry!.content)) {
         throw new Error('compacted runtime memory reintroduces the replaced or removed entry')
       }
+      // The worker supplies semantic candidates; deterministic packing owns exact
+      // UTF-8 accounting so the LLM never has to count bytes or delimiters.
       const fitted = packCompactionCandidates(replacements, request.target, compactedByteBudget)
       const targetEntries = [...fitted, ...(prepared.pendingEntry === undefined ? [] : [prepared.pendingEntry])]
       const entries = [...file.entries.filter(entry => entry.target !== request.target), ...targetEntries]
@@ -583,40 +563,6 @@ ${memory || '(empty)'}
     }))
     this.queue = operation.catch(() => undefined)
     return operation
-  }
-
-  /** Apply an LLM-produced compaction only to the exact snapshot it reviewed. */
-  compactTarget(
-    expectedRevision: string,
-    target: RuntimeMemoryTarget,
-    compacted: RuntimeMemoryCompactedEntry[],
-    maxBytes?: number,
-  ): Promise<RuntimeMemorySnapshot> {
-    if (target === 'user' && this.userController !== undefined) {
-      return this.userController.compactTarget(expectedRevision, target, compacted, maxBytes).then(() => this.snapshot())
-    }
-    const operation = this.queue.then(() => this.withLock(() => {
-      const file = this.readSource()
-      const beforeRevision = revision(file)
-      if (beforeRevision !== expectedRevision) throw new RuntimeMemoryConflictError()
-      const byteBudget = maxBytes ?? this.limits[target]
-      if (!Number.isInteger(byteBudget) || byteBudget < 0 || byteBudget > this.limits[target]) throw new Error('compaction byte budget is invalid')
-      const now = this.now().toISOString()
-      const existing = file.entries.filter(entry => entry.target === target)
-      const replacements = compactionCandidates(compacted, existing, target, now)
-      // The worker supplies semantic candidates; deterministic packing owns exact
-      // UTF-8 accounting so the LLM never has to count bytes or delimiters.
-      const fitted = packCompactionCandidates(replacements, target, byteBudget)
-      const entries = [...file.entries.filter(entry => entry.target !== target), ...fitted]
-      const used = byteCount(entries, target)
-      const limit = this.limits[target]
-      if (used > limit) throw new RuntimeMemoryCapacityError(target, byteCount(file.entries, target), used, limit)
-      this.persist({ version: RUNTIME_MEMORY_VERSION, entries })
-      const snapshot = this.snapshotUnlocked({ version: RUNTIME_MEMORY_VERSION, entries })
-      return snapshot
-    }))
-    this.queue = operation.catch(() => undefined)
-    return this.userController === undefined ? operation : operation.then(() => this.snapshot())
   }
 
   private initialize(): void {

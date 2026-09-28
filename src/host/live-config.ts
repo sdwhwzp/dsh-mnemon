@@ -1,6 +1,5 @@
-import type { Volatile } from '@deepseek-ai/cosmokit'
-import type z from 'schemastery'
-import ProfileSchema, { isVolatile, supportsLiveConfig } from './profile-schema.mjs'
+import { isVolatile, type Volatile } from '@deepseek-ai/cosmokit'
+import z from '@deepseek-ai/schemastery'
 import { Config as PlainConfig, resolveConfig, type Config } from './config.ts'
 
 /** DSH keeps these references stable while committing live profile edits. */
@@ -17,15 +16,14 @@ function plain(value: unknown): unknown {
   return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, plain(child)]))
 }
 
-/** Read a detached configuration snapshot from either DSH generation. */
+/** Read a detached snapshot of the live profile configuration. */
 export function plainHostConfig(value: unknown = {}): Config {
   return plain(value) as Config
 }
 
 function liveConfig(): z<Config, LiveHostConfig> {
-  // Rehydrate the published schema into the fork that creates real Volatile
-  // references; adding metadata to the old parser would silently skip updates.
-  const schema = new ProfileSchema(PlainConfig.toJSON())
+  // Copy the published schema so the plain resolver stays non-volatile.
+  const schema = new z(PlainConfig.toJSON())
   schema.dict = Object.fromEntries(Object.entries(schema.dict ?? {}).map(([key, field]) => [
     key, key === 'remoteAccess' ? field : field.volatile(),
   ]))
@@ -52,4 +50,4 @@ function liveConfig(): z<Config, LiveHostConfig> {
 }
 
 /** Profile Config for live forms; transport authority retains normal remounts. */
-export const LiveConfig = supportsLiveConfig ? liveConfig() : PlainConfig
+export const LiveConfig = liveConfig()

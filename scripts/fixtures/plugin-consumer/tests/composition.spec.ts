@@ -11,6 +11,7 @@ import * as threeTier from 'dsh-mnemon-strategy-default-three-tier'
 import * as scoped from 'dsh-mnemon-strategy-scoped'
 import * as light from 'dsh-mnemon-strategy-light-context'
 import * as capture from 'dsh-mnemon-strategy-auto-capture'
+import * as general from 'dsh-mnemon-strategy-general'
 import * as notes from '../lib/external-source.js'
 import * as focus from '../lib/external-strategy.js'
 import * as externalBudget from '../lib/external-strategy-extension.js'
@@ -65,10 +66,30 @@ describe('external consumer of packed artifacts', () => {
     } finally { turns.forEach(turn => turn.release()); await runner.dispose(); rmSync(directory, { recursive: true, force: true }) }
   })
 
+  it('applies a packed enhancement to the packed general main Strategy', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'external-general-strategy-'))
+    const runner = new MemoryCompositionRunner({ strategyTypeId: 'general' })
+    const turns: MemoryTestTurn[] = []
+    try {
+      await runner.mount(general, { instanceId: 'general' })
+      await runner.mount(light, { instanceId: 'light', config: { maxProjectionCharacters: 200 } })
+      await runner.mount(runtime, { instanceId: 'global', config: { dataDir: join(directory, 'global') } })
+      await (await runner.managementClient('source:global')).mutate('mutate',
+        { action: 'add', target: 'memory', content: 'General sentinel. '.repeat(100) }, { confirmed: true })
+      const turn = await runner.beginTurn()
+      turns.push(turn)
+      expect(turn.view.strategyTypeId).toBe('general')
+      expect(turn.view.strategyExtensions?.map(item => item.typeId)).toEqual(['light-context'])
+      expect(turn.view.guidance?.system).toContain('MNEMON GENERAL MEMORY PROTOCOL')
+      expect(turn.view.projection.filter(item => item.mode === 'eager').map(item => item.sourceInstanceKey)).toEqual(['source:global'])
+      expect(turn.view.projection.reduce((sum, item) => sum + item.text.length, 0)).toBeLessThanOrEqual(200)
+    } finally { turns.forEach(turn => turn.release()); await runner.dispose(); rmSync(directory, { recursive: true, force: true }) }
+  })
+
   it('imports every declared Node entry from installed packages, not repository sources', async () => {
     const names: string[] = JSON.parse(readFileSync(new URL('../artifacts.json', import.meta.url), 'utf8'))
     const require = createRequire(import.meta.url)
-    expect(names).toHaveLength(17)
+    expect(names).toHaveLength(18)
     for (const name of names) {
       const manifest = JSON.parse(readFileSync(require.resolve(name + '/package.json'), 'utf8'))
       for (const subpath of Object.keys(manifest.exports)) {

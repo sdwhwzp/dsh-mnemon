@@ -1,4 +1,4 @@
-import z from 'schemastery'
+import z from '@deepseek-ai/schemastery'
 import { DEFAULT_IDLE_REVIEW } from './protocol.ts'
 import { isAbsolute, sep } from 'node:path'
 import { normalizeDisplayMode } from './display-mode.ts'

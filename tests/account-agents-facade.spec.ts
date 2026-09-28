@@ -3,6 +3,7 @@
 // carry disappears for the whole plugin: the background review reads
 // `isOwnedBy` off this object and fails closed when it is absent.
 import { describe, expect, it } from 'vitest'
+import { memorySettings } from './helpers/account-settings.ts'
 import { MnemonAccounts } from '../src/host/account-access.ts'
 import type { HostAgent, HostContextShape } from '../src/host/dsh.ts'
 
@@ -31,7 +32,7 @@ describe('the scoped agents facade', () => {
   it('carries isOwnedBy and hands the registry the unwrapped parent', () => {
     const agent = hostAgent('parent-1')
     const { ctx, seen } = fakeContext(agent, { ownership: true })
-    const accounts = new MnemonAccounts(ctx, '/tmp/mnemon-facade', { accountDataDir: '/tmp/mnemon-facade', cliPath: '/fake/mnemon' } as never)
+    const accounts = new MnemonAccounts(ctx, '/tmp/mnemon-facade', { accountDataDir: '/tmp/mnemon-facade', cliPath: '/fake/mnemon' } as never, memorySettings())
 
     const scoped = accounts.wrapContext()
     const wrapped = scoped.agents.get('parent-1')
@@ -47,7 +48,7 @@ describe('the scoped agents facade', () => {
   it('omits isOwnedBy when the runtime registry does not publish it', () => {
     const agent = hostAgent('parent-2')
     const { ctx } = fakeContext(agent, { ownership: false })
-    const accounts = new MnemonAccounts(ctx, '/tmp/mnemon-facade', { accountDataDir: '/tmp/mnemon-facade', cliPath: '/fake/mnemon' } as never)
+    const accounts = new MnemonAccounts(ctx, '/tmp/mnemon-facade', { accountDataDir: '/tmp/mnemon-facade', cliPath: '/fake/mnemon' } as never, memorySettings())
 
     expect(accounts.wrapContext().agents.isOwnedBy).toBeUndefined()
   })

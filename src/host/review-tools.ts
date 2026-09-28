@@ -10,10 +10,10 @@ export interface ReviewToolHost {
 const startingReview = new AsyncLocalStorage<symbol>()
 
 /**
- * Older published Team tools evaluate membership after a child loses its
- * temporary Lead identity. Keep their conservative pause unless the operator
- * selects scoped review (verified with DSH/Teams 0.1.7-rc.1). That opt-in still
- * requires startGuardedReview; it never removes another plugin's policy.
+ * Pausing stays the conservative default while Team tools are installed; the
+ * operator can select scoped review instead (verified with DSH/Teams
+ * 0.1.7-rc.2). That opt-in still requires startGuardedReview; it never removes
+ * another plugin's policy.
  */
 export function idleReviewBlockReason(parent: HostAgent, agentTeams: 'pause' | 'scoped' = 'pause'): 'agent-team' | undefined {
   return agentTeams !== 'scoped' && parent.ctx?.get?.('agentTeams') !== undefined

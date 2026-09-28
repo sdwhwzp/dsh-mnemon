@@ -11,6 +11,7 @@ import { compositionFixture } from './fixtures/composition.ts'
 import { createReadHandler, createWriteHandler } from '../src/host/rpc.ts'
 import { MnemonLifecycle } from '../src/host/lifecycle.ts'
 import { MnemonSubagentCoordinator } from '../src/host/subagent.ts'
+import { sessionLog } from './fixtures/session-log.ts'
 
 const fixtures: Awaited<ReturnType<typeof compositionFixture>>[] = []
 const directories: string[] = []
@@ -19,7 +20,7 @@ async function fixture(options: Parameters<typeof compositionFixture>[0] = {}) {
   const value = await compositionFixture(options); fixtures.push(value); return value
 }
 function agent(id: string, cwd: string): HostAgent {
-  return { id, status: 'idle', session: { header: { cwd }, events: [] }, ctx: { on: vi.fn(), effect: vi.fn() }, followup: vi.fn(), steer: vi.fn(), inject: vi.fn() }
+  return { id, status: 'idle', session: { header: { cwd }, ...sessionLog() }, ctx: { on: vi.fn(), effect: vi.fn() }, followup: vi.fn(), steer: vi.fn(), inject: vi.fn() }
 }
 afterEach(async () => {
   for (const value of fixtures.splice(0)) await value.dispose()
@@ -125,7 +126,7 @@ describe('default Host scope over the Composable Runtime', () => {
     const workspaces = [{ id: 'one', title: 'One', path: one }, { id: 'two', title: 'Two', path: two }]
     const registry = { get: (id: string) => workspaces.find(value => value.id === id), list: () => workspaces } satisfies HostWorkspaceRegistry
     const session = agent('session', one)
-    const agents = { get: (id: string) => id === session.id ? session : undefined, roots: () => [session] } satisfies HostAgentsService
+    const agents = { get: (id: string) => id === session.id ? session : undefined, roots: () => [session] } satisfies Pick<HostAgentsService, 'get' | 'roots'>
     const live = new LiveMnemonRuntime(graph, registry, agents, extensions)
     try {
       expect(live.forAgent(session).directory).toBe(createStorageRoot(graph.config, one).effectiveDataDir())
@@ -141,7 +142,7 @@ describe('default Host scope over the Composable Runtime', () => {
     const workspace = directory()
     const { graph, extensions } = await fixture({ storageScope })
     const session = agent('headless', workspace)
-    const live = new LiveMnemonRuntime(graph, undefined, { get: () => session, roots: () => [session] }, extensions)
+    const live = new LiveMnemonRuntime(graph, undefined, { get: () => session }, extensions)
     try {
       expect(live.forAgent(session).directory).toBe(createStorageRoot(graph.config, workspace).effectiveDataDir())
       expect(await live.route({ sessionId: session.id })).toMatchObject({ selectedRoot: createStorageRoot(graph.config, workspace).effectiveDataDir(), effectiveRoot: createStorageRoot(graph.config, workspace).effectiveDataDir(), aligned: true })

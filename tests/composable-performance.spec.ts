@@ -43,9 +43,11 @@ describe('Composable View performance fences', () => {
     const cpuMilliseconds = (elapsedCpu.user + elapsedCpu.system) / 1_000
 
     // CPU time isolates the control-plane cost from other Vitest workers. The
-    // wall fence remains deliberately wider so accidental I/O still fails.
+    // wall fence only catches accidental I/O waits, so it tolerates a loaded
+    // machine: parallel suites have pushed healthy runs past five seconds.
     expect(cpuMilliseconds).toBeLessThan(2_000)
-    expect(elapsedWall).toBeLessThan(5_000)
+    expect(elapsedWall).toBeLessThan(15_000)
     graph.dispose()
-  })
+    // The test timeout must exceed the wall fence plus fixture setup, or the fence never applies.
+  }, 30_000)
 })

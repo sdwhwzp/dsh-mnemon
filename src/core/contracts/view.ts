@@ -134,20 +134,41 @@ export interface MemoryStrategyManifest {
   typeId: string
   packageName: string
   deterministic: true
+  /** Source roles this Strategy may select; [ANY_MEMORY_SOURCE_ROLE] accepts every role. */
   supportedSourceRoles: string[]
   maxSources: number
   maxRoutes: number
   maxActions: number
-  /** Exclusive contribution slots owned by this Strategy, not Core vocabulary. */
+  /** Exclusive contribution slots this Strategy accepts; standard slots follow Core's value contracts. */
   extensionSlots?: string[]
 }
 
-/** An additive plugin targets one explicit Strategy contract, never replaces it. */
+/** Extension target for every selected Strategy that declares the extension's standard slot. */
+export const ANY_MEMORY_STRATEGY = '*' as const
+
+/** Strategy role list entry for a role-agnostic Strategy that may select any Source. */
+export const ANY_MEMORY_SOURCE_ROLE = '*' as const
+
+/** Standard View extension slots, each with one public value contract any Strategy may accept. */
+export const MEMORY_VIEW_EXTENSION_SLOTS = ['selection', 'projection', 'capture'] as const
+export type MemoryViewExtensionSlot = typeof MEMORY_VIEW_EXTENSION_SLOTS[number]
+
+export interface MemoryViewExtensionValues {
+  /** Admitted Source instances in priority order; writableSourceKeys keeps actions on a subset. */
+  selection: { sourceKeys: string[]; writableSourceKeys?: string[] }
+  /** Ceiling for resident projection characters within the Host budget. */
+  projection: { maxProjectionCharacters: number }
+  /** Asks the current model to record qualified durable facts through Source-local actions. */
+  capture: { instruction: string; actionIds: string[]; sourceKeys?: string[] }
+}
+
+/** An additive plugin targets one Strategy contract, or any Strategy through a standard slot; it never replaces the Strategy. */
 export interface MemoryStrategyExtensionManifest {
   apiVersion: typeof COMPOSABLE_MEMORY_API_VERSION
   kind: 'strategy-extension'
   typeId: string
   packageName: string
+  /** One Strategy typeId, or ANY_MEMORY_STRATEGY with a standard slot. */
   strategyTypeId: string
   slot: string
   deterministic: true

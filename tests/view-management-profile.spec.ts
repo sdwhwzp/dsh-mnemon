@@ -37,7 +37,7 @@ describe('View overlays across full profile reconciliation', () => {
     const namespace = (anchor: object) => new MemoryPluginManagement({
       settings: f.settings,
       get: () => ({ entries: () => f.loader.entries(), ...anchor }),
-    } as unknown as HostContextShape, f.engine).settingsNamespace
+    } as unknown as HostContextShape, f.engine, f.settings).settingsNamespace
     const expected = namespace({ config: { baseUrl } })
     expect(expected).toMatch(/^mnemon-view-[a-f0-9]{16}$/u)
     expect(namespace({ ctx: { baseUrl } })).toBe(expected)

@@ -1,7 +1,7 @@
 import type { JSX } from 'react'
 import type { MemoryProviderIcon, MemoryProviderId } from '../host/protocol.ts'
 import { MnemonLogo } from './MnemonLogo.tsx'
-export interface ProviderIconProps {
+interface ProviderIconProps {
   providerId: MemoryProviderId
   icon?: MemoryProviderIcon | undefined
   className?: string | undefined

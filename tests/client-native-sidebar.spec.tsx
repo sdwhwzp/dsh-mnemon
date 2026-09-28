@@ -31,7 +31,7 @@ const sourceOwner = createContext('missing-owner')
 function SourceProbe() { return <span>{useContext(sourceOwner)}</span> }
 
 /** Exercise the real released slot ledger with a panel owner obeying its public contract. */
-function fixture(initiallyDeclared = true, layoutReady = true) {
+function fixture(initiallyDeclared = true) {
   const core = new SlotCore()
   const controller = new MnemonWorkspaceController()
   const seat = new MnemonNativeSidebarSeat()
@@ -46,7 +46,6 @@ function fixture(initiallyDeclared = true, layoutReady = true) {
     for (const listener of panelListeners) listener()
   })
   const layout = { selectPanel }
-  const serviceListeners = new Set<(name: string) => void>()
   const register = core.register.bind(core)
   const declare = () => register({ name: 'root', children: {
     main: { kind: 'keyed', scope: 'root' },
@@ -54,8 +53,7 @@ function fixture(initiallyDeclared = true, layoutReady = true) {
   } } as never, (() => null) as never)
   let stopOwner = initiallyDeclared ? declare() : undefined
   const ctx = {
-    on: (_event: string, listener: (name: string) => void) => { serviceListeners.add(listener); return () => serviceListeners.delete(listener) },
-    layout: layoutReady ? layout : undefined,
+    layout,
     slots: {
       register,
       inject: (name: string, factory: () => () => void) => {
@@ -123,10 +121,6 @@ function fixture(initiallyDeclared = true, layoutReady = true) {
     rename: (value: string) => { label = value },
     declare: () => { stopOwner = declare() },
     removeOwner: () => { stopOwner?.(); stopOwner = undefined },
-    setLayout: (available: boolean) => {
-      ctx.layout = available ? layout : undefined
-      for (const listener of serviceListeners) listener('layout')
-    },
   }
 }
 
@@ -239,21 +233,6 @@ describe('native Sidebar panel integration', () => {
     const peers = f.core.entriesOfSlot('main')
     expect(() => f.mount()).toThrow()
     expect(f.core.entriesOfSlot('main')).toEqual(peers)
-    expect(f.core.entriesOfSlot('sidebar.panellist')).toHaveLength(1)
-    expect(document.querySelector('[data-dsh-mnemon-entry]')).toBeNull()
-  })
-
-  it('follows late layout service activation and replacement without duplicate native entries', () => {
-    document.body.innerHTML = '<aside data-pane="sidebar"><div><button class="newSession">New</button></div></aside>'
-    const f = fixture(true, false)
-    expect(document.querySelectorAll('[data-dsh-mnemon-entry]')).toHaveLength(1)
-    act(() => f.setLayout(true))
-    expect(document.querySelector('[data-dsh-mnemon-entry]')).toBeNull()
-    expect(f.core.entriesOfSlot('sidebar.panellist')).toHaveLength(1)
-    act(() => f.setLayout(false))
-    expect(f.core.entriesOfSlot('sidebar.panellist')).toHaveLength(0)
-    expect(document.querySelectorAll('[data-dsh-mnemon-entry]')).toHaveLength(1)
-    act(() => f.setLayout(true))
     expect(f.core.entriesOfSlot('sidebar.panellist')).toHaveLength(1)
     expect(document.querySelector('[data-dsh-mnemon-entry]')).toBeNull()
   })

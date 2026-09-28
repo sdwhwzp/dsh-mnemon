@@ -16,7 +16,6 @@ const requireFrom = createRequire(import.meta.url)
 const CLIENT_EXTERNALS = [
   /^react(?:\/.*)?$/,
   /^react-dom(?:\/.*)?$/,
-  /^cordis(?:\/.*)?$/,
   /^@deepseek-ai\/dsh-client-ui-primitives(?:\/.*)?$/,
 ]
 const CSS_VIRTUAL_PREFIX = '\0dsh-mnemon-css:'

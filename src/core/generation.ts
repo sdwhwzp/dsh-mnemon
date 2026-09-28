@@ -26,6 +26,22 @@ export interface MemoryGenerationHostSnapshot {
   evaluation: MemoryCompositionEvaluationReport
 }
 
+/** No generation serves new work: the composition is incomplete or was rejected. */
+export class MemoryCompositionUnavailableError extends Error {
+  readonly code = 'memory-composition-unavailable'
+
+  constructor(readonly evaluation: MemoryCompositionEvaluationReport) {
+    const reason = evaluation.diagnostics.map(diagnostic => diagnostic.message).join('; ')
+    super(`no Serving memory generation is available${reason === '' ? '' : `: ${reason}`}`)
+    this.name = 'MemoryCompositionUnavailableError'
+  }
+}
+
+/** Matched by code, so a copy of Core bundled into another entry point still qualifies. */
+export function isMemoryCompositionUnavailable(error: unknown): error is MemoryCompositionUnavailableError {
+  return error instanceof Error && (error as { code?: unknown }).code === 'memory-composition-unavailable'
+}
+
 function report(
   state: 'incomplete' | 'rejected',
   snapshot: MemoryContributionSnapshot,
@@ -106,8 +122,7 @@ export class MemoryGenerationHost {
     this.assertOpen()
     const record = generationId === undefined ? this.serving : this.records.get(generationId)
     if (record === undefined || (generationId === undefined && record.state !== 'serving')) {
-      const reason = this.evaluation.diagnostics.map(diagnostic => diagnostic.message).join('; ')
-      throw new Error(`no Serving memory generation is available${reason === '' ? '' : `: ${reason}`}`)
+      throw new MemoryCompositionUnavailableError(this.evaluation)
     }
     record.leases += 1
     let active = true

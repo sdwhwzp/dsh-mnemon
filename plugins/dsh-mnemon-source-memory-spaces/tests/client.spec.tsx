@@ -2,7 +2,7 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MemoryCompositionRunner } from 'dsh-mnemon/testing'
 import { translateEn as t } from 'dsh-mnemon/client'
@@ -69,6 +69,23 @@ describe('independent Memory Spaces Source client', () => {
       fireEvent.click(screen.getByRole('button', { name: t('search.action') }))
       expect(await screen.findByText('Provider-owned evidence')).not.toBeNull()
       expect((screen.getByRole('button', { name: t('search.agentAction') }) as HTMLButtonElement).disabled).toBe(true)
+    } finally { cleanup(); await runner.dispose(); rmSync(directory, { recursive: true, force: true }) }
+  })
+
+  it('starts a new Memory Space on a ready provider when Mnemon Native is not installed', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'mnemon-spaces-create-'))
+    const runner = new MemoryCompositionRunner()
+    try {
+      await runner.mount(strategy, { instanceId: 'strategy' })
+      await runner.mount({ inject: ['mnemonMemory'], async apply(ctx: Context) {
+        await installMemorySpaces(ctx, [{ instanceId: 'account', module: provider, config: undefined }], { config: { dataDir: directory } })
+      } }, { instanceId: 'spaces' })
+      const management = await runner.managementClient('source:spaces')
+      await management.mutate('provider-service-update', { providerId: 'account', settings: {}, enabled: true }, { confirmed: true })
+      render(<MemorySpacesSourcePage page="spaces" sourceTypeId="memory-spaces" sourceInstanceKey="source:spaces" sourceInstances={[]} locale="en" writable management={management} />)
+      fireEvent.click(await screen.findByRole('button', { name: 'Create Memory Space' }))
+      const dialog = screen.getByRole('dialog', { name: 'Create Memory Space' })
+      await waitFor(() => expect((within(dialog).getByRole('radio', { name: /Fixture/u }) as HTMLInputElement).checked).toBe(true))
     } finally { cleanup(); await runner.dispose(); rmSync(directory, { recursive: true, force: true }) }
   })
 

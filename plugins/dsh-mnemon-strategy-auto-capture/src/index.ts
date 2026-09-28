@@ -1,6 +1,5 @@
 import type { Context } from '@deepseek-ai/cordis'
-import { defineMemoryPlugin, installMemory, defineMemoryStrategyConfiguration } from 'dsh-mnemon/extension-sdk'
-import { defineThreeTierExtension, validateThreeTierExtension } from 'dsh-mnemon-strategy-default-three-tier/extension-sdk'
+import { defineMemoryPlugin, defineMemoryViewExtension, installMemory, defineMemoryStrategyConfiguration, validateMemoryViewExtension } from 'dsh-mnemon/extension-sdk'
 
 export interface Config { sourceKeys?: string[]; actionIds?: string[]; instruction?: string }
 export const name = 'dsh-mnemon-strategy-auto-capture'
@@ -8,18 +7,18 @@ export const inject = ['mnemonMemory']
 export const memoryPlugin = defineMemoryPlugin({
   packageName: name,
   label: { en: 'Active capture', 'zh-CN': '主动记录' },
-  description: { en: 'Guide the current LLM to retain qualified durable facts.', 'zh-CN': '引导当前 LLM 保留符合条件的长期事实。' },
+  description: { en: 'Identify and retain durable facts from the current conversation.', 'zh-CN': '在当前对话中识别并保存值得长期保留的事实。' },
   roles: ['strategy-extension'],
-  provides: [{ id: 'strategy.default-three-tier.capture', exclusive: true }],
-  requires: ['strategy.default-three-tier', 'source.durable-evidence'],
+  provides: [{ id: 'strategy.capture', exclusive: true }],
+  requires: ['strategy', 'source.durable-evidence'],
 })
 const instruction = 'During the current conversation, consider recording at most one new durable user-supplied preference, correction, or established project fact that will help a future task. Compare existing memory first; skip duplicates, secrets, transient progress, guesses, assistant-authored claims and facts merely retrieved from memory. Respect a request not to remember. Prefer adding one concise fact to one eligible durable Source; do not copy the same fact into multiple layers. Continue without writing when no candidate qualifies.'
 
 export function createAutoCaptureExtension(config: Config = {}) {
-  const capture = validateThreeTierExtension('capture', { instruction: config.instruction ?? instruction,
+  const capture = validateMemoryViewExtension('capture', { instruction: config.instruction ?? instruction,
     actionIds: config.actionIds ?? ['remember'],
     ...(config.sourceKeys === undefined ? {} : { sourceKeys: config.sourceKeys }) })
-  return defineThreeTierExtension({ typeId: 'auto-capture', packageName: name, slot: 'capture',
+  return defineMemoryViewExtension({ typeId: 'auto-capture', packageName: name, slot: 'capture',
     contribute: (_request, sources) => ({ ...capture, sourceKeys: capture.sourceKeys ?? sources
       .filter(source => source.role === 'durable-evidence').map(source => source.sourceInstanceKey).sort() }),
   })

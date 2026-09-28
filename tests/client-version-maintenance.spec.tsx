@@ -36,7 +36,7 @@ describe('version maintenance', () => {
     delete value.current
     delete value.latest
     const f = fixture([value])
-    expect(await screen.findByText('待安装')).toBeTruthy()
+    expect(await screen.findByText('未安装（可选）')).toBeTruthy()
     expect(screen.queryByText('已是最新')).toBeNull()
     expect(screen.getByText('通过 npm 安装（推荐）')).toBeTruthy()
     expect(screen.getByText('npm install --global @mnemon-dev/mnemon@latest')).toBeTruthy()
@@ -73,6 +73,19 @@ describe('version maintenance', () => {
     writeText.mockRejectedValue(new Error('clipboard unavailable'))
     fireEvent.click(screen.getByRole('button', { name: '复制命令：mnemon update' }))
     expect(await screen.findByText('无法访问剪贴板，请选中命令手动复制。')).toBeTruthy()
+  })
+
+  it('copies through the DSH execCommand fallback when the Clipboard API is absent', async () => {
+    const execCommand = vi.fn(() => true)
+    Object.defineProperty(document, 'execCommand', { value: execCommand, configurable: true })
+    try {
+      fixture([cli()])
+      fireEvent.click(await screen.findByRole('button', { name: '复制命令：mnemon update' }))
+      expect(await screen.findByText('已复制')).toBeTruthy()
+      expect(execCommand).toHaveBeenCalledWith('copy')
+    } finally {
+      Reflect.deleteProperty(document, 'execCommand')
+    }
   })
 
   it('starts collapsed, groups packages, updates the selected package and keeps its restart state after recheck', async () => {

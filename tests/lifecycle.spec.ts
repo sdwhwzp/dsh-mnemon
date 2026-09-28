@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { realpathSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { assertReleasedPayloadSemantics } from '@deepseek-ai/dsh-session-format-v0-to-v1'
 import { MemoryExecutions } from '../src/host/memory-executions.ts'
 import { resolveConfig } from "../src/host/config.ts"
@@ -16,6 +16,7 @@ import type {
 } from "../src/host/dsh.ts"
 import { MnemonLifecycle } from "../src/host/lifecycle.ts"
 import { IdleReviewError, type MnemonSubagentCoordinator } from "../src/host/subagent.ts"
+import { sessionLog } from './fixtures/session-log.ts'
 
 type Listener = (...args: unknown[]) => unknown
 
@@ -58,9 +59,17 @@ function fixture(config = resolveConfig({ cliPath: '/fake/mnemon' }), options: {
     resolve: vi.fn(async () => ({ id: 'default' })),
     mount: vi.fn(async () => ({ id: 'default' })),
   }
+  // DSH appends an admitted step batch to the Session log and its surface.
+  const admit = (listener: Listener): Listener => async (...args) => {
+    const decision = await listener(...args) as HostPreStepDecision
+    if (decision.kind === 'enter') {
+      for (const message of decision.messages) events.push({ type: 'user/message', seq: events.length, data: { ...message } })
+    }
+    return decision
+  }
   const agentCtx = {
     on: vi.fn((name: string, listener: Listener) => {
-      agentListeners.set(name, listener)
+      agentListeners.set(name, name === 'agent/pre-step' ? admit(listener) : listener)
       return () => agentListeners.delete(name)
     }),
     effect: vi.fn((callback: () => (() => unknown) | void) => {
@@ -84,7 +93,7 @@ function fixture(config = resolveConfig({ cliPath: '/fake/mnemon' }), options: {
     id: 'session-1',
     status: 'idle',
     ...(taskModelRoute ? { options: { provider: 'deepseek', model: 'deepseek-chat' } } : {}),
-    session: { events },
+    session: { ...sessionLog(events) },
     ctx: agentCtx,
     followup,
     steer,
@@ -112,7 +121,7 @@ function fixture(config = resolveConfig({ cliPath: '/fake/mnemon' }), options: {
       id: options.sessionId,
       status: 'idle' as const,
       ...(options.agentOptions === undefined ? {} : { options: options.agentOptions }),
-      session: { header: options.meta ?? {}, events: [] },
+      session: { header: options.meta ?? {}, ...sessionLog() },
       ctx: taskCtx,
       followup: vi.fn(),
       steer: vi.fn(),
@@ -207,6 +216,9 @@ function fixture(config = resolveConfig({ cliPath: '/fake/mnemon' }), options: {
   return { agent, agentListeners, agentSections, agentContexts, promptAssemblies, events, followup, steer, lifecycle, coordinator, composableTurns, runtimeSource, createTaskAgent, disposedTaskAgents, defaultModel, llm, agentPresets, assemblePrompt, preStep, turnStopping, stop }
 }
 
+// The DSH-owned Session codec, resolved exactly as the installed host resolves it.
+const requireDsh = createRequire(realpathSync(new URL('../node_modules/@deepseek-ai/dsh/package.json', import.meta.url)))
+
 afterEach(() => vi.useRealTimers())
 
 describe('Mnemon DSH lifecycle integration', () => {
@@ -227,12 +239,9 @@ describe('Mnemon DSH lifecycle integration', () => {
     value.stop()
   })
 
-  // Point at a clean public alpha7 consumer's node_modules to verify the V4
-  // persistence contract without replacing the repository's legacy dev cohort.
-  const v4ContractRoot = process.env.MNEMON_DSH_V4_CONTRACT_ROOT
-  it.skipIf(v4ContractRoot === undefined)('persists guided context through the published V4 codec that rejects plugin wrappers', async () => {
-    const sessionApi = await import(pathToFileURL(join(v4ContractRoot!, '@deepseek-ai/dsh-session/lib/index.js')).href)
-    const format = await import(pathToFileURL(join(v4ContractRoot!, '@deepseek-ai/dsh-session-format-v3-to-v4/lib/index.js')).href)
+  it('persists guided context through the published V4 codec that rejects plugin wrappers', async () => {
+    const sessionApi = await import(requireDsh.resolve('@deepseek-ai/dsh-session'))
+    const format = await import(requireDsh.resolve('@deepseek-ai/dsh-session-format-v3-to-v4'))
     const sessionId = sessionApi.SessionId('mnemon-source-contract-fixture')
     const session = sessionApi.Session.create(sessionId, undefined, {
       version: 4, id: sessionId, createdAt: 0, isSeeded: false, delegationDepth: 0,
@@ -322,61 +331,17 @@ describe('Mnemon DSH lifecycle integration', () => {
 
   it('re-composes the guided reminder after a rewind drops it from the surface', async () => {
     const value = fixture()
-    // The real host publishes a model-visible projection; the base stub does not.
-    const surface: { nodes: number[] } = { nodes: [] }
-    ;(value.agent.session as { surface?: { nodes: readonly number[] } }).surface = surface
+    const forms = (decision: HostPreStepDecision) => decision.kind === 'enter' ? decision.messages.map(message => message.source.form) : []
+    expect(forms(await value.preStep([userMessage()], 1))).toEqual([undefined, 'instructions', 'recall'])
 
-    // Commit an injected message to the durable log and the surface, the way the
-    // host does once a step is admitted.
-    const commit = (message: HostUserMessage): void => {
-      const seq = value.events.length
-      value.events.push({ type: 'user/message', seq, data: { source: message.source, turn: 1 } })
-      surface.nodes.push(seq)
-    }
-
-    const first = await value.preStep([userMessage()], 1)
-    expect(first.kind).toBe('enter')
-    const reminder = first.kind === 'enter' ? first.messages.at(-1) : undefined
-    expect(reminder?.source).toMatchObject({ kind: 'dsh-mnemon' })
-    commit(reminder as HostUserMessage)
-
-    // Still visible: a later first step must not duplicate it.
-    const second = await value.preStep([userMessage()], 2)
-    // Reminder not repeated; the snapshot rides along because this fixture's
-    // Wake text is turn-derived, so turn 2 renders a different revision.
-    expect(second.kind === 'enter' && second.messages).toHaveLength(2)
+    // Still visible: a later first step must not duplicate it. The snapshot
+    // rides along because this fixture's Wake text is turn-derived.
+    expect(forms(await value.preStep([userMessage()], 2))).toEqual([undefined, 'recall'])
 
     // Rewind replaces the surface and drops the reminder. The append-only event
     // log still contains it, which is why presence cannot be read from there.
-    surface.nodes.length = 0
-
-    const third = await value.preStep([userMessage()], 3)
-    expect(third.kind).toBe('enter')
-    const reissued = third.kind === 'enter' ? third.messages.at(-1) : undefined
-    expect(reissued?.source).toMatchObject({ kind: 'dsh-mnemon' })
-  })
-
-  it('falls back to session-scoped state when the host publishes no surface', async () => {
-    const value = fixture()
-    const first = await value.preStep([userMessage()], 1)
-    expect(first.kind === 'enter' && first.messages).toHaveLength(3)
-    const second = await value.preStep([userMessage()], 2)
-    expect(second.kind === 'enter' && second.messages).toHaveLength(2)
-  })
-
-  it('drives a new alpha session through snapshot and indexed event accessors', async () => {
-    const value = fixture()
-    const session = value.agent.session as HostSession
-    delete session.events
-    session.snapshotEvents = () => value.events
-    session.eventAt = seq => value.events[seq]
-
-    const decision = await value.preStep([userMessage()], 1)
-    expect(decision.kind).toBe('enter')
-    expect(value.lifecycle.snapshot('session-1').current?.memoryToolCalls).toBe(0)
-
-    await value.turnStopping(1)
-    expect(value.composableTurns.endTurn).toHaveBeenCalledWith('session-1:1')
+    value.agent.session.surface = { nodes: [] }
+    expect(forms(await value.preStep([userMessage()], 3))).toEqual([undefined, 'instructions', 'recall'])
   })
 
   it('pins one immutable Wake across every model step and releases it at the turn boundary', async () => {
@@ -448,7 +413,7 @@ describe('Mnemon DSH lifecycle integration', () => {
     const metadataAgent = vi.mocked(value.coordinator.maintainMetadata).mock.calls[0]?.[0] as HostAgent
     expect(metadataAgent).not.toBe(value.agent)
     expect(metadataAgent.session.header?.cwd).toBe('/tmp/workspace-two')
-    expect(value.coordinator.archiveDocument).toHaveBeenCalledWith(expect.objectContaining({ session: { header: { cwd: '/tmp/workspace-two', agentPreset: 'default' }, events: [] } }), 'doc-1', expect.any(AbortSignal))
+    expect(value.coordinator.archiveDocument).toHaveBeenCalledWith(expect.objectContaining({ session: expect.objectContaining({ header: { cwd: '/tmp/workspace-two', agentPreset: 'default' } }) }), 'doc-1', expect.any(AbortSignal))
     expect(value.defaultModel.currentSelection).toHaveBeenCalledTimes(2)
     expect(value.agentPresets.resolve).toHaveBeenCalledTimes(2)
     expect(value.agentPresets.mount).toHaveBeenCalledTimes(2)
@@ -461,7 +426,7 @@ describe('Mnemon DSH lifecycle integration', () => {
     const operation = vi.fn(async (agent: HostAgent) => {
       expect(agent).not.toBe(value.agent)
       expect(agent.session.header?.cwd).toBe('/tmp/workspace-two')
-      expect(agent.session.events).toEqual([])
+      expect(agent.session.snapshotEvents()).toEqual([])
       if (failed) throw new Error('model unavailable')
       return 'maintained'
     })
@@ -690,7 +655,6 @@ describe('Mnemon DSH lifecycle integration', () => {
       }
       expect(value.coordinator.review).toHaveBeenCalledTimes(2)
       expect(value.lifecycle.snapshot('session-1').current).toMatchObject({ idleReviewAttempts: 2, idleReviewPending: false })
-      value.agentListeners.get('agent/session-start')?.({ source: 'compact' })
       await value.preStep([durableCandidate(300)], 31); await value.turnStopping(31)
       await vi.advanceTimersByTimeAsync(300_000)
       expect(value.coordinator.review).toHaveBeenCalledTimes(2)
@@ -1114,6 +1078,28 @@ describe('Mnemon DSH lifecycle integration', () => {
       expect(value.lifecycle.snapshot('session-1').current?.idleReviewPending).toBe(true)
       config.memoryTopology.strategyId = 'personal-notes'
       await vi.advanceTimersByTimeAsync(5_000)
+      expect(value.coordinator.review).not.toHaveBeenCalled()
+    } finally { value.stop() }
+  })
+
+  it('runs three-tier review only over turns that three-tier composed', async () => {
+    vi.useFakeTimers()
+    const value = fixture(resolveConfig({ idleReviewMs: 5_000 }))
+    const pin = value.composableTurns.beginTurn.getMockImplementation()!
+    // The selected Strategy is off, so the only installed one composes instead.
+    value.composableTurns.beginTurn.mockImplementation(async (turnId: string, scope: object) => {
+      const context = await pin(turnId, scope)
+      context.view.strategyTypeId = 'general'
+      return context
+    })
+    try {
+      await value.preStep([durableCandidate()], 1)
+      await value.turnStopping(1)
+      await value.preStep([userMessage('one more substantive turn')], 2)
+      await value.turnStopping(2)
+      expect(value.lifecycle.snapshot('session-1').current?.reviewActivity.eligible).toBe(true)
+      expect(value.lifecycle.snapshot('session-1').current?.idleReviewPending).toBe(false)
+      await vi.advanceTimersByTimeAsync(10_000)
       expect(value.coordinator.review).not.toHaveBeenCalled()
     } finally { value.stop() }
   })

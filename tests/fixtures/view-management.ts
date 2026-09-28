@@ -12,6 +12,7 @@ import * as base from 'dsh-mnemon-strategy-default-three-tier'
 import * as scoped from 'dsh-mnemon-strategy-scoped'
 import * as light from 'dsh-mnemon-strategy-light-context'
 import * as capture from 'dsh-mnemon-strategy-auto-capture'
+import * as general from 'dsh-mnemon-strategy-general'
 import { provideMemoryRuntime } from '../../src/core/runtime.ts'
 import { resolveConfig } from '../../src/host/config.ts'
 import { createRuntimeGraph, LiveMnemonRuntime } from '../../src/host/runtime.ts'
@@ -29,7 +30,10 @@ interface TestLoader extends MemoryPluginLoader {
   write(): void
 }
 
-export async function viewManagementFixture(saved?: MemoryViewPreferences, anchor?: string, stored: Record<string, object> = {}) {
+/** pluginManager simulates DSH's official manager: it writes the profile row, then reconciles. */
+export interface ViewManagementFixtureOptions { pluginManager?: boolean; generalStrategy?: boolean }
+
+export async function viewManagementFixture(saved?: MemoryViewPreferences, anchor?: string, stored: Record<string, object> = {}, options: ViewManagementFixtureOptions = {}) {
   const root = mkdtempSync(join(tmpdir(), 'mnemon-view-management-'))
   const workspace = join(root, 'workspace')
   mkdirSync(workspace)
@@ -41,13 +45,14 @@ export async function viewManagementFixture(saved?: MemoryViewPreferences, ancho
   const modules: Record<string, unknown> = {
     [runtime.name]: runtime, [documents.name]: documents,
     [spaces.name]: { name: spaces.name, inject: ['mnemonMemory'], apply: (ctx: Context) => spaces.installMemorySpaces(ctx, [{ instanceId: holographic.id, module: holographic, config: undefined }]) },
-    [base.name]: base, [scoped.name]: scoped, [light.name]: light, [capture.name]: capture,
+    [base.name]: base, [scoped.name]: scoped, [light.name]: light, [capture.name]: capture, [general.name]: general,
   }
   loader.import = vi.fn(async name => {
     if (!modules[name]) throw new Error('Unknown fixture module: ' + name)
     return modules[name]
   })
   const settingsDocuments = new Map<string, { value: object; revision: number; validate?: (value: never) => void }>()
+  const updateListeners = new Set<(namespace: string, value: unknown) => void>()
   const settings: HostSettingsService = {
     writable: true,
     register: (namespace, _schema, options) => {
@@ -68,19 +73,21 @@ export async function viewManagementFixture(saved?: MemoryViewPreferences, ancho
       current.validate?.(next as never)
       current.value = next
       current.revision += 1
-      ctx.emit('settings/updated' as never, namespace, next)
+      for (const listener of updateListeners) listener(namespace, next)
     }),
+    onUpdated: listener => { updateListeners.add(listener); return () => { updateListeners.delete(listener) } },
   }
   ctx.provide('settings', settings)
   const config = resolveConfig({ storageScope: 'custom', dataDir: join(root, 'data'), cliPath: '/fake/mnemon', runtimeUserScope: 'storage' })
   settings.register('mnemon', {}, { base: config, applies: 'live' })
-  const management = new MemoryPluginManagement(ctx as unknown as HostContextShape, engine)
+  const management = new MemoryPluginManagement(ctx as unknown as HostContextShape, engine, settings)
   const stop = management.start()
-  const profileEntries = [
+  const profileEntries: Array<{ id: string; name: string; disabled?: boolean }> = [
     { id: 'mnemon-source-runtime', name: runtime.name },
     { id: 'mnemon-source-documents', name: documents.name },
     { id: 'mnemon-source-memory-spaces', name: spaces.name },
     { id: 'mnemon-strategy-default-three-tier', name: base.name },
+    ...(options.generalStrategy ? [{ id: 'general', name: general.name, disabled: true }] : []),
     { id: 'scoped', name: scoped.name, disabled: true },
     { id: 'light', name: light.name, disabled: true },
     { id: 'capture', name: capture.name, disabled: true },
@@ -90,7 +97,17 @@ export async function viewManagementFixture(saved?: MemoryViewPreferences, ancho
     // The public event fires after every entry in a profile replay has settled.
     ;(ctx.emit as (event: string) => void)('app-boot/config-reload')
   }
+  const pluginManager = {
+    setPluginEnabled: vi.fn(async (entryId: string, enabled: boolean) => {
+      const row = profileEntries.find(entry => entry.id === entryId)
+      if (row === undefined) return { application: 'failed', error: { message: 'unknown-plugin' } }
+      row.disabled = !enabled
+      await reconcileProfile()
+      return { application: 'applied' }
+    }),
+  }
   await loader.root.update(structuredClone(profileEntries))
+  if (options.pluginManager) ctx.provide('pluginManager', pluginManager)
   const treeWrite = vi.spyOn(loader, 'write')
   const graph = createRuntimeGraph(management.resolveConfig(config), workspace, engine)
   const live = new LiveMnemonRuntime(graph, {
@@ -104,5 +121,5 @@ export async function viewManagementFixture(saved?: MemoryViewPreferences, ancho
     await ctx.fiber.dispose()
     rmSync(root, { recursive: true, force: true })
   }
-  return { ctx, root, workspace, engine, loader, modules, settings, settingsDocuments, management, treeWrite, config, graph, live, profileEntries, reconcileProfile, dispose }
+  return { ctx, root, workspace, engine, loader, modules, settings, settingsDocuments, management, treeWrite, config, graph, live, profileEntries, reconcileProfile, pluginManager, dispose }
 }

@@ -38,6 +38,8 @@ function protocolFixture(options: Config = {}) {
       role: type, availability: 'ready', revision: 'r1', capabilities: ['status'], management: { label: type, description: type },
     })) })),
     executeManagement: vi.fn(async (_request: unknown) => ({ revision: 'r2', value: {} })),
+    sourceInstances: () => ['runtime', 'documents', 'memory-spaces'].map(type => ({ sourceInstanceKey: 'source:mnemon-source-' + type, sourceTypeId: type })),
+    strategy: { definition: { manifest: { typeId: 'default-three-tier' } } },
   }
   const release = vi.fn()
   const graph = {
@@ -93,6 +95,19 @@ describe('Mnemon RPC Source boundaries', () => {
     expect(await write('source-management-mutate', { ...request, confirmed: true })).toMatchObject({ ok: false, error: { message: expect.stringContaining('revision conflict') } })
     expect(execute).toHaveBeenCalledWith(expect.objectContaining({ scope: { storage: 'custom', workspaceId: f.workspace }, sourceInstanceKey: request.sourceInstanceKey }))
     expect(await read('source-management-read', { sourceInstanceKey: 'source:missing', operation: 'snapshot' })).toMatchObject({ ok: false })
+  })
+
+  it('refuses management and assistance on a memory layer that is off', async () => {
+    const f = protocolFixture({ memoryTopology: { layers: { documents: { enabled: false } } } } as Config)
+    const read = createReadHandler(f.runtime)
+    const write = createWriteHandler(f.runtime, lifecycle({ manageSource: vi.fn() }))
+    const off = { ok: false, error: { message: 'Memory layer documents is off; turn it on to read or change it' } }
+    expect(await read('source-management-read', { sourceInstanceKey: 'source:mnemon-source-documents', operation: 'snapshot' })).toMatchObject(off)
+    expect(await write('source-management-mutate', { sourceInstanceKey: 'source:mnemon-source-documents', operation: 'mutate', input: {}, expectedRevision: 'r1', confirmed: true })).toMatchObject(off)
+    expect(await write('source-assistance', { sourceInstanceKey: 'source:mnemon-source-documents', operation: 'mutate', input: {}, expectedRevision: 'r1', confirmed: true })).toMatchObject(off)
+    expect(f.generation.executeManagement).not.toHaveBeenCalled()
+    // Another layer stays usable.
+    expect(await read('source-management-read', { sourceInstanceKey: 'source:mnemon-source-runtime', operation: 'snapshot' })).toMatchObject({ ok: true })
   })
 
   it('keeps the Runtime UX and validates branch input in the owning Source', async () => {
@@ -303,7 +318,7 @@ describe('Host assistance and channels', () => {
     f.route.aligned = false
     f.route.effectiveRoot = '/fixture/other'
     expect(await createReadHandler(f.runtime, lifecycle())('status-summary', { sessionId: 's1' })).toMatchObject({ ok: true, value: {
-      healthy: true, lifecycle: { enabled: true }, memorySystem: { evaluation: { state: 'ready' } },
+      healthy: true, lifecycle: { enabled: true }, memorySystem: { strategyTypeId: 'default-three-tier', evaluation: { state: 'ready' } },
       workspaceContext: { aligned: false, selectedRoot: '/fixture/data', effectiveRoot: '/fixture/other' },
     } })
   })
@@ -335,23 +350,14 @@ describe('Host assistance and channels', () => {
     const handle = vi.fn()
     registerRpc({ rpc: { handle } } as unknown as HostConnectionHandle, f.runtime)
     expect(handle).toHaveBeenCalledTimes(4)
-    expect(handle).toHaveBeenCalledWith(MNEMON_READ_CHANNEL, expect.any(Function), { authority: 'trusted-host' })
-    expect(handle).toHaveBeenCalledWith(MNEMON_ACTIVATION_CHANNEL, expect.any(Function), { authority: 'trusted-host' })
-    expect(handle).toHaveBeenCalledWith(MNEMON_WRITE_CHANNEL, expect.any(Function), { authority: 'loopback' })
-    expect(handle).toHaveBeenCalledWith(MNEMON_PACK_CHANNEL, expect.any(Function), { authority: 'loopback' })
+    for (const channel of [MNEMON_READ_CHANNEL, MNEMON_ACTIVATION_CHANNEL, MNEMON_WRITE_CHANNEL, MNEMON_PACK_CHANNEL]) {
+      expect(handle).toHaveBeenCalledWith(channel, expect.any(Function))
+    }
     for (const channel of [MNEMON_WRITE_CHANNEL, MNEMON_ACTIVATION_CHANNEL]) {
       const handler = handle.mock.calls.find(([id]) => id === channel)![1] as HostRpcHandler
       expect(await handler(channel === MNEMON_WRITE_CHANNEL ? 'remember' : 'body', { content: 'blocked', memoryBodyId: 'project', active: false })).toMatchObject({ ok: false })
     }
     expect(f.sources['memory-spaces']!.mutate).not.toHaveBeenCalled()
-  })
-
-  it('supports explicitly selected trusted-host management without a parallel RPC implementation', () => {
-    const f = protocolFixture()
-    const handle = vi.fn()
-    registerRpc({ rpc: { handle } } as unknown as HostConnectionHandle, f.runtime, undefined, undefined, 'trusted-host')
-    expect(handle).toHaveBeenCalledWith(MNEMON_WRITE_CHANNEL, expect.any(Function), { authority: 'trusted-host' })
-    expect(handle).toHaveBeenCalledWith(MNEMON_PACK_CHANNEL, expect.any(Function), { authority: 'trusted-host' })
   })
 
   it('keeps Pack transport authenticated, selected-root scoped, and merge-only from the page', async () => {

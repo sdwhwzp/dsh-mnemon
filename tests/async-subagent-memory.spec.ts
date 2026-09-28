@@ -5,6 +5,7 @@ import { MnemonLifecycle } from '../src/host/lifecycle.ts'
 import { LiveMnemonRuntime } from '../src/host/runtime.ts'
 import { MnemonSubagentCoordinator } from '../src/host/subagent.ts'
 import { memoryGraphFixture as graphFixture } from './helpers/memory-graph.ts'
+import { sessionLog } from './fixtures/session-log.ts'
 
 type Listener = (...args: unknown[]) => unknown
 const disposers: Array<() => void> = []
@@ -57,6 +58,7 @@ function fixture() {
   const runtime = new LiveMnemonRuntime(memory.graph, undefined, undefined, memory.extensions)
   const registry = new Map<string, HostAgent>()
   const controls = new Map<HostAgent, ReturnType<typeof events>>()
+  const logs = new Map<HostAgent, HostSessionEvent[]>()
   const hostEvents = events()
   const host = {
     ...hostEvents,
@@ -70,13 +72,14 @@ function fixture() {
   const stop = lifecycle.start()
   const create = (id: string, parent?: HostAgent, configure?: (ctx: ReturnType<typeof events>) => void) => {
     const ctx = events()
+    const log: HostSessionEvent[] = []
     configure?.(ctx)
     const agent = {
       id,
       status: 'idle',
       session: {
         header: { cwd: resolve('/workspace/project'), ...(parent === undefined ? {} : { origin: 'subagent', parentSession: parent.id }) },
-        events: [],
+        ...sessionLog(log),
       },
       ctx,
       followup: vi.fn(),
@@ -84,13 +87,13 @@ function fixture() {
       inject: vi.fn(),
     } as unknown as HostAgent
     controls.set(agent, ctx)
+    logs.set(agent, log)
     registry.set(id, agent)
-    hostEvents.emit('agent/created', { agent })
-    ctx.emit('agent/session-start', { agent, source: 'startup' })
+    hostEvents.emit('agent/created', { agent, source: 'startup' })
     return agent
   }
   const append = (agent: HostAgent, type: string, turn: number) => {
-    const log = agent.session.events as HostSessionEvent[]
+    const log = logs.get(agent)!
     const event = { seq: log.length, type, data: { turn } }
     log.push(event)
     controls.get(agent)!.emit('session/event', agent.session, event)
@@ -116,7 +119,7 @@ function fixture() {
   })
   const root = create('root')
   const recall = (agent: HostAgent, query: string) => coordinator.recall(agent, { query }, new AbortController().signal, { requirePinnedView: true })
-  return { ...memory, runtime, coordinator, lifecycle, root, create, begin, end, dispose, recall, controls }
+  return { ...memory, runtime, coordinator, lifecycle, root, create, begin, end, dispose, recall, controls, logs }
 }
 
 describe('asynchronous child memory authority', () => {
@@ -319,21 +322,6 @@ describe('asynchronous child memory authority', () => {
     await value.end(value.root, 1)
     await value.begin(child, 1)
     expect(value.views.activeTurn(child.id)!.scope).toMatchObject({ workspaceId: resolve('/workspace/project'), agentId: child.id, sessionId: child.id })
-  })
-
-  it('resets a child turn budget after clear without broadening its delegation', async () => {
-    const value = fixture()
-    await value.begin(value.root, 1)
-    const child = value.create('child', value.root)
-    await value.end(value.root, 1)
-    await value.begin(child, 1)
-    await value.recall(child, 'release history')
-    value.controls.get(child)!.emit('agent/session-start', { agent: child, source: 'clear' })
-    ;(child.session.events as HostSessionEvent[]).length = 0
-    value.setIds(['replacement'])
-    await value.begin(child, 1)
-    expect((await value.recall(child, 'release history')).results.map(row => row.memoryBodyId)).toEqual(['project'])
-    expect(value.search).toHaveBeenCalledTimes(2)
   })
 
   it('releases a rejected child step pin but keeps its delegation for a later turn', async () => {

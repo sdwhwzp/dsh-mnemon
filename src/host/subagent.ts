@@ -13,7 +13,6 @@ import { DEFAULT_MEMORY_VIEW_BUDGET, type ComposableMemoryView, type MemoryEvide
 import type { MemoryCompositionGeneration } from '../core/composition.ts'
 import { agentScope, type MnemonAgentRuntimeSource, type MnemonRuntimeGraph } from './runtime.ts'
 import type { ComposableMemoryTurn } from '../core/turns.ts'
-import { hostSessionEvents } from './session-events.ts'
 import type { MnemonAccounts } from './account-access.ts'
 import { idleReviewBlockReason, startGuardedReview, type ReviewToolHost } from './review-tools.ts'
 import { reviewCheckpoint } from './review-checkpoint.ts'
@@ -43,7 +42,10 @@ type RecallInsight = Insight & { revision?: string }
 function evidenceInsights(evidence: MemoryEvidence): RecallInsight[] {
   return evidence.items.map(item => {
     const metadata = optionalObject(item.provenance) ?? {}
-    return { ...metadata, id: item.id, content: item.text, score: item.score, revision: item.revision } as RecallInsight
+    return { ...metadata, id: item.id, content: item.text,
+      ...(item.score === undefined ? {} : { score: item.score }),
+      ...(item.revision === undefined ? {} : { revision: item.revision }),
+    } as RecallInsight
   })
 }
 
@@ -412,13 +414,13 @@ function safeFailureDetail(value: string): string {
 
 /** Recover the contained DSH model/transport error without exposing the child transcript. */
 function subagentFailureDetail(run: HostSubagentRun, result: HostSubagentResult): string | undefined {
-  // rc.8 publishes a bounded provider diagnostic for both local and remote
-  // children. Prefer it over reaching into a local Agent's event history.
+  // Prefer a provider's bounded diagnostic. In-process children publish none,
+  // so fall back to the local Agent's last turn error.
   if (typeof result.diagnostic === 'string') {
     const diagnostic = safeFailureDetail(result.diagnostic)
     if (diagnostic !== '') return diagnostic
   }
-  const events = run.localAgent === undefined ? [] : hostSessionEvents(run.localAgent.session)
+  const events = run.localAgent === undefined ? [] : run.localAgent.session.snapshotEvents()
   for (let index = events.length - 1; index >= 0; index -= 1) {
     const event = events[index]
     if (event?.type !== 'turn/end') continue
@@ -1010,7 +1012,7 @@ export class MnemonSubagentCoordinator {
       const runtime = graph.source('runtime', scope).forGeneration(lease.generation)
       const context: RuntimeWriteContext = {
         runtime, inspectRuntime: runtime,
-        maintain: threeTierActionWorkflow(graph.config.memoryTopology.strategyId, 'runtime', 'mutate') !== undefined,
+        maintain: threeTierActionWorkflow(lease.generation.strategy.definition.manifest.typeId, 'runtime', 'mutate') !== undefined,
         commit: () => runtime.mutate('mutate', request, signal),
         memorySpaces: async () => {
           if (!graph.config.writeEnabled || !this.runtimeSource.config.writeEnabled) throw new Error('dsh-mnemon is configured read-only')

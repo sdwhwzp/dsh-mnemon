@@ -2,7 +2,7 @@
 
 **English** | [简体中文](../zh-CN/README.md) | [Project home](../../README.md)
 
-Start with the default three-tier workflow. The implementation is composable; you do not need to manage plugins to use it.
+Start with the default Layered strategy. The implementation is composable; you do not need to manage plugins to use it.
 
 ## Use the system
 

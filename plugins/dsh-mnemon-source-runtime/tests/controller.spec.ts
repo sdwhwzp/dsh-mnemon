@@ -2,8 +2,8 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
+import { RUNTIME_ENTRY_DELIMITER } from '../src/contracts.ts'
 import {
-  RUNTIME_ENTRY_DELIMITER,
   RuntimeMemoryCapacityError,
   RuntimeMemoryController,
 } from "../src/controller.ts"
@@ -219,10 +219,10 @@ describe('RuntimeMemoryController', () => {
       'Always stash before pulling.',
       'Exclude environment YAML from commits.',
     ])
-    expect(combined.contextText()).toContain('Always stash before pulling.')
-    expect(combined.contextText()).toContain('Exclude environment YAML from commits.')
-    expect(combined.contextText()).not.toContain('Hidden global project fact.')
-    expect(combined.contextText()).not.toContain('Hidden workspace profile.')
+    expect(combined.contextProjection().text).toContain('Always stash before pulling.')
+    expect(combined.contextProjection().text).toContain('Exclude environment YAML from commits.')
+    expect(combined.contextProjection().text).not.toContain('Hidden global project fact.')
+    expect(combined.contextProjection().text).not.toContain('Hidden workspace profile.')
 
     await combined.mutate({ action: 'add', target: 'user', content: 'Prefer concise answers.' })
     await combined.mutate({ action: 'add', target: 'memory', content: 'Run tests before project commits.' })
@@ -247,17 +247,6 @@ describe('RuntimeMemoryController', () => {
       'Hidden global project fact.',
       'Keep local changes safe before Git synchronization.',
       'Prefer Chinese replies.',
-    ])
-
-    const compactedMemory = await combined.compactTarget(
-      workspace.snapshot().revision,
-      'memory',
-      [{ content: 'Keep project configuration YAML out of commits.', importance: 'critical' }],
-    )
-    expect(compactedMemory.entries.map(entry => entry.content)).toEqual([
-      'Keep local changes safe before Git synchronization.',
-      'Prefer Chinese replies.',
-      'Keep project configuration YAML out of commits.',
     ])
   })
 
@@ -315,7 +304,7 @@ describe('RuntimeMemoryController', () => {
   it('renders a bounded QoderWork-style runtime context from the committed source', async () => {
     const { controller } = fixture()
     await controller.mutate({ action: 'add', target: 'user', content: 'User prefers concise Chinese replies', importance: 'critical' })
-    const context = controller.contextText()
+    const context = controller.contextProjection().text
     expect(context).toContain('MNEMON RUNTIME MEMORY SNAPSHOT')
     expect(context).toMatch(/Revision: [a-f0-9]{64}/u)
     expect(context).toContain('Contents of USER.md (user profile; entries: 1; UTF-8 bytes:')
@@ -400,12 +389,12 @@ describe('RuntimeMemoryController', () => {
 
   it('assembles every prompt from the latest committed USER and MEMORY records', async () => {
     const { controller } = fixture()
-    const empty = controller.contextText()
+    const empty = controller.contextProjection().text
     expect(empty).not.toContain('User prefers compact release notes')
 
     await controller.mutate({ action: 'add', target: 'user', content: 'User prefers compact release notes', importance: 'critical' })
     await controller.mutate({ action: 'add', target: 'memory', content: 'Release checks run with pnpm verify' })
-    const populated = controller.contextText()
+    const populated = controller.contextProjection().text
 
     expect(populated).toContain('User prefers compact release notes')
     expect(populated).toContain('Release checks run with pnpm verify')
@@ -440,37 +429,13 @@ describe('RuntimeMemoryController', () => {
     expect(revisions.size).toBe(4)
   })
 
-  it('applies a compacted target only to the exact reviewed revision', async () => {
-    const { controller } = fixture()
-    await controller.mutate({ action: 'add', target: 'memory', content: 'Project uses pnpm.' })
-    await controller.mutate({ action: 'add', target: 'memory', content: 'pnpm manages workspace dependencies.' })
-    const reviewed = controller.snapshot()
-
-    await controller.compactTarget(reviewed.revision, 'memory', [{ content: 'Project uses pnpm for workspace dependency management.', importance: 'normal' }])
-    expect(controller.snapshot().entries).toEqual([
-      expect.objectContaining({ target: 'memory', content: 'Project uses pnpm for workspace dependency management.', importance: 'normal' }),
-    ])
-    expect(readFileSync(controller.memoryPath, 'utf8')).toBe('Project uses pnpm for workspace dependency management.\n')
-    expect(controller.contextText()).toContain('<runtime-memory-file name="MEMORY.md">\n[importance=normal; created=0d; updated=0d]\nProject uses pnpm for workspace dependency management.\n</runtime-memory-file>')
-    expect(controller.contextText()).not.toContain('pnpm manages workspace dependencies.')
-  })
-
-  it('never overwrites a concurrent mutation with an obsolete compaction plan', async () => {
-    const { controller } = fixture()
-    await controller.mutate({ action: 'add', target: 'user', content: 'User prefers concise replies.' })
-    const reviewed = controller.snapshot()
-    await controller.mutate({ action: 'add', target: 'user', content: 'User prefers Chinese.' })
-
-    await expect(controller.compactTarget(reviewed.revision, 'user', [{ content: 'User prefers concise Chinese replies.', importance: 'critical' }])).rejects.toThrow('changed while archival')
-    expect(controller.snapshot().entries.map(entry => entry.content)).toEqual(['User prefers concise replies.', 'User prefers Chinese.'])
-  })
-
   it('packs semantic compaction candidates into an exact host-owned byte budget', async () => {
     const { controller } = fixture()
     await controller.mutate({ action: 'add', target: 'user', content: 'Original verbose preference.' })
-    const reviewed = controller.snapshot()
+    const request = { action: 'add', target: 'user', content: 'Newest preference.' } as const
+    const plan = await controller.planMaintenance(request)
 
-    await controller.compactTarget(reviewed.revision, 'user', [
+    await controller.compactAndMutate(plan.revision, request, [
       { content: 'normal candidate that cannot join the critical one', importance: 'normal' },
       { content: 'critical rule', importance: 'critical' },
       { content: 'low detail', importance: 'low' },
@@ -479,6 +444,7 @@ describe('RuntimeMemoryController', () => {
     expect(controller.snapshot().entries.map(entry => ({ content: entry.content, importance: entry.importance }))).toEqual([
       { content: 'critical rule', importance: 'critical' },
       { content: 'low detail', importance: 'low' },
+      { content: 'Newest preference.', importance: 'normal' },
     ])
   })
 
@@ -747,9 +713,10 @@ describe('RuntimeMemoryController branch scoping', () => {
     const { controller } = fixture()
     await controller.mutate({ action: 'add', target: 'memory', content: 'v1 branch-scoped', branches: ['main', 'dev'] })
     await controller.mutate({ action: 'add', target: 'memory', content: 'unscoped' })
-    const reviewed = controller.snapshot()
+    const request = { action: 'add', target: 'memory', content: 'new unscoped fact' } as const
+    const plan = await controller.planMaintenance(request)
 
-    await controller.compactTarget(reviewed.revision, 'memory', [
+    await controller.compactAndMutate(plan.revision, request, [
       { content: 'branch-scoped merged', importance: 'normal', branches: ['main', 'dev'] },
       { content: 'unscoped merged', importance: 'normal' },
     ])

@@ -5,18 +5,12 @@ interface LoaderLike {
   locate(fiber?: unknown): string | undefined
 }
 
-interface EntryLike {
-  options?: { id?: unknown }
-}
-
 function stableEntryId(ctx: Context, explicit: string | undefined): string {
   const configured = explicit?.trim()
   if (configured !== undefined && configured !== '') return configured
   const loader = ctx.get('loader', false) as LoaderLike | undefined
   const located = loader?.locate(ctx.fiber)?.trim()
   if (located !== undefined && located !== '') return located
-  const entryId = ((ctx.fiber as unknown as { entry?: EntryLike }).entry?.options?.id)
-  if (typeof entryId === 'string' && entryId.trim() !== '') return entryId.trim()
   throw new Error('installMemory requires a stable Loader Entry id; pass options.instanceId for direct ctx.plugin() mounts')
 }
 

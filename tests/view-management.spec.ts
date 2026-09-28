@@ -10,6 +10,7 @@ import type { RuntimeMemorySnapshot } from 'dsh-mnemon-source-runtime/contracts'
 import type { Context } from '@deepseek-ai/cordis'
 import { COMPOSABLE_MEMORY_API_VERSION } from 'dsh-mnemon/contracts'
 import { defineMemoryStrategy, defineMemoryStrategyConfiguration, installMemory } from 'dsh-mnemon/extension-sdk'
+import { sessionLog } from './fixtures/session-log.ts'
 
 const fixtures: Awaited<ReturnType<typeof viewManagementFixture>>[] = []
 afterEach(async () => { for (const value of fixtures.splice(0)) await value.dispose() })
@@ -37,7 +38,7 @@ describe('View configuration with the real pinned DSH Cordis Loader', () => {
     ])
     expect(catalog.entries.find(entry => entry.typeId === 'light-context')).toMatchObject({
       label: { en: 'Light context', 'zh-CN': '轻量上下文' }, slot: 'projection', writable: true,
-      roles: ['strategy-extension'], requires: ['strategy.default-three-tier'],
+      roles: ['strategy-extension'], requires: ['strategy'],
     })
     expect(catalog.entries.find(entry => entry.typeId === 'memory-spaces')).toMatchObject({ roles: ['source'], provides: expect.arrayContaining([{ id: 'source.durable-evidence', exclusive: false }]) })
     expect(f.engine.contributionSnapshot().revision).toBe(before)
@@ -72,7 +73,7 @@ describe('View configuration with the real pinned DSH Cordis Loader', () => {
   it('previews the actual composition read-only, saves through Cordis, and keeps the old turn immutable', async () => {
     const f = await fixture()
     await f.graph.source('runtime').mutate('mutate', { action: 'add', target: 'memory', content: 'Keep this real context. '.repeat(100) })
-    const parent = { id: 'root', session: { header: { cwd: f.workspace }, events: [] } } as unknown as HostAgent
+    const parent = { id: 'root', session: { header: { cwd: f.workspace }, ...sessionLog() } } as unknown as HostAgent
     const owner = new AgentMemoryTurn(parent, f.live)
     await owner.begin(1)
     const current = owner.inspect()!

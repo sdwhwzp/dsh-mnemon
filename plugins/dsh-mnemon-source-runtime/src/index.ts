@@ -10,7 +10,7 @@ export { Config }
 export const memoryPlugin = defineMemoryPlugin({
   packageName: name,
   label: { en: 'Runtime memory', 'zh-CN': '运行时记忆' },
-  description: { en: 'Working context for the current runtime and task.', 'zh-CN': '当前运行环境与任务使用的工作上下文。' },
+  description: { en: 'Bounded, deterministic hot memory injected directly into every eligible turn.', 'zh-CN': '有界且确定的热记忆，在每个符合条件的回合中直接注入。' },
   roles: ['source'],
   provides: [{ id: 'source' }, { id: 'source.working-context' }],
 })

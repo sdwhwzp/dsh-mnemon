@@ -1,5 +1,5 @@
 import { resolve } from 'node:path'
-import type { HostConnectionHandle, HostRpcAuthority, HostRpcHandler } from './dsh.ts'
+import type { HostConnectionHandle, HostRpcHandler } from './dsh.ts'
 import type { MnemonLifecycle } from './lifecycle.ts'
 import type { LiveMnemonRuntime } from './runtime.ts'
 import type { MemoryRuntime } from '../core/runtime.ts'
@@ -74,13 +74,13 @@ export function createViewHandler(runtime: LiveMnemonRuntime, engine: MemoryRunt
   }
 }
 
-export function registerViewRpc(connection: HostConnectionHandle, runtime: LiveMnemonRuntime, engine: MemoryRuntime, management: MemoryPluginManagement, lifecycle: MnemonLifecycle, authority: HostRpcAuthority, installation?: MemoryPluginInstallation): {
+export function registerViewRpc(connection: HostConnectionHandle, runtime: LiveMnemonRuntime, engine: MemoryRuntime, management: MemoryPluginManagement, lifecycle: MnemonLifecycle, installation?: MemoryPluginInstallation): {
   read: HostRpcHandler
   write: HostRpcHandler
 } {
   const readHandler = createViewHandler(runtime, engine, management, 'read', lifecycle, installation)
   const writeHandler = createViewHandler(runtime, engine, management, 'write', lifecycle, installation)
-  connection.rpc.handle(MNEMON_VIEW_CHANNEL, readHandler, { authority: 'trusted-host' })
-  connection.rpc.handle(MNEMON_VIEW_WRITE_CHANNEL, writeHandler, { authority })
+  connection.rpc.handle(MNEMON_VIEW_CHANNEL, readHandler)
+  connection.rpc.handle(MNEMON_VIEW_WRITE_CHANNEL, writeHandler)
   return { read: readHandler, write: writeHandler }
 }

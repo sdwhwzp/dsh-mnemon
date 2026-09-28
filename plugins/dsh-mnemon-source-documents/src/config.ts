@@ -1,6 +1,6 @@
 import { homedir } from 'node:os'
 import { isAbsolute, join } from 'node:path'
-import z from 'schemastery'
+import z from '@deepseek-ai/schemastery'
 
 export interface Config { dataDir?: string; limitBytes?: number }
 

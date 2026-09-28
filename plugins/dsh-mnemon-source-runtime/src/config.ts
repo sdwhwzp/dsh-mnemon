@@ -1,9 +1,8 @@
 import { homedir } from 'node:os'
 import { isAbsolute, join } from 'node:path'
-import z from 'schemastery'
+import z from '@deepseek-ai/schemastery'
 
 import { DEFAULT_RUNTIME_MEMORY_LIMIT_BYTES, DEFAULT_RUNTIME_USER_LIMIT_BYTES, MAX_RUNTIME_MEMORY_LIMIT_BYTES } from './defaults.ts'
-export { DEFAULT_RUNTIME_MEMORY_LIMIT_BYTES, DEFAULT_RUNTIME_USER_LIMIT_BYTES, MAX_RUNTIME_MEMORY_LIMIT_BYTES } from './defaults.ts'
 
 export interface Config {
   dataDir?: string

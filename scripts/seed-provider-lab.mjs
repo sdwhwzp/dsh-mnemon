@@ -157,12 +157,16 @@ try {
   for (const provider of selectedProviders) {
     let body
     try {
-      const descriptor = (await read('provider-services')).providers.find(item => item.id === provider.id)
-      if (descriptor === undefined) throw new Error('Provider descriptor not available: ' + provider.id)
-      const connection = provider.connection ?? {}
-      const settings = Object.fromEntries(descriptor.fields.filter(field => field.scope === 'service' && connection[field.key] !== undefined).map(field => [field.key, connection[field.key]]))
-      const memorySettings = Object.fromEntries(descriptor.fields.filter(field => field.scope === 'memory' && connection[field.key] !== undefined).map(field => [field.key, connection[field.key]]))
-      await mutate('provider-service-update', { providerId: provider.id, settings, enabled: true })
+      // Mnemon Native has no service settings: its CLI is its connection.
+      let memorySettings = {}
+      if (provider.id !== 'mnemon-native') {
+        const descriptor = (await read('provider-services')).providers.find(item => item.id === provider.id)
+        if (descriptor === undefined) throw new Error('Provider descriptor not available: ' + provider.id)
+        const connection = provider.connection ?? {}
+        const settings = Object.fromEntries(descriptor.fields.filter(field => field.scope === 'service' && connection[field.key] !== undefined).map(field => [field.key, connection[field.key]]))
+        memorySettings = Object.fromEntries(descriptor.fields.filter(field => field.scope === 'memory' && connection[field.key] !== undefined).map(field => [field.key, connection[field.key]]))
+        await mutate('provider-service-update', { providerId: provider.id, settings, enabled: true })
+      }
       const existing = (await read('body-directory')).items
       body = existing.find(candidate => candidate.provider.id === provider.id && candidate.name === provider.name)
         ?? existing.find(candidate => candidate.provider.id === provider.id)

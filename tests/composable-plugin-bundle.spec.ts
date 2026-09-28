@@ -9,7 +9,7 @@ import * as autoCapture from 'dsh-mnemon-strategy-auto-capture'
 import * as lightContext from 'dsh-mnemon-strategy-light-context'
 import * as scoped from 'dsh-mnemon-strategy-scoped'
 import native from 'dsh-mnemon-provider-mnemon-native'
-import type { Context } from '@deepseek-ai/cordis'
+import { Context } from '@deepseek-ai/cordis'
 import { compositionFixture } from './fixtures/composition.ts'
 const fixtures: Awaited<ReturnType<typeof compositionFixture>>[] = []
 afterEach(async () => { for (const value of fixtures.splice(0)) await value.dispose() })
@@ -68,7 +68,7 @@ describe('explicit default Starter', () => {
       expect(applyProvider).toHaveBeenCalledOnce()
       expect(runner.context.get('mnemonProvider', false)).toBeUndefined()
       expect(runner.inspect().evaluation.sourceInstanceKeys).toEqual(['source:memory-spaces/custom:team'])
-      await expect(spaces.apply({} as Context, { providers: ['not-installed'] })).rejects.toThrow('DSH Loader')
+      await expect(spaces.apply(new Context(), { providers: ['not-installed'] })).rejects.toThrow('DSH Loader')
       await expect(runner.mount(spaces, { instanceId: 'duplicate', config: {
         providers: ['dsh-mnemon-provider-mnemon-native', 'dsh-mnemon-provider-mnemon-native'],
       } })).rejects.toThrow('duplicate Memory Space Provider child')

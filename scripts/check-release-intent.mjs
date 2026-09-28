@@ -33,6 +33,17 @@ export function assertReleaseIntentCoverage(changedPackages, releases) {
   return covered
 }
 
+/**
+ * A package absent at the base revision is introduced by this change. It needs
+ * a release intent like any changed package, but it first publishes with the
+ * next release pull request, so it does not make this change a release.
+ */
+export function introducedPackageBaseVersions(packages, baseVersions) {
+  const versions = new Map(baseVersions)
+  for (const item of packages) if (!versions.has(item.manifest.name)) versions.set(item.manifest.name, item.manifest.version)
+  return versions
+}
+
 export function assertVersionedReleaseIntent(plan, paths, options, pendingChangesets) {
   assert(plan.selectionComputed && plan.releasePackages.length > 0, 'Expected a versioned release plan')
   assert.equal(pendingChangesets.length, 0, `Release pull request still contains pending changesets: ${pendingChangesets.join(', ')}`)
@@ -67,7 +78,7 @@ async function main() {
   for (const value of [baseRevision, revision]) assert.match(value, /^[0-9a-f]{40}$/u, 'Changeset validation requires full Git revisions')
 
   const packages = await readReleasePackages()
-  const baseVersions = await readReleaseVersionsAtRevision(packages, baseRevision)
+  const baseVersions = introducedPackageBaseVersions(packages, await readReleaseVersionsAtRevision(packages, baseRevision))
   const plan = createReleasePlan(packages, { baseVersions })
   const paths = await readChangedPaths(baseRevision, revision)
   const ignoredPackageJson = await devOnlyManifestChanges(plan, paths, baseRevision, revision)

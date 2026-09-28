@@ -17,6 +17,8 @@ vi.mock('../src/client/better-sidebar.tsx', () => ({ mountBetterSidebarTab: () =
 import { apply } from '../src/client/index.ts'
 import { consumeMnemonAnchor, dispatchMnemonAnchor } from '../src/client/anchor.ts'
 import { MnemonBuiltinWorkspaceHost, MnemonWorkspaceHost } from '../src/client/workspace-mount.tsx'
+import type { Config } from '../src/host/protocol.ts'
+import { settingsScope } from './helpers/settings-scope.ts'
 
 const disposers: Array<() => void> = []
 afterEach(() => {
@@ -63,15 +65,23 @@ function fixture() {
     uiSession: { adapter: { current } },
     sessions: { list: catalog },
     workspaces: { list: workspaces },
-    locale: { ...locale, register: () => () => {}, bind: () => (key: string) => key },
-    connection: { rpc: { call: vi.fn(async () => ({ ok: true, value: { status: 'ready', value: { displayMode: 'builtin' }, writable: true, mode: 'host' } })) } },
+    // One runtime object, as in DSH: its store methods must keep their receiver.
+    locale: Object.assign(locale, { register: () => () => {}, bind: () => (key: string) => key }),
+    connection: { rpc: { call: vi.fn(async () => ({ ok: true, value: { status: 'ready', value: { displayMode: 'builtin' }, writable: true, mode: 'host' } })) }, isLoopback: true },
     effect(callback: () => unknown) { const dispose = callback(); if (typeof dispose === 'function') disposers.push(dispose as () => void) },
+    // Plugins page navigation and the DSH settings mirror are not provided here.
+    inject: () => {},
+    layout: { selectPanel: () => {} },
     slots: {
       inject(_name: string, factory: () => (() => void)) { const dispose = factory(); disposers.push(dispose); return dispose },
+      entries: () => [],
+      entriesOfSlot: () => [],
+      getVersion: () => 0,
+      subscribe: () => () => {},
       register(options: unknown, component: unknown) { entries.push({ options, component } as typeof entries[number]); return () => {} },
     },
   }
-  const settings = { getSnapshot: () => ({ status: 'ready' as const, value: {}, writable: true, mode: 'host' as const }), subscribe: () => () => {}, set: async () => {}, unset: async () => {}, setPath: async () => {}, unsetPath: async () => {} }
+  const settings = settingsScope<Config>({ status: 'ready', value: {}, writable: true, mode: 'host' })
   const workspaceProps = {
     connection: ctx.connection as never,
     settingsScope: settings,
@@ -84,12 +94,13 @@ function fixture() {
   }
   function renderSettings() {
     apply(ctx)
-    const entry = entries.find(candidate => candidate.options.name === 'settings.section')!
+    const entry = entries.find(candidate => candidate.options.name === 'plugins.bundle.config')!
     // A root slot caches its injected props: session updates must come from
     // subscriptions inside the mounted component, not another inject call.
     const props = entry.options.inject!()
     const Component = entry.component
-    return render(<Component {...props} />)
+    // The Plugins page renders a bundle's configuration as its `page` view.
+    return render(<Component {...props} view="page" />)
   }
   return { ctx, current, catalog, workspaces, workspaceProps, renderSettings }
 }

@@ -10,26 +10,26 @@ If installation is complete, jump to [First verification](#6-complete-first-veri
 
 You need:
 
-- Node.js `^22.19.0 || >=24.0.0` for the DSH 0.1.5-rc.1 baseline;
+- Node.js `^22.19.0 || >=24.0.0` for the DSH 0.1.7-rc.2 baseline;
 - a DSH Web or Headless profile that starts successfully;
-- a locally executable `mnemon` CLI;
+- for Mnemon Native only, a locally executable `mnemon` CLI (the other Providers use their own services);
 - a DSH model route capable of creating independent task Agents.
 
 Regular semantic work prefers a provider named `spawn` with `toolFilter`, `persona`, and `depthLimit`. Mnemon keeps one stable `mnemon_subagent_result` tool registered and issues a revocable `requestId` for each child. The child returns `{ requestId, result }`; the Host validates `result` against that operation's schema and rejects stale or foreign submissions, without depending on the Provider's `outputSchema` path. Optional background review defaults to a guarded `spawn` child with a bounded checkpoint. Full-context `fork` is opt-in. Review has an independent switch, cooldown and attempt budget; see [review compatibility and limits](../reference/configuration.md#provider-requirements).
 
-The composable v0.5.6 distribution pins a verified combination of sixteen official plugins. Read the [patch notes](../releases/v0.5.6.md) and [compatibility matrix](../reference/compatibility.md). The DSH baseline is 0.1.5-rc.1; its complete profile requires Node `^22.19.0 || >=24.0.0`. Mnemon's Node 20 public-entry checks do not establish full Host compatibility. Current UI examples show v0.5.4 in Light appearance after a backup import into isolated storage; old release records retain their original versions.
+The composable v0.5.6 distribution pins a verified combination of sixteen official plugins. Read the [patch notes](../releases/v0.5.6.md) and [compatibility matrix](../reference/compatibility.md). The DSH baseline is 0.1.7-rc.2; its complete profile requires Node `^22.19.0 || >=24.0.0`. Mnemon's Node 20 public-entry checks do not establish full Host compatibility. Current UI examples show v0.5.4 in Light appearance after a backup import into isolated storage; old release records retain their original versions.
 
 Install and verify the tested DSH release with:
 
 ```sh
-npm install -g @deepseek-ai/dsh@0.1.5-rc.1
+npm install -g @deepseek-ai/dsh@0.1.7-rc.2
 dsh --version
 npm view @deepseek-ai/dsh dist-tags
 ```
 
 ## 2. Install Mnemon
 
-npm is recommended on macOS, Linux, and Windows (Node.js 22+). Run these commands on the machine running DSH:
+Only Mnemon Native uses the Mnemon CLI. Skip this step if your Memory Spaces use another Provider; you can install it later. npm is recommended on macOS, Linux, and Windows (Node.js 22+). Run these commands on the machine running DSH:
 
 ```sh
 npm install --global @mnemon-dev/mnemon@latest
@@ -124,7 +124,7 @@ Then start or restart the profile:
 dsh --profile web
 ```
 
-If the Web profile is reached through a cloud hostname, do not publish port 3080 directly. DSH 0.1.5-rc.1 authenticates every Mnemon RPC and stream through a browser session established from the one-time URL printed at Host startup. Configure the HTTPS reverse proxy or access gateway and trusted authority together, then open that launch URL, by following [Cloud-hosted WebUI](./operations.md#cloud-hosted-webui). The same section preserves the historical `remoteAccess` procedure for DSH 0.1.1-rc.2; that rollback requires the Mnemon release previously verified with that host.
+If the Web profile is reached through a cloud hostname, do not publish port 3080 directly. DSH authenticates every Mnemon RPC and stream through a browser session established from the one-time URL printed at Host startup. Configure the HTTPS reverse proxy or access gateway and trusted authority together, then open that launch URL, by following [Cloud-hosted WebUI](./operations.md#cloud-hosted-webui). The same section preserves the historical `remoteAccess` procedure for DSH 0.1.1-rc.2; that rollback requires the Mnemon release previously verified with that host.
 
 Upgrade and uninstall:
 
@@ -148,15 +148,15 @@ With `storageScope=workspace`, Headless resolves `<invocation cwd>/.mnemon`; no 
 
 ## 4. Configure storage and the interface
 
-Open **Settings → Memory System**:
+Open **Plugins** in the DSH sidebar and select **dsh-mnemon**; its page holds the whole configuration. From the Memory System workbench, **Configure** (the gear) in its header opens the same page.
 
-The [UI guide](./ui-guide.md) shows the current settings and optional enhancements.
+The [UI guide](./ui-guide.md) shows the current configuration and optional enhancements.
 
 ### Workbench entry
 
-By default, open the dedicated workbench from Memory System in the DSH sidebar. Choose Builtin in Settings, or set `displayMode: builtin`, to show the same Source pages as a conversation tab instead. Save switches the entry live without changing stored data.
+By default, open the dedicated workbench from Memory System in the DSH sidebar. Choose **Conversation tab** under **Interface → Memory System opens in** on that page, or set `displayMode: builtin`, to show the same Source pages as a conversation tab instead. The choice applies at once and switches the entry live without changing stored data.
 
-### Storage location
+### Storage scope
 
 | Scope | Root | Best suited for |
 |---|---|---|
@@ -165,9 +165,9 @@ By default, open the dedicated workbench from Memory System in the DSH sidebar. 
 | **Custom** | `dataDir` | A dedicated disk, mounted volume, or explicit directory |
 | **Centralized workspaces** | `<central-root>/workspaces/<workspace-path-hash>/` | Central management with project isolation |
 
-For centralized project isolation, select `storageScope: workspaces` and optionally set `dataDir`; data is stored in `<central-root>/workspaces/<workspace-path-hash>/`. The directory setting appears alongside the scope selector. Existing roots are retained when switching modes.
+In the **Storage** group, **Storage scope** selects Global, Workspace or Centralized, and **Data directory** completes it with **Default** or **Custom**: under Global a custom path is the `custom` directory; under Centralized it is the central root, and data is stored in `<central-root>/workspaces/<workspace-path-hash>/`. Existing roots are retained when switching modes.
 
-Save initializes a candidate runtime graph before atomically switching the Host. The page clears stale state and reloads automatically—no browser refresh is needed. Changing scope never migrates, merges, or deletes old data.
+The **Apply** beside the storage change initializes a candidate runtime graph before atomically switching the Host. The page clears stale state and reloads automatically—no browser refresh is needed. Changing scope never migrates, merges, or deletes old data.
 
 ### Default memory layers
 
@@ -186,7 +186,7 @@ Confirm that:
 - the top right says Connected;
 - Mnemon and dsh-mnemon show installed versions;
 - the storage root matches your chosen scope;
-- Runtime, Documents and Memory Spaces match the enabled layers in Settings;
+- Runtime, Documents and Memory Spaces match the enabled memory layers;
 - Runtime, Documents, and Memory Spaces report no errors.
 
 Documents also needs a DSH workspace identity in Global or Custom storage. Select a workspace for the current conversation, or select the inspected workspace in Workspace storage. “Waiting for workspace” is a missing project context, not a missing CLI.
@@ -199,7 +199,7 @@ If Mnemon is unavailable, run `command -v mnemon` and `mnemon --version` on macO
 
 1. Open **Memory Spaces → Overview**.
 2. Select **Create Memory Space**.
-3. Choose an enabled Provider explicitly. Keep **Mnemon Native** for the official local-first default; enable third-party services in Settings first.
+3. Choose a ready Provider. The dialog starts with the first one: **Mnemon Native**, the official local-first default, once its CLI is installed. Enable third-party services on the `dsh-mnemon` page under **Plugins** first.
 4. Use a narrow name such as “Project Decisions.”
 5. Describe what belongs there and which tasks should recall it, then enable read activation.
 

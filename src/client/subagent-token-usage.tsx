@@ -3,13 +3,14 @@ import { createElement, type ComponentType, type ReactElement } from 'react'
 import type { SnapshotSelectorHook } from '@deepseek-ai/dsh-client-store'
 import type { StoredEntry } from '@deepseek-ai/dsh-client-ui-slots'
 import type { MnemonClientContext, MnemonSessionListState, MnemonSessionSummary } from "./dsh-context.ts"
+import { isRecord } from './is-record.ts'
 
-export const MNEMON_SUBAGENT_TOKEN_USAGE_KEY = 'mnemonSubagentTokenUsage'
+const MNEMON_SUBAGENT_TOKEN_USAGE_KEY = 'mnemonSubagentTokenUsage'
 const SUBAGENT_LINEAGE_SLOT = 'conversation.session.header.lineage'
 const SUBAGENT_LOCALE = 'subagent'
 const MNEMON_SHADOW_PRIORITY = -100
 
-export interface MnemonTokenUsageProjection {
+interface MnemonTokenUsageProjection {
   uncachedInputTokens: number
   outputTokens: number
   cacheReadTokens: number
@@ -25,7 +26,7 @@ type LineageComponent = ComponentType<LineageProps>
 const scopedSnapshots = new WeakMap<MnemonSessionListState, MnemonSessionListState>()
 
 function isTokenUsage(value: unknown): value is MnemonTokenUsageProjection {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
+  if (!isRecord(value)) return false
   const usage = value as Record<keyof MnemonTokenUsageProjection, unknown>
   return ['uncachedInputTokens', 'outputTokens', 'cacheReadTokens', 'cacheWriteTokens']
     .every((key) => {
@@ -81,6 +82,7 @@ function lineageShadow(official: LineageComponent): LineageComponent {
   }
 }
 
+/** SlotRegistry face used to re-register the official entry's type-erased locale and inject. */
 interface ErasedSlots {
   entries(key: string): readonly StoredEntry[]
   subscribe(key: string, listener: () => void): () => void
@@ -100,13 +102,11 @@ function officialLineage(entries: readonly StoredEntry[]): StoredEntry | undefin
  * Mnemon keeps the official UI, styles, locale, and navigation behavior.
  */
 export function mountSubagentTokenUsageOverride(ctx: MnemonClientContext): () => void {
-  const slots = ctx.slots as unknown as Partial<ErasedSlots>
-  if (typeof slots.entries !== 'function' || typeof slots.subscribe !== 'function'
-    || typeof slots.register !== 'function') return () => {}
+  const slots = ctx.slots as unknown as ErasedSlots
   let official: StoredEntry | undefined
   let disposeShadow: (() => void) | undefined
   const reconcile = (): void => {
-    const entries = slots.entries!(SUBAGENT_LINEAGE_SLOT)
+    const entries = slots.entries(SUBAGENT_LINEAGE_SLOT)
     if (official !== undefined && entries.includes(official)) return
     const disposePreviousShadow = disposeShadow
     disposeShadow = undefined
@@ -114,7 +114,7 @@ export function mountSubagentTokenUsageOverride(ctx: MnemonClientContext): () =>
     disposePreviousShadow?.()
     official = officialLineage(entries)
     if (official === undefined) return
-    disposeShadow = slots.register!({
+    disposeShadow = slots.register({
       name: SUBAGENT_LINEAGE_SLOT,
       priority: MNEMON_SHADOW_PRIORITY,
       locale: official.locale,

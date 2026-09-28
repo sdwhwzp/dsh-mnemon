@@ -23,6 +23,7 @@ function fixture(options: { base?: Record<string, unknown>; user?: Record<string
     register: vi.fn(),
     describe: () => [{ ns: 'mnemon', base, user: structuredClone(user), value: Config({ ...base, ...user }), revision, applies: 'live' as const }],
     mutate,
+    onUpdated: () => () => {},
   } satisfies HostSettingsService
   return {
     settings, mutate, conflict,

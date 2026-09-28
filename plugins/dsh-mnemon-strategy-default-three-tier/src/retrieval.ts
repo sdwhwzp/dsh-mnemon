@@ -72,14 +72,6 @@ const MODEL_RECALL_UNKNOWN_LIMIT_PER_ATTEMPT = 1
 const MODEL_RECALL_LIST_LIMIT = 8
 const MODEL_RECALL_METADATA_LIMIT = 300
 
-function boundedModelText(value: string, maximum: number): string {
-  if (maximum <= 0) return ''
-  if (value.length <= maximum) return value
-  let end = maximum - 1
-  if (end > 0 && /[\uD800-\uDBFF]/u.test(value[end - 1]!)) end -= 1
-  return `${value.slice(0, end)}…`
-}
-
 interface ModelInsightAdmission {
   resultLimit?: number
   contentLimit?: number
@@ -139,7 +131,7 @@ function boundedModelInsights(results: readonly RecallInsight[], admission: Mode
     if (seenReferences.has(reference) || seenDigests.has(digest)) continue
     const remainingContent = totalContentLimit - contentCharacters
     if (remainingContent <= 0) break
-    const content = boundedModelText(result.content, Math.min(contentLimit, remainingContent))
+    const content = clip(result.content, Math.min(contentLimit, remainingContent))
     if (content === '') continue
     seenReferences.add(reference)
     seenDigests.add(digest)
@@ -149,19 +141,19 @@ function boundedModelInsights(results: readonly RecallInsight[], admission: Mode
     admitted.push({
       id: result.id,
       content,
-      ...(result.category === undefined ? {} : { category: boundedModelText(result.category, MODEL_RECALL_METADATA_LIMIT) }),
+      ...(result.category === undefined ? {} : { category: clip(result.category, MODEL_RECALL_METADATA_LIMIT) }),
       ...(typeof result.importance !== 'number' || !Number.isFinite(result.importance) ? {} : { importance: result.importance }),
-      ...(result.tags === undefined ? {} : { tags: result.tags.slice(0, MODEL_RECALL_LIST_LIMIT).map(tag => boundedModelText(tag, MODEL_RECALL_METADATA_LIMIT)) }),
-      ...(result.entities === undefined ? {} : { entities: result.entities.slice(0, MODEL_RECALL_LIST_LIMIT).map(entity => boundedModelText(entity, MODEL_RECALL_METADATA_LIMIT)) }),
-      ...(result.source === undefined ? {} : { source: boundedModelText(result.source, MODEL_RECALL_METADATA_LIMIT) }),
-      ...(result.createdAt === undefined ? {} : { createdAt: boundedModelText(result.createdAt, MODEL_RECALL_METADATA_LIMIT) }),
+      ...(result.tags === undefined ? {} : { tags: result.tags.slice(0, MODEL_RECALL_LIST_LIMIT).map(tag => clip(tag, MODEL_RECALL_METADATA_LIMIT)) }),
+      ...(result.entities === undefined ? {} : { entities: result.entities.slice(0, MODEL_RECALL_LIST_LIMIT).map(entity => clip(entity, MODEL_RECALL_METADATA_LIMIT)) }),
+      ...(result.source === undefined ? {} : { source: clip(result.source, MODEL_RECALL_METADATA_LIMIT) }),
+      ...(result.createdAt === undefined ? {} : { createdAt: clip(result.createdAt, MODEL_RECALL_METADATA_LIMIT) }),
       ...(typeof result.depth !== 'number' || !Number.isFinite(result.depth) ? {} : { depth: result.depth }),
-      ...(result.edgeType === undefined ? {} : { edgeType: boundedModelText(result.edgeType, MODEL_RECALL_METADATA_LIMIT) }),
-      ...(result.memoryBodyId === undefined ? {} : { memoryBodyId: boundedModelText(result.memoryBodyId, 1_000) }),
-      ...(result.memoryBodyName === undefined ? {} : { memoryBodyName: boundedModelText(result.memoryBodyName, MODEL_RECALL_METADATA_LIMIT) }),
+      ...(result.edgeType === undefined ? {} : { edgeType: clip(result.edgeType, MODEL_RECALL_METADATA_LIMIT) }),
+      ...(result.memoryBodyId === undefined ? {} : { memoryBodyId: clip(result.memoryBodyId, 1_000) }),
+      ...(result.memoryBodyName === undefined ? {} : { memoryBodyName: clip(result.memoryBodyName, MODEL_RECALL_METADATA_LIMIT) }),
       ...(result.memoryProviderId === undefined ? {} : { memoryProviderId: result.memoryProviderId }),
       ...(result.memoryCapabilities === undefined ? {} : { memoryCapabilities: structuredClone(result.memoryCapabilities) }),
-      ...(result.externalUri === undefined ? {} : { externalUri: boundedModelText(result.externalUri, 2_000) }),
+      ...(result.externalUri === undefined ? {} : { externalUri: clip(result.externalUri, 2_000) }),
     })
   }
   return { results: admitted }

@@ -15,13 +15,12 @@ import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { expect, it } from 'vitest'
 import { MnemonAccounts } from '../src/host/account-access.ts'
-import type { HostAgent, HostContextShape, HostPrincipal } from '../src/host/dsh.ts'
+import type { HostAgent, HostContextShape, HostPrincipal, HostSessionEvent } from '../src/host/dsh.ts'
 import { MnemonLifecycle } from '../src/host/lifecycle.ts'
 import { LiveMnemonRuntime } from '../src/host/runtime.ts'
 import { MnemonSubagentCoordinator } from '../src/host/subagent.ts'
 import { registerTools } from '../src/host/tools.ts'
 import { createWriteHandler } from '../src/host/rpc.ts'
-import { hostSessionEvents } from '../src/host/session-events.ts'
 import { compositionFixture } from './fixtures/composition.ts'
 import { memorySettings } from './helpers/account-settings.ts'
 
@@ -73,14 +72,15 @@ it('logs and projects each account memory through the real Harness Agent loop an
     await ctx.plugin(AgentLoop, { agents: [] })
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
-    ctx.provide('settings', memorySettings() as never)
+    const accountSettings = memorySettings()
+    ctx.provide('settings', accountSettings as never)
     ctx.provide('principalAccess', {
       assertAuthenticated(principal: HostPrincipal) { if (!['1', '2'].includes(principal.id)) throw new Error('unknown account') },
       async resolve(principal: HostPrincipal, subjects: { sessionIds: string[] }) {
         return { readableSessionIds: new Set(subjects.sessionIds.filter(id => id === 'owner-' + principal.id)), readableWorkspaceIds: new Set(['shared']) }
       },
     } as never)
-    const accounts = new MnemonAccounts(ctx as unknown as HostContextShape, join(root, 'accounts'), { accountDataDir: join(root, 'accounts'), cliPath: '/fake/mnemon' })
+    const accounts = new MnemonAccounts(ctx as unknown as HostContextShape, join(root, 'accounts'), { accountDataDir: join(root, 'accounts'), cliPath: '/fake/mnemon' }, accountSettings)
     const scoped = accounts.wrapContext()
     live = new LiveMnemonRuntime(memory.graph, { get: id => id === 'shared' ? { id, title: 'Shared', path: memory.workspace } : undefined, list: () => [] }, scoped.agents, memory.extensions, accounts)
     const runtime = live
@@ -150,7 +150,7 @@ it('logs and projects each account memory through the real Harness Agent loop an
       expect(messages[0]!.text).toContain('Only-account-' + own)
       expect(messages.at(-1)!.text).toContain('document-account-' + own)
       expect(messages.map(value => value.text).join('')).not.toMatch(new RegExp('Only-account-' + other + '|document-account-' + other))
-      const events = hostSessionEvents((agent as unknown as HostAgent).session)
+      const events = agent.session.snapshotEvents() as readonly HostSessionEvent[]
       const injected = events.filter(event => event.type === 'user/message' && (event.data.source as { kind?: string } | undefined)?.kind === 'dsh-mnemon')
       expect(injected.length).toBeGreaterThan(0)
       expect(injected.every(event => (event.data.principal as HostPrincipal)?.id === own)).toBe(true)

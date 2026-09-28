@@ -1,10 +1,11 @@
 import { css, sidebarCss, useT } from './presentation.ts'
 import type { JSX } from 'react'
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react'
+import { writeClipboard } from '@deepseek-ai/dsh-client-ui-primitives'
 import { CATEGORIES, type Category, type EntityView, type Insight, type MemorySpaceCatalog, type MemorySpaceMetadataUpdate, type MemorySpaceProvider, type MemorySpaceView, type MemoryGraphNode, type MemoryGraphSnapshot, type MemoryPlacementCapability, type MemoryPlacementPreference, type MemoryListView, type MemoryProviderConfigField, type MemoryProviderConnection, type MemoryProviderDescriptor, type MemoryProviderId, type MemoryReadSource } from '../contracts.ts'
 import type { MemorySpacesPageClient } from './api.ts'
 import { ProviderIcon } from './ProviderIcon.tsx'
-import { providerFieldLabel, providerDisplayLabel, providerOptionLabel, providerSummary } from './provider-presentation.ts'
+import { providerFieldLabel, providerOptionLabel, providerSummary } from './provider-presentation.ts'
 import { type MnemonKey, type MnemonTranslate, useRequestVersion, appearanceClass, useLocale, humanBytes, message, short, PageHeader, SectionSpinner, ProgressiveFooter, SidebarModal, EmptyState } from 'dsh-mnemon/client'
 
 import type { MemoryPersistenceStrategy } from '../contracts.ts'
@@ -30,8 +31,19 @@ function mergeProviderDefaults(providers: readonly MemoryProviderDescriptor[], c
 }
 
 function providerDraftComplete(provider: MemoryProviderDescriptor | undefined, connection: MemoryProviderConnection | undefined): boolean {
-  if (provider === undefined || provider.origin === 'native') return true
-  return provider.serviceConfigured !== false && memoryProviderFields(provider).every(field => !field.required || String(connection?.[field.key] ?? '').trim() !== '')
+  if (provider === undefined || provider.serviceConfigured === false) return false
+  return provider.origin === 'native' || memoryProviderFields(provider).every(field => !field.required || String(connection?.[field.key] ?? '').trim() !== '')
+}
+
+/** Keep a ready provider; otherwise Mnemon Native while its CLI is available, then the first other ready one. */
+function readyProviderId(providers: readonly MemoryProviderDescriptor[], current?: MemoryProviderId): MemoryProviderId | undefined {
+  const ready = providers.filter(provider => provider.serviceConfigured !== false)
+  return ready.find(provider => provider.id === current)?.id ?? (ready.find(provider => provider.origin === 'native') ?? ready[0])?.id
+}
+
+/** Why a provider cannot be chosen: Mnemon Native needs its CLI, the others a service configured on the dsh-mnemon page under Plugins. */
+function providerUnavailableKey(provider: MemoryProviderDescriptor): 'overview.nativeCliRequired' | 'overview.providerServiceRequired' {
+  return provider.origin === 'native' ? 'overview.nativeCliRequired' : 'overview.providerServiceRequired'
 }
 
 export function nativeSpaceProvider(provider: MemorySpaceProvider): boolean {
@@ -83,8 +95,7 @@ function insightKey(insight: Insight): string {
 }
 
 function MemoryProviderBadge(props: { providerId: MemoryProviderId; label: string }): JSX.Element {
-  const label = providerDisplayLabel(props.providerId, props.label)
-  return <span className={css.providerBadge} data-provider={props.providerId} title={label}>{label}</span>
+  return <span className={css.providerBadge} data-provider={props.providerId} title={props.label}>{props.label}</span>
 }
 
 function ReadSourcePanel(props: {
@@ -171,7 +182,7 @@ function InsightCard(props: {
           <>
             {props.onRelated !== undefined && supportsRelated && <button type="button" className={neutralActionClass} onClick={() => props.onRelated?.(insight)}>{t('card.related')}</button>}
             {props.onClone !== undefined && <button type="button" className={neutralActionClass} onClick={() => props.onClone?.(insight)}>{t('card.clone')}</button>}
-            <button type="button" className={neutralActionClass} onClick={() => void navigator.clipboard?.writeText(insight.id)}>{t('common.copyId')}</button>
+            <button type="button" className={neutralActionClass} onClick={() => void writeClipboard(insight.id)}>{t('common.copyId')}</button>
             {props.writeEnabled && supportsForget && <button type="button" className={forgetActionClass} onClick={() => setConfirming(true)}>{t('card.forget')}</button>}
           </>
         )}
@@ -681,22 +692,19 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
           generatedAt: new Date().toISOString(),
         }
       })
-      const normalizedProviders = nextCatalog.providers
-      const normalizedCatalog = { ...nextCatalog, providers: normalizedProviders, items: nextCatalog.items }
       if (request !== loadRequest.current) return
-      setProviderDrafts(current => mergeProviderDefaults(normalizedCatalog.providers, current))
-      setCatalog(normalizedCatalog)
+      setProviderDrafts(current => mergeProviderDefaults(nextCatalog.providers, current))
+      setCatalog(nextCatalog)
       setCatalogLoading(false)
       void props.client.bodies().then(next => {
         if (request !== loadRequest.current) return
-        const full = { ...next, providers: next.providers, items: next.items }
-        setCatalog(full)
+        setCatalog(next)
       }).catch(reason => {
         if (request === loadRequest.current && !quiet && !directoryUnavailable) setError(message(reason))
       }).finally(() => { if (request === loadRequest.current) setHealthLoading(false) })
       void props.client.graph().then(next => {
         if (request !== loadRequest.current) return
-        const enriched = enrichMultiSpaceGraph(next, normalizedCatalog.items)
+        const enriched = enrichMultiSpaceGraph(next, nextCatalog.items)
         setGraph(enriched)
         setSelected(current => current === null ? null : enriched.nodes.find(node => graphNodeKey(node) === graphNodeKey(current)) ?? null)
       }).catch(reason => {
@@ -726,6 +734,8 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
     const timer = window.setInterval(() => setSyncClock(Date.now()), 1_000)
     return () => window.clearInterval(timer)
   }, [])
+  // A new space starts with a provider that can take it now.
+  useEffect(() => { setSpaceProviderId(current => readyProviderId(catalog?.providers ?? [], current) ?? current) }, [catalog])
 
   const toggle = async (body: MemorySpaceView) => {
     setChanging(body.id); setError(null)
@@ -802,7 +812,7 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
         providerId: spaceProviderId,
         ...(manualProvider?.origin === 'native' ? {} : { connection: providerDrafts[spaceProviderId] ?? {} }),
       })
-      setSpaceName(''); setSpaceDescription(''); setSpaceProviderId(providers.find(provider => provider.origin === 'native')?.id ?? providers[0]?.id ?? 'mnemon-native')
+      setSpaceName(''); setSpaceDescription(''); setSpaceProviderId(current => readyProviderId(providers) ?? current)
       setProviderDrafts(current => Object.fromEntries(providers.map(provider => [provider.id, Object.fromEntries(Object.entries(current[provider.id] ?? {}).map(([key, value]) => [key, provider.fields.some(field => field.key === key && field.input === 'secret') ? '' : value]))])))
       setCreatingSpaceOpen(false)
       await load(true)
@@ -899,7 +909,7 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
     <label>{t('overview.editDescription')}<textarea aria-label={t('overview.editDescription')} value={editDescription} onChange={event => setEditDescription(event.target.value)} rows={4} maxLength={1000} /></label>
     {!nativeSpaceProvider(body.provider) && (() => { const descriptor = providers.find(provider => provider.id === body.provider.id); return descriptor === undefined ? null : <ProviderMemoryFields provider={descriptor} connection={editConnection} onChange={(key, value) => setEditConnection(current => ({ ...current, [key]: value }))} body={body} clearSecrets={editClearSecrets} onClearSecretsChange={setEditClearSecrets} /> })()}
   </form>
-  const spaceCreateForm = <form id={spaceCreateFormId} className={appearanceClass(css.bodyEdit, css.spaceCreateForm)} onSubmit={event => void create(event)}>
+  const spaceCreateForm = <form id={spaceCreateFormId} className={appearanceClass(css.bodyEdit, css.bodyCreateForm)} onSubmit={event => void create(event)}>
     <section className={css.createSection}>
       <div className={css.createSectionHeading}><span>01</span><div><strong>{t('overview.createIdentityTitle')}</strong><small>{t('overview.createIdentityHint')}</small></div></div>
       <div className={css.createIdentityGrid}>
@@ -910,11 +920,11 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
     <section className={css.createSection}>
       <div className={css.createSectionHeading}><span>02</span><div><strong>{t('overview.createPlacementTitle')}</strong><small>{t('overview.createPlacementHint')}</small></div></div>
       <fieldset className={css.providerChoice}><legend>{t('overview.providerLabel')}</legend>{providers.map(provider => {
-        const serviceMissing = provider.origin !== 'native' && provider.serviceConfigured === false
+        const serviceMissing = provider.serviceConfigured === false
         return <label key={provider.id} data-selected={spaceProviderId === provider.id || undefined} data-native={provider.origin === 'native' || undefined} data-disabled={serviceMissing || undefined}>
           <input type="radio" name="memory-provider" value={provider.id} checked={spaceProviderId === provider.id} disabled={serviceMissing} onChange={() => setSpaceProviderId(provider.id)} />
           <ProviderIcon providerId={provider.id} icon={provider.icon} className={css.providerChoiceIcon} />
-          <span><strong>{provider.label}{provider.origin === 'native' && <em>{t('overview.nativeOfficial')}</em>}</strong><small>{serviceMissing ? t('overview.providerServiceRequired') : `${t(`overview.workspaceBinding.${provider.workspaceBinding}`)} · ${providerSummary(t, provider)}`}</small></span>
+          <span><strong>{provider.label}{provider.origin === 'native' && <em>{t('overview.nativeOfficial')}</em>}</strong><small>{serviceMissing ? t(providerUnavailableKey(provider)) : `${t(`overview.workspaceBinding.${provider.workspaceBinding}`)} · ${providerSummary(t, provider)}`}</small></span>
           <i className={css.choiceControl} data-kind="radio" aria-hidden="true" />
         </label>
       })}</fieldset>
@@ -990,7 +1000,7 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
                   : selectedKind === 'entity'
                     ? <dl className={css.inspectorMeta}><div><dt>{t('overview.entityMentions')}</dt><dd>{selected.occurrenceCount ?? 0}</dd></div><div><dt>{t('term.spaces')}</dt><dd>{selected.memoryBodyNames?.join(' · ') || '—'}</dd></div></dl>
                     : <dl className={css.inspectorMeta}><div><dt>{t('term.space')}</dt><dd>{selected.memoryBodyName ?? '—'} <code>{selected.memoryBodyId ?? ''}</code></dd></div><div><dt>{t('overview.memoryId')}</dt><dd><code>{selected.id}</code></dd></div><div><dt>{t('common.category')}</dt><dd>{categoryLabel(t, selected.category ?? 'general')}</dd></div></dl>}
-                <div className={css.inspectorActions}>{selectedKind !== 'space' && <button type="button" className={css.primaryButton} onClick={() => props.onExplore(selected.content)}>{t('overview.exploreNode')}</button>}<button type="button" className={css.secondaryButton} onClick={() => void navigator.clipboard?.writeText(selected.id)}>{t('common.copyId')}</button></div>
+                <div className={css.inspectorActions}>{selectedKind !== 'space' && <button type="button" className={css.primaryButton} onClick={() => props.onExplore(selected.content)}>{t('overview.exploreNode')}</button>}<button type="button" className={css.secondaryButton} onClick={() => void writeClipboard(selected.id)}>{t('common.copyId')}</button></div>
               </>
             )}
           </aside>
@@ -1218,9 +1228,15 @@ export function PersistenceStrategyDialog(props: {
       const next = catalog.providers
       setProviders(next)
       setProviderDrafts(previous => mergeProviderDefaults(next, previous))
-      setProviderId(currentProviderId => next.some(provider => provider.id === currentProviderId && (provider.origin === 'native' || provider.serviceConfigured !== false))
-        ? currentProviderId
-        : next.find(provider => provider.origin === 'native')?.id ?? next[0]?.id ?? 'mnemon-native')
+      setProviderId(currentProviderId => readyProviderId(next, currentProviderId) ?? currentProviderId)
+      // Without a saved candidate list, start from the provider that is ready now.
+      if (configured?.rules?.allowedProviderIds === undefined) {
+        setAutomaticProviderIds(current => {
+          const ready = current.filter(id => next.some(provider => provider.id === id && provider.serviceConfigured !== false))
+          const first = readyProviderId(next)
+          return ready.length > 0 || first === undefined ? ready : [first]
+        })
+      }
     }).catch(reason => { if (current) setError(message(reason)) }).finally(() => { if (current) setLoading(false) })
     return () => { current = false }
   }, [props.client])
@@ -1273,11 +1289,11 @@ export function PersistenceStrategyDialog(props: {
           <div className={css.createSectionHeading}><span>02</span><div><strong>{t(mode === 'manual' ? 'strategy.manualTitle' : 'strategy.automaticTitle')}</strong><small>{t(mode === 'manual' ? 'strategy.manualDescription' : 'strategy.automaticDescription')}</small></div></div>
           {mode === 'manual' ? <>
             <fieldset className={css.providerChoice}><legend>{t('overview.providerLabel')}</legend>{providers.map(provider => {
-              const disabled = provider.origin !== 'native' && provider.serviceConfigured === false
+              const disabled = provider.serviceConfigured === false
               return <label key={provider.id} data-selected={providerId === provider.id || undefined} data-native={provider.origin === 'native' || undefined} data-disabled={disabled || undefined}>
                 <input type="radio" name="strategy-provider" value={provider.id} checked={providerId === provider.id} disabled={disabled} onChange={() => setProviderId(provider.id)} />
                 <ProviderIcon providerId={provider.id} icon={provider.icon} className={css.providerChoiceIcon} />
-                <span><strong>{provider.label}{provider.origin === 'native' && <em>{t('overview.nativeOfficial')}</em>}</strong><small>{disabled ? t('overview.providerServiceRequired') : `${t(`overview.workspaceBinding.${provider.workspaceBinding}`)} · ${providerSummary(t, provider)}`}</small></span>
+                <span><strong>{provider.label}{provider.origin === 'native' && <em>{t('overview.nativeOfficial')}</em>}</strong><small>{disabled ? t(providerUnavailableKey(provider)) : `${t(`overview.workspaceBinding.${provider.workspaceBinding}`)} · ${providerSummary(t, provider)}`}</small></span>
                 <i className={css.choiceControl} data-kind="radio" aria-hidden="true" />
               </label>
             })}</fieldset>
@@ -1291,9 +1307,10 @@ export function PersistenceStrategyDialog(props: {
               return <label key={capability} data-selected={selected || undefined}><input type="checkbox" checked={selected} onChange={() => toggleCapability(capability)} /><i className={css.choiceControl} data-kind="check" aria-hidden="true" /><span>{t(`overview.capability.${capability}`)}</span></label>
             })}</fieldset>
             <div className={css.placementCandidates}>{providers.map(provider => {
-              const disabled = provider.serviceConfigured === false || (dataBoundary === 'local-only' && provider.kind === 'remote')
               const selected = automaticProviderIds.includes(provider.id)
-              return <label key={provider.id} data-selected={selected || undefined} data-disabled={disabled || undefined}><input type="checkbox" checked={selected} disabled={disabled} onChange={event => toggleProvider(provider.id, event.target.checked)} /><ProviderIcon providerId={provider.id} icon={provider.icon} className={css.candidateIcon} /><span><strong>{provider.label}</strong><small>{provider.serviceConfigured === false ? t('overview.providerServiceRequired') : provider.origin === 'native' ? t('overview.candidateNativeReady') : provider.kind === 'local' ? t('overview.candidateLocal') : t('overview.candidateRemote')}</small></span><i className={css.choiceControl} data-kind="check" aria-hidden="true" /></label>
+              // A saved candidate that is no longer ready can still be cleared.
+              const disabled = (provider.serviceConfigured === false && !selected) || (dataBoundary === 'local-only' && provider.kind === 'remote')
+              return <label key={provider.id} data-selected={selected || undefined} data-disabled={disabled || undefined}><input type="checkbox" checked={selected} disabled={disabled} onChange={event => toggleProvider(provider.id, event.target.checked)} /><ProviderIcon providerId={provider.id} icon={provider.icon} className={css.candidateIcon} /><span><strong>{provider.label}</strong><small>{provider.serviceConfigured === false ? t(providerUnavailableKey(provider)) : provider.origin === 'native' ? t('overview.candidateNativeReady') : provider.kind === 'local' ? t('overview.candidateLocal') : t('overview.candidateRemote')}</small></span><i className={css.choiceControl} data-kind="check" aria-hidden="true" /></label>
             })}</div>
             {automaticProviderIds.map(id => { const provider = providers.find(candidate => candidate.id === id); return provider === undefined || provider.origin === 'native' ? null : <ProviderMemoryFields key={id} provider={provider} connection={providerDrafts[id] ?? {}} onChange={(key, value) => updateDraft(id, key, value)} /> })}
           </section>}

@@ -1,9 +1,9 @@
 # dsh-mnemon 账号隔离融合
 
-- 原作者源：`https://github.com/omdsh-dev/dsh-mnemon.git`，`main`，同步基线 `65a14ddd2d83bd0850948dc915bc410552b545d9`。
+- 原作者源：`https://github.com/omdsh-dev/dsh-mnemon.git`，`main`，同步基线 `42640337f06f4a9ba8fa6bcf18c6ed2cef871182`。
 - 自有 fork：`https://github.com/sdwhwzp/dsh-mnemon.git`，上传地址 `git@github.com:sdwhwzp/dsh-mnemon.git`。
 - 当前融合分支：`dev`；`main` 跟随源分支。所有临时分支的提交必须可从 `dev` 到达后，才删除本地和自有远端临时分支。
-- 适配版本：`0.5.16-dsh.20260927.3`，17 个 Mnemon 包使用同一版本；配套本地 Harness `0.1.7-rc.2` 与 `dsh-passwords 2.7.5-dsh.20260927.1`。
+- 适配版本：`0.5.17-dsh.20260928.1`，18 个 Mnemon 包使用同一版本；配套本地 Harness `0.1.7-rc.2` 与 `dsh-passwords 2.7.5-dsh.20260927.2`。
 
 本 fork 保留原作者的三层记忆、工具、工作台与数据格式，增加可选的登录账号隔离，以及可选的共享记忆层：设置 `sharedMemoryDir` 后所有账号共读一个记忆空间，只有 `role=admin` 的账号可写，目录与写权限均由 Host 指派。配置与使用限制见 [账号部署](docs/zh-CN/guides/accounts.md)。未设置 `accountDataDir` 时仍使用原作者的单用户存储规则；未设置 `sharedMemoryDir` 时共享条目自动停用。
 
@@ -11,7 +11,7 @@
 
 Web RPC 依赖 Harness 的 Connection 路由修复：通过 `ctx.get` 解析可选 Web 服务器，避免 Cordis 将属性访问归到未声明该服务的提供者上下文。Headless 不要求 Web 服务。
 
-上游委派结果工具按请求注册接收器并在卸载时释放；计数器仍由账号状态提供。评审工具的发布、取消和归档预检沿用上游流程，账号隔离与共享记忆权限覆盖这些入口。 主包包含账号隔离、会话恢复、归档预检与评审保护；解包大小上限为 1,415,000 字节，Source/Provider 仍单独发包。
+上游委派结果工具按请求注册接收器并在卸载时释放；计数器仍由账号状态提供。评审工具的发布、取消和归档预检沿用上游流程，账号隔离与共享记忆权限覆盖这些入口。 主包包含账号隔离、会话恢复、归档预检与评审保护；解包大小上限为 1,510,000 字节，Source/Provider 仍单独发包。
 
 状态页底部的完整存储路径允许在长目录名内换行，使账号哈希目录在手机窄窗中完整可读且不增加横向滚动。原生主面板的返回按钮复用聚合插件的移动侧栏避让标记，保留侧栏开关与返回会话各自的点击区域。
 
@@ -24,6 +24,8 @@ Web RPC 依赖 Harness 的 Connection 路由修复：通过 `ctx.get` 解析可�
 服务器 30 的发布包必须纳入 [插件固定清单](deploy/server30-pins.json) 和 `fastTier: false`，并从切换前的当前 profile 制作候选。依赖、补丁、锁文件或 current 链接在准备后发生变化时，重新准备候选。不得用旧快照覆盖交接后的插件更新。安装后恢复 `dsh-passwords/.env`，先用隔离数据库与账号验证候选，再备份、切换、检查并保留回滚入口。 切换前以 `tzwl3` 检查 `.dsh-module-fallback` 下链接父目录的写入和遍历权限；隔离 profile 的权限修正不能替代对候选原始目录的检查。`dsh-weknora` 保持现有版本。
 
 本 fork 的 `dsh.YYYYMMDD.N` 预发布版本使用 `dsh` 发布通道。Starter 精确固定组件版本，组件 peer 依赖保留兼容范围；不以 `latest` 通道发布定制版本。
+
+账号设置通过 DSH 0.1.7 的 profile 配置存储；每个账号单独映射命名空间，更新订阅只接收本账号事件。新增通用记忆策略与其他 17 个组件统一固定版本。
 
 类型检查与构建使用清单固定的已发布 SDK；账号行为测试再链接实际 Harness 0.1.7 构建。混合两代 Schemastery 声明的整树类型检查不作为发布依据。
 
@@ -43,6 +45,6 @@ pnpm run verify:docs
 
 真实 Native 数据库用例另需将 `MNEMON_NATIVE_TEST_CLI` 指向校验过的 `mnemon 0.2.5` 可执行文件。该用例只使用临时数据目录；普通用例不调用真实模型 API。
 
-评审隔离测试使用 Harness 0.1.6 的 Node PTC 服务及独立文件系统、子进程和沙箱提供者；旧版本测试仍使用其 worker-thread 服务。测试仅创建临时账号与工作区，等待 Host 卸载后清理。
+评审隔离测试使用 Harness 0.1.7 的 Node PTC 服务及独立文件系统、子进程和沙箱提供者。测试仅创建临时账号与工作区，等待 Host 卸载后清理。
 
-Successful independent artifact checks release their temporary installation immediately unless `--keep` is set; failed installations remain available for diagnosis. This bounds disk use across the seventeen plugin checks.
+Successful independent artifact checks release their temporary installation immediately unless `--keep` is set; failed installations remain available for diagnosis. This bounds disk use across the eighteen plugin checks.

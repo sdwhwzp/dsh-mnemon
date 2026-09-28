@@ -6,6 +6,7 @@
 
 ## v0.5
 
+- [v0.5.17：可组合策略与组件设置](./v0.5.17.md)
 - [v0.5.16：中文元数据、原生 Sidebar 与 Source 滚动](./v0.5.16.md)
 - [v0.5.15：USER 工具写入、Runtime 元数据与皮肤接口](./v0.5.15.md)
 - [v0.5.14：Desktop 加载、OpenViking User Key 与 Agent Teams 审查](./v0.5.14.md)

@@ -26,7 +26,7 @@ Host 只暴露适配器能够兑现的能力；UI 与 Agent 工具不会伪造�
 
 ## 服务与记忆空间字段
 
-| Provider | 工作区行为 | 设置中的服务配置 | 记忆空间中的实例配置 |
+| Provider | 工作区行为 | 插件页中的服务配置 | 记忆空间中的实例配置 |
 |---|---|---|---|
 | OpenViking | 保持 Provider 全局作用域 | `endpoint`、`apiKey`、`account`、可选 `discoveryUser` | `targetUri`、`user`、`actorPeerId` |
 | Honcho | 保持 Provider 全局作用域 | `endpoint`、`apiKey` | `workspace`、`userId`、`agentId` |
@@ -37,7 +37,7 @@ Host 只暴露适配器能够兑现的能力；UI 与 Agent 工具不会伪造�
 | ByteRover | 默认随工作区，可由目录覆盖 | `cliPath`、`apiKey`、`defaultDirectory` | `workingDirectory` |
 | Supermemory | 保持 Provider 全局作用域 | `endpoint`、`apiKey` | `containerTag`、`searchMode` |
 
-“**设置 → 记忆系统**”只保存 Provider 服务配置，不创建记忆空间；同一范围内该 Provider 的所有记忆空间复用它。“**记忆空间 → 概览**”负责创建、编辑、启停与删除记忆空间，并只呈现 workspace、user、bank、container、target URI 等实例范围。Host 在调用适配器前合并两层配置。Secret 保存在 `<storageRoot>/state/memory-providers.json`，权限为 `0600`；WebUI 只以掩码表示已配置的 Secret，输入新值即可替换。
+“记忆空间”页面（在**插件 → 可组合记忆**中点击“记忆空间”）的“记忆 Provider”只保存 Provider 服务配置，不创建记忆空间；同一范围内该 Provider 的所有记忆空间复用它。“**记忆空间 → 概览**”负责创建、编辑、启停与删除记忆空间，并只呈现 workspace、user、bank、container、target URI 等实例范围。Host 在调用适配器前合并两层配置。Secret 保存在 `<storageRoot>/state/memory-providers.json`，权限为 `0600`；WebUI 只以掩码表示已配置的 Secret，输入新值即可替换。
 
 DSH 的“工作区”模式不会统一重写所有 Provider 命名空间。Mnemon Native 自动随工作区切换；Holographic 与 ByteRover 默认使用工作区下的本地路径，但允许显式路径覆盖；其余远程 Provider 继续使用记忆空间中配置的 URI、workspace、user、bank、project 或 container，切换 DSH 工作区不会隐式改写这些身份。
 

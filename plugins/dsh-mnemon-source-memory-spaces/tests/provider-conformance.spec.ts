@@ -234,7 +234,7 @@ describe('Memory Spaces Provider child-module conformance', () => {
       endpoint: 'https://vector.example',
       apiKey: 'service-secret',
     })).resolves.toMatchObject({ providerId: 'work-account', enabled: true, configured: true })
-    const body = service.memoryBodies.list().find(candidate => candidate.provider.id === 'work-account')!
+    const body = service.memorySpaces.list().find(candidate => candidate.provider.id === 'work-account')!
     expect(body).toMatchObject({ provider: { id: 'work-account', label: 'Vector Store', apiKeyConfigured: true } })
     expect(JSON.stringify(body)).not.toContain('service-secret')
 

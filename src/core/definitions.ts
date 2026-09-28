@@ -1,5 +1,5 @@
 import type { MemoryPackageProvenance, MemoryPluginDescriptor, MemoryPluginLocalizedText, MemorySourceActionManifest, MemorySourceDefinition, MemorySourceManifest, MemorySourceRouteManifest, MemoryStrategyDefinition, MemoryStrategyExtensionDefinition } from './contracts/index.ts'
-import { COMPOSABLE_MEMORY_API_VERSION, MEMORY_CAPABILITIES, MEMORY_PLUGIN_API_VERSION } from './contracts/index.ts'
+import { ANY_MEMORY_SOURCE_ROLE, ANY_MEMORY_STRATEGY, COMPOSABLE_MEMORY_API_VERSION, MEMORY_CAPABILITIES, MEMORY_PLUGIN_API_VERSION, MEMORY_VIEW_EXTENSION_SLOTS } from './contracts/index.ts'
 
 const ID = /^[a-z][a-z0-9-]{0,127}$/u
 const PACKAGE = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/u
@@ -18,6 +18,21 @@ export function id(value: unknown, label: string): string {
   const normalized = requiredText(value, label, 128)
   if (!ID.test(normalized)) throw new Error(`${label} must match [a-z][a-z0-9-]{0,127}`)
   return normalized
+}
+
+/** A role-agnostic Strategy names the wildcard alone, never beside specific roles. */
+function sourceRoles(value: readonly string[]): string[] {
+  if (value.includes(ANY_MEMORY_SOURCE_ROLE)) {
+    if (value.length !== 1) throw new Error('memory Strategy supported Source roles must list the any-role wildcard alone')
+    return [ANY_MEMORY_SOURCE_ROLE]
+  }
+  return uniqueIds(value, 'memory Strategy supported Source role')
+}
+
+/** Only standard slots have a value contract every Strategy can share. */
+function anyStrategyTarget(slot: unknown): typeof ANY_MEMORY_STRATEGY {
+  if (!(MEMORY_VIEW_EXTENSION_SLOTS as readonly unknown[]).includes(slot)) throw new Error(`memory Strategy extension for any Strategy must use a standard slot: ${String(slot)}`)
+  return ANY_MEMORY_STRATEGY
 }
 
 export function positiveInteger(value: unknown, label: string, maximum = 1_000_000): number {
@@ -233,7 +248,7 @@ export function defineMemoryStrategy<T extends MemoryStrategyDefinition>(definit
     ...manifest,
     typeId,
     packageName,
-    supportedSourceRoles: uniqueIds(manifest.supportedSourceRoles, 'memory Strategy supported Source role'),
+    supportedSourceRoles: sourceRoles(manifest.supportedSourceRoles),
     maxSources: positiveInteger(manifest.maxSources, 'memory Strategy maxSources', 1_000),
     maxRoutes: positiveInteger(manifest.maxRoutes, 'memory Strategy maxRoutes', 1_000),
     maxActions: positiveInteger(manifest.maxActions, 'memory Strategy maxActions', 1_000),
@@ -256,7 +271,7 @@ export function defineMemoryStrategyExtension<T extends MemoryStrategyExtensionD
     manifest: jsonClone({
       ...manifest, packageName,
       typeId: id(manifest.typeId, 'memory Strategy extension typeId'),
-      strategyTypeId: id(manifest.strategyTypeId, 'memory Strategy extension target'),
+      strategyTypeId: manifest.strategyTypeId === ANY_MEMORY_STRATEGY ? anyStrategyTarget(manifest.slot) : id(manifest.strategyTypeId, 'memory Strategy extension target'),
       slot: id(manifest.slot, 'memory Strategy extension slot'),
     }, 'memory Strategy extension manifest'),
     contribute: definition.contribute,

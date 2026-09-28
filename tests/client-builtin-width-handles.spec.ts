@@ -54,7 +54,7 @@ function installStyles(): { refresh(): void; dispose(): void } {
   }
 }
 
-/** Native ConversationRoot/ConversationContent ancestry in published rc.2 and alpha.2. */
+/** Native ConversationRoot/ConversationContent ancestry in the published DSH 0.1.7 WebUI. */
 function mountConversation(parent: HTMLElement = document.body) {
   const body = document.createElement('div')
   body.innerHTML = `

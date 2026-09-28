@@ -14,7 +14,7 @@ export type MemorySourcePageComponent = (props: MemorySourcePageProps) => ReactN
 
 /** The existing DSH Slot capability narrowed to this one child Slot. */
 export interface MemorySourceUIContext {
-  locale?: { bind(namespace: 'mnemon'): import('./locales.ts').MnemonTranslate }
+  locale: { bind(namespace: 'mnemon'): import('./locales.ts').MnemonTranslate }
   slots: {
     inject(name: typeof MNEMON_SOURCE_PAGE_SLOT, setup: () => () => void): () => void
     register(options: {
@@ -28,7 +28,7 @@ export interface MemorySourceUIContext {
 }
 
 interface MemorySourcePageDirectoryContext {
-  locale?: { getSnapshot(): unknown; subscribe(listener: () => void): () => void }
+  locale: { getSnapshot(): unknown; subscribe(listener: () => void): () => void }
   slots: {
     getVersion(name: typeof MNEMON_SOURCE_PAGE_SLOT): number
     entriesOfSlot(name: typeof MNEMON_SOURCE_PAGE_SLOT): readonly { options: { id?: string; label?: string | (() => string); order?: number }; component?: unknown }[]
@@ -124,7 +124,7 @@ export function createMemorySourcePageDirectory(ctx: MemorySourcePageDirectoryCo
   let snapshot: readonly MemorySourcePageEntry[] = Object.freeze([])
   const read = (): readonly MemorySourcePageEntry[] => {
     const currentVersion = ctx.slots.getVersion(MNEMON_SOURCE_PAGE_SLOT)
-    const currentLocale = ctx.locale?.getSnapshot()
+    const currentLocale = ctx.locale.getSnapshot()
     if (currentVersion === version && currentLocale === localeSnapshot) return snapshot
     version = currentVersion
     localeSnapshot = currentLocale
@@ -167,8 +167,8 @@ export function createMemorySourcePageDirectory(ctx: MemorySourcePageDirectoryCo
         listener()
       }
       const stopSlots = ctx.slots.subscribe(MNEMON_SOURCE_PAGE_SLOT, changed)
-      const stopLocale = ctx.locale?.subscribe(changed)
-      return () => { stopLocale?.(); stopSlots() }
+      const stopLocale = ctx.locale.subscribe(changed)
+      return () => { stopLocale(); stopSlots() }
     },
   }
 }

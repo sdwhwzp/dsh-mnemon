@@ -5,8 +5,10 @@ import { dispatchMnemonAnchor, type MnemonAnchorPage } from './anchor.ts'
 import type { MnemonKey } from './locales.ts'
 import type { MnemonClientContext } from './dsh-context.ts'
 import css from './MnemonTurnTail.module.css'
+import { IconChevronDownOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconDataOutline16 } from './ui-icons.ts'
 
-export interface MnemonTurnTailProps {
+interface MnemonTurnTailProps {
   /** Engine-owned closing Turn boundary (TurnLocation on the wire). */
   turn: unknown
   seq: number
@@ -36,11 +38,6 @@ export function memoryPageForTool(name: string): MnemonAnchorPage {
   return 'memory-spaces/spaces'
 }
 
-/** Whether this entry renders for the owner; chain selectors decline quietly. */
-export function selectMnemonTurnTail(owner: { turn: unknown }): Record<string, never> | null {
-  return isClosedTurn(owner.turn) ? {} : null
-}
-
 /** One-line memory-activity bar under a completed turn; hides when the turn touched no memory. */
 export const MnemonTurnTail = memo(function MnemonTurnTail({ turn, seq, sessionId, connection, localeRuntime, t }: MnemonTurnTailProps): JSX.Element | null {
   const subscribeLocale = useCallback((listener: () => void) => localeRuntime.subscribe(listener), [localeRuntime])
@@ -49,7 +46,7 @@ export const MnemonTurnTail = memo(function MnemonTurnTail({ turn, seq, sessionI
   const [activity, setActivity] = useState<TurnMemoryActivity | null | undefined>(undefined)
   const [open, setOpen] = useState(false)
   const number = turnNumber(turn)
-  // List-slot hosts render every entry without calling its chain selector.
+  // The turn-tail list renders every entry, so the entry itself waits for the closing Turn.
   const closed = isClosedTurn(turn)
 
   useEffect(() => {
@@ -76,7 +73,7 @@ export const MnemonTurnTail = memo(function MnemonTurnTail({ turn, seq, sessionI
   return (
     <div className={css.root} data-open={open || undefined}>
       <button type="button" className={css.bar} aria-expanded={open} onClick={() => setOpen(value => !value)}>
-        <span className={css.mark} aria-hidden="true">◈</span>
+        <IconDataOutline16 size={14} className={css.mark} />
         <span className={css.label}>{t('turnTail.label')}</span>
         <span className={css.metrics}>
           {activity.recalls > 0 && <span>{t('turnTail.recall', { count: activity.recalls })}</span>}
@@ -85,7 +82,7 @@ export const MnemonTurnTail = memo(function MnemonTurnTail({ turn, seq, sessionI
           {activity.inspections > 0 && <span>{t('turnTail.inspect', { count: activity.inspections })}</span>}
           {activity.failures > 0 && <span className={css.failureMetric}>{t('turnTail.failed', { count: activity.failures })}</span>}
         </span>
-        <span className={`${css.chevron} ${open ? css.chevronOpen : ''}`} aria-hidden="true" />
+        <IconChevronDownOutlineRegular size={12} className={`${css.chevron} ${open ? css.chevronOpen : ''}`} />
       </button>
       {open && (
         <div className={css.details}>

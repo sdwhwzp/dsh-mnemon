@@ -22,6 +22,10 @@ export type MemoryParticipationChannel = 'recall' | 'write' | 'projection' | 'ma
 export type MemoryLayerParticipation = Record<MemoryParticipationChannel, MemoryParticipationMode>
 export interface MemoryTopologyDefinition { id: string; strategyId: string; layers: Array<ResolvedMemoryLayerConfig & { id: string }> }
 export interface MemoryCompositionStatus {
+  /** Whether a composition serves new turns. A rejected change can leave the previous one serving. */
+  serving: boolean
+  /** The main Strategy composing the serving composition, which a fallback can make differ from the selected one. */
+  strategyTypeId?: string
   evaluation: import('../core/contracts/index.ts').MemoryCompositionEvaluationReport
   sources: MemorySourceManagementInstance[]
   configuration: ResolvedMemoryTopologyConfig
@@ -109,7 +113,7 @@ export type RpcResult<T = JsonValue> =
   | { ok: false; error: RpcError }
 
 /** Public DSH browser RPC face plus the transport boundary needed to gate local-only writes. */
-export type ClientConnectionHandle = Pick<DshClientConnectionHandle, 'rpc'> & Partial<Pick<DshClientConnectionHandle, 'isLoopback'>>
+export type ClientConnectionHandle = Pick<DshClientConnectionHandle, 'rpc' | 'isLoopback'>
 
 export interface ClientSettingsSnapshot<T> {
   status: 'loading' | 'ready' | 'unavailable'
@@ -124,11 +128,7 @@ export interface ClientSettingsSnapshot<T> {
 export interface ClientSettingsScope<T> {
   getSnapshot(): ClientSettingsSnapshot<T>
   subscribe(listener: () => void): () => void
-  set(field: string, value: unknown): Promise<void>
-  unset(field: string): Promise<void>
-  setPath(path: string[], value: unknown): Promise<void>
-  unsetPath(path: string[]): Promise<void>
-  mutate?(ops: SettingsOperation[]): Promise<void>
+  mutate(ops: SettingsOperation[]): Promise<void>
 }
 
 export type SettingsOperation = { op: 'set'; path: string[]; value: unknown } | { op: 'unset'; path: string[] }
@@ -245,7 +245,7 @@ export interface Config {
   displayMode?: MnemonDisplayMode | 'buildin'
   tabEnabled?: boolean
   writeEnabled?: boolean
-  /** DSH rc.2 management-channel authority; ignored by DSH 0.1.2-alpha.1. */
+  /** Remote management grant for paired pages; loopback pages keep full access. */
   remoteAccess?: 'read-only' | 'trusted-host'
   lifecycleEnabled?: boolean
   recallMode?: 'guided' | 'off'
@@ -328,7 +328,7 @@ export interface ResolvedConfig {
   displayMode: MnemonDisplayMode
   tabEnabled: boolean
   writeEnabled: boolean
-  /** DSH rc.2 management-channel authority; ignored by DSH 0.1.2-alpha.1. */
+  /** Remote management grant for paired pages; loopback pages keep full access. */
   remoteAccess: 'read-only' | 'trusted-host'
   lifecycleEnabled: boolean
   recallMode: 'guided' | 'off'
@@ -561,6 +561,8 @@ export interface StatusView {
 }
 
 export type MnemonPackComponent = 'runtime' | 'documents' | 'memory-spaces'
+/** The Sources that keep their data in Mnemon's data directory, in the order a backup lists them. */
+export const MNEMON_PACK_COMPONENTS = ['runtime', 'documents', 'memory-spaces'] as const satisfies readonly MnemonPackComponent[]
 export type MnemonPackScope = 'full' | MnemonPackComponent
 export type MnemonPackImportMode = 'merge' | 'replace'
 
@@ -579,6 +581,13 @@ export interface MnemonPackManifest {
   source: { plugin: 'dsh-mnemon'; pluginVersion: string }
   components: MnemonPackComponent[]
   summary: MnemonPackComponentSummary[]
+}
+
+/** Where memory lives now, and where the global scope keeps it when no directory is chosen. */
+export interface MnemonPackTarget {
+  root: string
+  scope: StorageScopeKind
+  defaultRoot: string
 }
 
 export interface MnemonPackExport {

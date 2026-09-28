@@ -9,8 +9,8 @@ export { Config }
 
 export const memoryPlugin = defineMemoryPlugin({
   packageName: name,
-  label: { en: 'Documents', 'zh-CN': '档案' },
-  description: { en: 'Searchable project records and narrative memory.', 'zh-CN': '可检索的项目档案与叙事记忆。' },
+  label: { en: 'Project Documents', 'zh-CN': '项目档案' },
+  description: { en: 'Versioned narrative documents searched first and read in full on demand.', 'zh-CN': '可版本化的叙事文档，先检索，再按需阅读全文。' },
   roles: ['source'],
   provides: [{ id: 'source' }, { id: 'source.narrative' }],
 })

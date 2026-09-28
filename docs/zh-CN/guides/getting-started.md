@@ -10,26 +10,26 @@
 
 你需要：
 
-- DSH 0.1.5-rc.1 基线所需的 Node.js `^22.19.0 || >=24.0.0`；
+- DSH 0.1.7-rc.2 基线所需的 Node.js `^22.19.0 || >=24.0.0`；
 - 一个可以启动的 DSH Web 或 Headless profile；
-- 本地可执行的 `mnemon` CLI；
+- 仅在使用 Mnemon Native 时需要本地可执行的 `mnemon` CLI（其他 Provider 使用各自的服务）；
 - 一个能够创建独立任务 Agent 的 DSH 模型路由。
 
 普通语义任务优先使用名为 `spawn` 的 Provider，并要求 `toolFilter`、`persona` 与 `depthLimit`。Mnemon 固定注册一个 `mnemon_subagent_result` 工具，并为每个子任务签发可撤销的 `requestId`。子任务返回 `{ requestId, result }`；Host 按该操作的 schema 校验 `result`，拒绝过期或其他子任务提交的结果，不依赖 Provider 的 `outputSchema` 路径。可选后台审查默认通过受 guard 保护的 `spawn` 子 Agent 读取有界检查点；完整上下文 `fork` 需显式选择。审查提供独立开关、冷却时间与尝试预算，详见[审查兼容性和限制](../reference/configuration.md)。
 
-Composable v0.5.6 精确固定经过验证的十六个官方插件组合。请阅读[补丁说明](../releases/v0.5.6.md)和[兼容性矩阵](../reference/compatibility.md)。DSH 基线为 0.1.5-rc.1，完整 profile 需要 Node `^22.19.0 || >=24.0.0`；Mnemon 的 Node 20 公开入口检查不代表完整 Host 兼容。当前界面示例来自 v0.5.4 浅色模式，先将备份导入隔离存储再采集；旧发布记录保留原版本身份。
+Composable v0.5.6 精确固定经过验证的十六个官方插件组合。请阅读[补丁说明](../releases/v0.5.6.md)和[兼容性矩阵](../reference/compatibility.md)。DSH 基线为 0.1.7-rc.2，完整 profile 需要 Node `^22.19.0 || >=24.0.0`；Mnemon 的 Node 20 公开入口检查不代表完整 Host 兼容。当前界面示例来自 v0.5.4 浅色模式，先将备份导入隔离存储再采集；旧发布记录保留原版本身份。
 
 安装并核对已验证的 DSH 版本：
 
 ```sh
-npm install -g @deepseek-ai/dsh@0.1.5-rc.1
+npm install -g @deepseek-ai/dsh@0.1.7-rc.2
 dsh --version
 npm view @deepseek-ai/dsh dist-tags
 ```
 
 ## 2. 安装 Mnemon
 
-macOS、Linux 和 Windows 均推荐使用 npm（Node.js 22+）。在运行 DSH 的宿主机器上执行：
+只有 Mnemon Native 使用 Mnemon CLI。记忆空间使用其他 Provider 时可跳过这一步，以后再安装。macOS、Linux 和 Windows 均推荐使用 npm（Node.js 22+）。在运行 DSH 的宿主机器上执行：
 
 ```sh
 npm install --global @mnemon-dev/mnemon@latest
@@ -124,7 +124,7 @@ dsh plugin --profile web add "link:/absolute/path/to/dsh-mnemon"
 dsh --profile web
 ```
 
-如果需要通过云端域名访问 Web profile，不要直接发布 3080 端口。DSH 0.1.5-rc.1 通过 Host 启动时输出的一次性 URL 建立浏览器会话，并用它认证全部 Mnemon RPC 与 stream。请按[云端 WebUI](./operations.md#cloud-hosted-webui)同时配置 HTTPS 反向代理或访问网关与可信 authority，再打开该启动 URL；同一节保留了 DSH 0.1.1-rc.2 的历史 `remoteAccess` 步骤，回滚时须配套使用之前针对该宿主验证过的 Mnemon 版本。
+如果需要通过云端域名访问 Web profile，不要直接发布 3080 端口。DSH 通过 Host 启动时输出的一次性 URL 建立浏览器会话，并用它认证全部 Mnemon RPC 与 stream。请按[云端 WebUI](./operations.md#cloud-hosted-webui)同时配置 HTTPS 反向代理或访问网关与可信 authority，再打开该启动 URL；同一节保留了 DSH 0.1.1-rc.2 的历史 `remoteAccess` 步骤，回滚时须配套使用之前针对该宿主验证过的 Mnemon 版本。
 
 升级与卸载：
 
@@ -146,17 +146,17 @@ dsh --profile headless "回答前先检查持久化的项目上下文。"
 
 `storageScope=workspace` 时，Headless 直接解析 `<启动命令 cwd>/.mnemon`，不需要 Web 工作区目录。一次性 runner 会在 Agent 进入 idle 后退出，因此尚未开始的评分后台审查会在关闭时取消；任务内已经完成的显式或模型引导写入仍会持久化。
 
-## 4. 选择入口与存储位置
+## 4. 选择入口与存储范围
 
-打开“设置 → 记忆系统”：
+在 DSH 侧边栏打开“插件”，选择**可组合记忆 (dsh-mnemon)**，全部配置都在这个页面；在记忆系统工作台中，也可以点击顶部的**配置**（齿轮）打开同一页面。
 
-[交互指南](./ui-guide.md)展示当前设置与可选增强。
+[交互指南](./ui-guide.md)展示当前配置与可选增强。
 
 ### 工作台入口
 
-默认点击 DSH 侧边栏中的“记忆系统”打开独立工作台。在设置中选择 Builtin，或配置 `displayMode: builtin`，可将同一组 Source 页面放入会话 Tab。保存后入口实时切换，不改变记忆数据。
+默认点击 DSH 侧边栏中的“记忆系统”打开独立工作台。在该页面“界面 → 记忆系统入口”中选择“会话标签页”，或配置 `displayMode: builtin`，可将同一组 Source 页面放入会话 Tab。选择后立即生效，入口实时切换，不改变记忆数据。
 
-### 存储位置
+### 存储范围
 
 | 范围 | 根目录 | 适合场景 |
 |---|---|---|
@@ -165,10 +165,10 @@ dsh --profile headless "回答前先检查持久化的项目上下文。"
 | **自定义** | `dataDir` | 专用磁盘、挂载卷或明确的数据目录 |
 | **集中工作区** | `<集中根>/workspaces/<工作区路径哈希>/` | 在统一目录集中备份，同时按项目隔离 |
 
-如需集中管理且按项目隔离，选择 `storageScope: workspaces` 并按需设置 `dataDir`；数据保存为 `<集中根>/workspaces/<工作区路径哈希>/`。目录设置位于范围选择器旁；切换模式时保留旧根。
+“存储”组中的“存储范围”选择全局、工作区或集中存储，“数据目录”再选择“默认”或“自定义”：全局范围下自定义路径即为 `custom` 目录；集中存储下它是集中根目录，数据保存为 `<集中根>/workspaces/<工作区路径哈希>/`。切换模式时保留旧根。
 
 
-点击保存后会先初始化新运行图，再原子切换 Host；页面自动清理旧状态并重新读取，无需刷新浏览器。切换范围不会自动迁移、合并或删除旧数据。
+点击存储改动旁的**应用**后，会先初始化新运行图，再原子切换 Host；页面自动清理旧状态并重新读取，无需刷新浏览器。切换范围不会自动迁移、合并或删除旧数据。
 
 ### 默认记忆层
 
@@ -187,7 +187,7 @@ dsh --profile headless "回答前先检查持久化的项目上下文。"
 - 右上角显示“已连接”；
 - Mnemon 与 dsh-mnemon 能显示当前版本；
 - 存储根与刚才选择的范围一致；
-- 运行时、档案、记忆空间与设置中启用的记忆层一致；
+- 运行时、档案、记忆空间与已启用的记忆层一致；
 - Runtime、Documents 和 Memory Spaces 没有错误提示。
 
 全局或自定义存储下，档案仍需要 DSH 工作区身份。先为当前会话选择工作区，或在工作区存储下选择查看对象。“等待工作区”表示缺少项目上下文，并非 CLI 未安装。
@@ -202,7 +202,7 @@ dsh --profile headless "回答前先检查持久化的项目上下文。"
 
 1. 打开“记忆空间 → 概览”。
 2. 点击“创建记忆空间”。
-3. 人工选择已启用的 Provider。保留 **Mnemon Native** 即使用官方本地优先默认；三方服务需先在设置中启用。
+3. 选择一个已就绪的 Provider。对话框默认选中第一个：安装 CLI 后即为官方本地优先的 **Mnemon Native**。三方服务需先在**插件 → 可组合记忆**页面中启用。
 4. 使用主题明确的名称，例如“项目决策”。
 5. 在说明中写清“哪些内容属于这里，以及什么任务应召回它”，然后开启读取激活开关。
 

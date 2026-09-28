@@ -53,7 +53,7 @@ Native `!!js` expressions are retained as expression data, never evaluated or co
 
 ## Verification scope
 
-Focused regressions cover [schema/reference behavior](../../../tests/live-config.spec.ts), [owner isolation and redaction](../../../tests/profile-settings.spec.ts), [revision conflicts and retired owners](../../../tests/profile-settings-revisions.spec.ts), [pure migration planning](../../../tests/legacy-settings-import.spec.ts), [retained-file recovery and expressions](../../../tests/profile-settings-import.spec.ts), and [both client icon generations](../../../tests/client-primitives-compat.spec.tsx).
+Focused regressions cover [schema/reference behavior](../../../tests/live-config.spec.ts), [owner isolation and redaction](../../../tests/profile-settings.spec.ts), [revision conflicts and retired owners](../../../tests/profile-settings-revisions.spec.ts), [pure migration planning](../../../tests/legacy-settings-import.spec.ts), [retained-file recovery and expressions](../../../tests/profile-settings-import.spec.ts), and [both client icon generations](https://github.com/omdsh-dev/dsh-mnemon/blob/65a14ddd2d83bd0850948dc915bc410552b545d9/tests/client-primitives-compat.spec.tsx).
 
 The artifact harness uses isolated test data and a deterministic model endpoint bound to `127.0.0.1`; it requires no external model API key and calls no external model provider. Bootstrap URLs, `server.json`, raw `web.log` and model request logs remain outside the repository. Public evidence must exclude credentials and private data.
 

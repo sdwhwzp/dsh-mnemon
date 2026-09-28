@@ -21,6 +21,7 @@ import { assertDshOutputSchema, MnemonSubagentCoordinator } from "../src/host/su
 import { DEFAULT_THREE_TIER_VIEW_STRATEGY } from 'dsh-mnemon-strategy-default-three-tier'
 import { registerTools } from "../src/host/tools.ts"
 import { resolveConfig } from "../src/host/config.ts"
+import { sessionLog } from './fixtures/session-log.ts'
 
 const capabilities = { outputSchema: true, depthLimit: true, toolFilter: true, persona: true }
 const temporaryDirectories: string[] = []
@@ -35,7 +36,7 @@ function parent(origin?: 'subagent'): HostAgent {
   return {
     id: origin === undefined ? 'root' : 'child',
     status: 'idle',
-    session: { header: { ...(origin === undefined ? {} : { origin }) }, events: [] },
+    session: { header: { ...(origin === undefined ? {} : { origin }) }, ...sessionLog() },
   } as unknown as HostAgent
 }
 
@@ -294,7 +295,9 @@ function runtimeSource(
     if (!turn.view.readGrants.some(grant => grant.id === 'doc-grant')) turn.view.readGrants.push({ id: 'doc-grant', sourceInstanceKey: 'docs', schema: 'dsh-mnemon.documents/v1' } as never)
     return policyFor(turn).query({ route: { id: 'docs/search', sourceInstanceKey: 'docs', sourceRouteId: operation, readGrantId: 'doc-grant' } as never, input, signal }, async () => ({ id: 'docs', viewId: turn.view.id, routeId: 'docs/search', sourceInstanceKey: 'docs', observedAt: 'now', items: [], truncated: false }))
   } }) }
-  const graph = { config, memoryComposition: { acquire: () => ({ generation: {}, release: () => {} }) }, composableTurns: turns, source: (type: string) => type === 'runtime' ? runtimeSession : type === 'documents' ? documentSession : spaceSession } as unknown as MnemonRuntimeGraph
+  // The serving generation composes with the configured Strategy.
+  const generation = { strategy: { definition: { manifest: { typeId: config.memoryTopology.strategyId } } } }
+  const graph = { config, memoryComposition: { acquire: () => ({ generation, release: () => {} }) }, composableTurns: turns, source: (type: string) => type === 'runtime' ? runtimeSession : type === 'documents' ? documentSession : spaceSession } as unknown as MnemonRuntimeGraph
   const source = { config, forAgent: vi.fn((_agent: HostAgent) => graph), bindAgentRuntime: vi.fn(() => () => {}) }
   return { ...source, executions: new MemoryExecutions(source) }
 }
@@ -392,7 +395,7 @@ async function documentArchiveFixture(proposal: unknown = { action: 'planned', s
   const spaces = service()
   vi.mocked(spaces.search).mockResolvedValue({ query: '', mode: 'keyword', results: [] })
   const host = subagents(proposal)
-  const agent = { ...parent(), session: { header: { cwd: workspace }, events: [] } } as HostAgent
+  const agent = { ...parent(), session: { header: { cwd: workspace }, ...sessionLog() } } as HostAgent
   const runtime = runtimeSource(undefined, spaces, controller)
   const coordinator = new MnemonSubagentCoordinator(host.value, runtime, toolRegistry().value)
   return { controller, document: created.document, spaces, host, agent, runtime, coordinator,
@@ -541,7 +544,7 @@ describe('Mnemon memory subagent coordinator', () => {
     const created = await documents.mutate<DocumentMutationResult>('mutate', { action: 'create', title: 'Composed archive', content: 'Keep the original code.' })
     const host = subagents({ action: 'planned', summary: 'Cold index for the original code.', memoryBodyId: body.id })
     const coordinator = new MnemonSubagentCoordinator(host.value, f.live, toolRegistry().value)
-    const agent = { ...parent(), session: { header: { cwd: f.workspace }, events: [] } } as HostAgent
+    const agent = { ...parent(), session: { header: { cwd: f.workspace }, ...sessionLog() } } as HostAgent
     await expect(coordinator.archiveDocument(agent, created.document.id, new AbortController().signal)).resolves.toMatchObject({ action: 'archived', lineage: [{ source: { digest: created.document.contentHash } }] })
     const indexed = await spaces.read<{ results: Insight[] }>('search', { query: created.document.contentHash, memoryBodyIds: [body.id] })
     expect(indexed.results).toHaveLength(1)
@@ -570,7 +573,7 @@ describe('Mnemon memory subagent coordinator', () => {
     await spaces.mutate('body-update', { memoryBodyId: body.id, request: { active: true } })
     const documents = f.graph.source('documents')
     const created = await documents.mutate<DocumentMutationResult>('mutate', { action: 'create', title: 'Scoped document', content: 'Must not escape the active View.' })
-    const agent = { ...parent(), session: { header: { cwd: f.workspace }, events: [] } } as HostAgent
+    const agent = { ...parent(), session: { header: { cwd: f.workspace }, ...sessionLog() } } as HostAgent
     const turn = await f.graph.composableTurns.beginTurn('archive-scoped', agentScope(agent, f.config), 'test')
     const outside = await spaces.mutate<{ id: string }>('body-create', { name: 'Outside pinned scope', description: 'Not in the immutable namespace grant.', providerId: 'holographic' })
     await spaces.mutate('body-update', { memoryBodyId: outside.id, request: { active: true } })
@@ -1795,7 +1798,7 @@ describe('Mnemon memory subagent coordinator', () => {
     vi.mocked(memoryService.rememberMany).mockResolvedValueOnce([{ action: 'added', id: 'document-index-1', memoryBodyId: 'project' }])
     const archive = vi.spyOn(controller, 'mutate')
     const coordinator = new MnemonSubagentCoordinator(host.value, runtimeSource(undefined, memoryService, controller), resultTools.value)
-    const agent = { ...parent(), session: { header: { cwd: workspace }, events: [] } } as HostAgent
+    const agent = { ...parent(), session: { header: { cwd: workspace }, ...sessionLog() } } as HostAgent
 
     const result = await coordinator.document(agent, { action: 'create', title: 'New architecture', content: 'b'.repeat(220) }, new AbortController().signal)
     expect(result).toMatchObject({
@@ -2102,7 +2105,7 @@ describe('Mnemon memory subagent coordinator', () => {
     await runtime.mutate('mutate', { action: 'add', target: 'memory', content })
     const before = await runtime.read<RuntimeMemorySnapshot>('snapshot')
     const coordinator = new MnemonSubagentCoordinator(subagents(undefined).value, f.live, toolRegistry().value)
-    const agent = { ...parent(), session: { header: { cwd: f.workspace }, events: [] } } as HostAgent
+    const agent = { ...parent(), session: { header: { cwd: f.workspace }, ...sessionLog() } } as HostAgent
     const original = SourceSession.prototype.mutateResult
     const failCommit = vi.spyOn(SourceSession.prototype, 'mutateResult').mockImplementation(function (this: SourceSession, operation, input, signal) {
       if (this.typeId === 'runtime' && operation === 'compact-and-mutate') return Promise.reject(new Error('injected local commit failure'))
@@ -2459,7 +2462,7 @@ describe('Mnemon memory subagent coordinator', () => {
   it('disposes failed delegated writes and reports the bounded provider error', async () => {
     const failedChild = {
       ...parent('subagent'),
-      session: { header: { origin: 'subagent' as const }, events: [{ type: 'turn/end', data: { reason: { kind: 'error', error: { code: 'MODEL_ROUTE', message: 'provider rejected sk-secret123456' } } } }] },
+      session: { header: { origin: 'subagent' as const }, ...sessionLog([{ type: 'turn/end', data: { reason: { kind: 'error', error: { code: 'MODEL_ROUTE', message: 'provider rejected sk-secret123456' } } } }]) },
     }
     const host = subagents(undefined, 'error', ['spawn'], failedChild)
     const coordinator = createCoordinator(host.value)

@@ -153,8 +153,6 @@ export const mnemonSubagentTokenUsageProjectionDefinition = {
   key: MNEMON_SUBAGENT_TOKEN_USAGE_KEY,
   stateVersion: 1,
   stateSchema: tokenUsageStateSchema,
-  // DSH 0.1.0 consumes schema/view; 0.1.1+ consumes stateSchema/wire.
-  schema: tokenUsageWire.viewSchema,
   init: (): MnemonSubagentTokenUsageState => ({
     descriptorSeen: false,
     totals: emptyTokenUsage(),
@@ -179,7 +177,6 @@ export const mnemonSubagentTokenUsageProjectionDefinition = {
       last: sample,
     }
   },
-  view: tokenUsageWire.view,
   wire: tokenUsageWire,
 } as const
 

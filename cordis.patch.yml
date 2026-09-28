@@ -2,7 +2,7 @@
 # replace this config row as a whole; use user settings or environment
 # variables for one-field overrides such as cliPath.
 # Connection's generic RPC registry uses its owning Context to mount routes.
-# DSH 0.1.5's Web profile omits this dependency from that service's scope.
+# DSH's Web profile (0.1.7-rc.2 included) injects only webRuntime there.
 - id: connection
   inject: [webRuntime, webServer]
 
@@ -90,6 +90,11 @@
                 instanceId: mnemon-native
         - id: mnemon-strategy-default-three-tier
           name: dsh-mnemon-strategy-default-three-tier
+        # A second main Strategy; memoryView.strategyTypeId selects which one
+        # composes the View. It stays off until selected.
+        - id: mnemon-strategy-general
+          name: dsh-mnemon-strategy-general
+          disabled: true
         # v0.5 ships these narrowly scoped enhancements with the Starter so the
         # Settings switches are always available. They remain opt-in.
         - id: mnemon-strategy-auto-capture

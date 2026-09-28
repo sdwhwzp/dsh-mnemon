@@ -5,16 +5,16 @@ import type { ClientSettingsScope, Config } from "../host/protocol.ts"
 import type { MnemonClientContext } from "./dsh-context.ts"
 import type { MnemonTranslate } from './locales.ts'
 import { MnemonWorkbench, type MnemonWorkspaceSelection } from './MnemonWorkbench.tsx'
-import type { MemorySourcePageDirectory } from './source-pages.tsx'
+import type { MNEMON_SOURCE_PAGE_SLOT, MemorySourcePageDirectory } from './source-pages.tsx'
+import type { MNEMON_COMPONENT_STATUS_SLOT } from './component-ui.tsx'
 import type { MnemonBetterSidebarSeat } from './better-sidebar-seat.ts'
 import type { MnemonNativeSidebarSeat } from './native-sidebar-seat.ts'
+import type { MnemonActionSeat } from './action-seat.ts'
+import type { MnemonChangeSignal } from './change-signal.ts'
 import { mountMnemonSidebarEntry } from './sidebar-entry.ts'
 import { MnemonWorkspaceController } from './workspace-controller.ts'
 import { useMnemonSessionId, type MnemonSessionBinding } from './session-binding.ts'
 import css from './MnemonWorkspace.module.css'
-
-/** The single visible Mnemon workspace, mounted by DSH's shell overlay. */
-export const MNEMON_VIEW_SELECTOR = '[data-dsh-mnemon-view]'
 
 const ACTIVE_ATTR = 'data-dsh-mnemon-active'
 const TASKBOARD_ACTIVE_ATTR = 'data-dsh-taskboard-active'
@@ -22,55 +22,24 @@ const SSH_ACTIVE_ATTR = 'data-dsh-ssh-active'
 const ACTIVATE_EVENT = 'dsh-panel-activate'
 const SIDEBAR_CONTEXT_SELECTOR = '[data-dsh-taskboard-entry], [data-dsh-ssh-entry], [class*="sessionRow"], [class*="projectRow"], [class*="searchResultRow"], [class*="searchResultWorkspace"], [class*="newSession"]'
 
-interface MnemonWorkspaceSurface {
-  column: HTMLElement
-  frame?: HTMLElement
-  details?: HTMLElement
-}
-
-function resolveWorkspaceSurface(): MnemonWorkspaceSurface | undefined {
-  const explicit = document.querySelector<HTMLElement>('[data-pane="conversation"]')
+/** Conversation column that the Sidebar workspace overlay covers. */
+function resolveWorkspaceColumn(): HTMLElement | undefined {
+  return document.querySelector<HTMLElement>('[data-pane="conversation"]')
     ?? document.querySelector<HTMLElement>('.dshDesktopConversationSurface')
-  if (explicit !== null) return { column: explicit }
-
-  const column = document.querySelector<HTMLElement>('[class*="centerCol"]')
-  if (column === null) return undefined
-  const frame = column.parentElement
-  const details = frame === null
-    ? undefined
-    : Array.from(frame.children).find((child): child is HTMLElement => child instanceof HTMLElement && child !== column && child.className.includes('detailsCol'))
-  return frame === null || details === undefined ? { column } : { column, frame, details }
-}
-
-function sameWorkspaceSurface(left: MnemonWorkspaceSurface | undefined, right: MnemonWorkspaceSurface | undefined): boolean {
-  return left?.column === right?.column && left?.frame === right?.frame && left?.details === right?.details
-}
-
-function workspaceSurfaceBounds(surface: MnemonWorkspaceSurface): { left: number; top: number; width: number; height: number } {
-  const columnRect = surface.column.getBoundingClientRect()
-  if (surface.frame === undefined) {
-    const { left, top, width, height } = columnRect
-    return { left, top, width, height }
-  }
-  const frameRect = surface.frame.getBoundingClientRect()
-  return {
-    left: columnRect.left,
-    top: frameRect.top,
-    width: Math.max(0, frameRect.left + frameRect.width - columnRect.left),
-    height: frameRect.height,
-  }
+    ?? document.querySelector<HTMLElement>('[class*="centerCol"]')
+    ?? undefined
 }
 
 function normalizePath(value: string): string {
   return value.replace(/[\\/]+$/u, '')
 }
 
-export interface MnemonWorkspaceNavigation {
+interface MnemonWorkspaceNavigation {
   open(): void
   close(): void
 }
 
-export interface MnemonWorkspaceHostProps {
+interface MnemonWorkspaceHostProps {
   connection: MnemonClientContext['connection']
   settingsScope: ClientSettingsScope<Config>
   sessions: MnemonClientContext['sessions']
@@ -79,15 +48,19 @@ export interface MnemonWorkspaceHostProps {
   localeRuntime: MnemonClientContext['locale']
   sourcePageDirectory: MemorySourcePageDirectory
   navigation?: MnemonWorkspaceNavigation
+  /** Opens the dsh-mnemon page under DSH Plugins while that page offers navigation. */
+  configuration?: MnemonActionSeat
+  /** Moves when a component is switched through DSH's plugin manager. */
+  componentChanges?: MnemonChangeSignal
   t: MnemonTranslate
   sessionId?: string | undefined
   cwd?: string
   active?: boolean
-  renderSlot?: PropsRenderSlots<'mnemon.source.page'>['renderSlot']
+  renderSlot?: PropsRenderSlots<typeof MNEMON_SOURCE_PAGE_SLOT | typeof MNEMON_COMPONENT_STATUS_SLOT>['renderSlot']
 }
 
-export interface MnemonBuiltinWorkspaceHostProps extends Pick<MnemonWorkspaceHostProps,
-  'connection' | 'settingsScope' | 'localeRuntime' | 'sourcePageDirectory' | 'renderSlot' | 't'> {
+interface MnemonBuiltinWorkspaceHostProps extends Pick<MnemonWorkspaceHostProps,
+  'connection' | 'settingsScope' | 'localeRuntime' | 'sourcePageDirectory' | 'configuration' | 'componentChanges' | 'renderSlot' | 't'> {
   sessionId: string
 }
 
@@ -104,6 +77,8 @@ export function MnemonBuiltinWorkspaceHost(props: MnemonBuiltinWorkspaceHostProp
     t={props.t}
     locale={locale.active}
     sourcePageDirectory={props.sourcePageDirectory}
+    {...(props.configuration === undefined ? {} : { configuration: props.configuration })}
+    {...(props.componentChanges === undefined ? {} : { componentChanges: props.componentChanges })}
     {...(props.renderSlot === undefined ? {} : { renderSlot: props.renderSlot })}
   />
 }
@@ -154,6 +129,8 @@ export function MnemonWorkspaceHost(props: MnemonWorkspaceHostProps): JSX.Elemen
     t={props.t}
     locale={locale.active}
     sourcePageDirectory={props.sourcePageDirectory}
+    {...(props.configuration === undefined ? {} : { configuration: props.configuration })}
+    {...(props.componentChanges === undefined ? {} : { componentChanges: props.componentChanges })}
     {...(props.renderSlot === undefined ? {} : { renderSlot: props.renderSlot })}
     {...(props.navigation === undefined ? {} : { onClose: props.navigation.close })}
   />
@@ -171,35 +148,30 @@ export function MnemonSidebarWorkspaceHost(props: MnemonWorkspaceHostProps & { c
   const [bounds, setBounds] = useState<{ left: number; top: number; width: number; height: number }>()
   useEffect(() => {
     if (!state.open || nativeSidebar?.available) return
-    let surface: MnemonWorkspaceSurface | undefined
-    const previousInert = new Map<HTMLElement, boolean>()
+    let column: HTMLElement | undefined
+    let previousInert = false
     const update = (): void => {
-      if (surface === undefined) return
-      const { left, top, width, height } = workspaceSurfaceBounds(surface)
+      if (column === undefined) return
+      const { left, top, width, height } = column.getBoundingClientRect()
       setBounds(previous => previous?.left === left && previous.top === top && previous.width === width && previous.height === height ? previous : { left, top, width, height })
     }
     const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(update)
-    const observedTargets = (value: MnemonWorkspaceSurface): HTMLElement[] => [...new Set([value.column, value.frame, value.details].filter((target): target is HTMLElement => target !== undefined))]
-    const inertTargets = (value: MnemonWorkspaceSurface): HTMLElement[] => [value.column, value.details].filter((target): target is HTMLElement => target !== undefined)
     const detach = (): void => {
-      if (surface !== undefined) {
-        for (const target of observedTargets(surface)) observer?.unobserve(target)
+      if (column !== undefined) {
+        observer?.unobserve(column)
+        column.inert = previousInert
       }
-      for (const [target, inert] of previousInert) target.inert = inert
-      previousInert.clear()
-      surface = undefined
+      column = undefined
     }
     const connect = (): void => {
-      const next = resolveWorkspaceSurface()
-      if (!sameWorkspaceSurface(next, surface)) {
+      const next = resolveWorkspaceColumn()
+      if (next !== column) {
         detach()
-        surface = next
-        if (surface !== undefined) {
-          for (const target of inertTargets(surface)) {
-            previousInert.set(target, target.inert)
-            target.inert = true
-          }
-          for (const target of observedTargets(surface)) observer?.observe(target)
+        column = next
+        if (column !== undefined) {
+          previousInert = column.inert
+          column.inert = true
+          observer?.observe(column)
         }
       }
       update()
@@ -234,6 +206,8 @@ export function MnemonSidebarWorkspaceHost(props: MnemonWorkspaceHostProps & { c
     currentSession={props.currentSession}
     localeRuntime={props.localeRuntime}
     sourcePageDirectory={props.sourcePageDirectory}
+    {...(props.configuration === undefined ? {} : { configuration: props.configuration })}
+    {...(props.componentChanges === undefined ? {} : { componentChanges: props.componentChanges })}
     sessionId={betterSidebar.scope.sessionId}
     {...(betterSidebar.scope.cwd === undefined ? {} : { cwd: betterSidebar.scope.cwd })}
     active={betterSidebar.visible}

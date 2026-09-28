@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os'
 import { join, win32 } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { resolveMemorySpacesConfig as resolveConfig } from '../src/config.ts'
-import { createRunner, findMnemonCommand } from '../src/runner.ts'
+import { createRunner } from '../src/runner.ts'
 import type { ProcessRunner } from '../src/providers/process.ts'
-import { nodeLauncherEnvironment } from '../src/native-cli.ts'
+import { findMnemonCommand, nodeLauncherEnvironment } from '../src/native-cli.ts'
 
 const temporaryDirectories: string[] = []
 

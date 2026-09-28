@@ -27,7 +27,7 @@ try {
   await mkdir(profileDir, { recursive: true })
   const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
   const names = ['dsh-mnemon', ...Object.keys(manifest.dependencies).filter(name => name.startsWith('dsh-mnemon-'))]
-  assert.equal(names.length, 17)
+  assert.equal(names.length, 18)
   for (const name of names) {
     const directory = join(profileDir, 'node_modules', name)
     await mkdir(directory, { recursive: true })
@@ -54,9 +54,7 @@ export async function apply(ctx, config) {
   await writeFile(configPath, '- id: connection\n  name: cordis:group\n  group: true\n  config: []\n')
   const retained = '# Operator comment\n- id: mnemon\n  config:\n    timeoutMs: 4321\n- id: mnemon-strategy-auto-capture\n  disabled: false\n- id: mnemon-source-documents\n  disabled: true\n'
   await writeFile(patchPath, retained)
-  const patches = () => app.readProfilePatches === undefined
-    ? [...app.loadProfileDirectory('dsh', profileDir, installAnchor).layers.flatMap(layer => layer.patches), ...app.loadOverlayPatches('dsh', patchPath)]
-    : app.readProfilePatches('dsh', profile)
+  const patches = () => app.readProfilePatches('dsh', profile)
   let Manager
   if (process.argv[3] === 'manager') Manager = (await load('@deepseek-ai/dsh-plugin-manager')).default
   const start = async () => {
@@ -74,7 +72,8 @@ export async function apply(ctx, config) {
     }, pathToFileURL(join(profileDir, 'package.json')).href)
   }
   const stop = async () => { await ctx?.fiber.dispose(); ctx = undefined; assert.equal(state.active.size, 0) }
-  const enabledNames = names.filter(name => !['dsh-mnemon-source-documents', 'dsh-mnemon-strategy-light-context', 'dsh-mnemon-strategy-scoped'].includes(name))
+  // The general main Strategy ships off until it is selected.
+  const enabledNames = names.filter(name => !['dsh-mnemon-source-documents', 'dsh-mnemon-strategy-general', 'dsh-mnemon-strategy-light-context', 'dsh-mnemon-strategy-scoped'].includes(name))
   const assertActive = expected => {
     assert.deepEqual([...state.active].sort(), expected.map(name => [name, 1]).sort())
     assert.equal([...ctx.loader.entries()].filter(entry => entry.options.id === 'mnemon-bundle').length, 1)
@@ -88,10 +87,7 @@ export async function apply(ctx, config) {
     assert(saved.includes('# Operator comment'))
     assert(saved.includes('timeoutMs: 4321'))
   }
-  const reload = async () => {
-    if (app.reconcileProfilePatches) await app.reconcileProfilePatches(ctx, patches(), 'dsh')
-    else { await stop(); await start() }
-  }
+  const reload = () => app.reconcileProfilePatches(ctx, patches(), 'dsh')
   await start()
   assertEnabled()
   if (Manager) {
@@ -103,7 +99,7 @@ export async function apply(ctx, config) {
     // without making that upstream defect an accepted lifecycle contract.
     const groups = new Set([...ctx.loader.entries()].filter(entry => entry.options.group).map(entry => entry.options.id))
     const pluginComponents = components.filter(row => !groups.has(row.rowId))
-    assert.equal(pluginComponents.length, 8)
+    assert.equal(pluginComponents.length, 10)
     assert(pluginComponents.every(row => plugins.some(plugin => plugin.entryId === row.entryId)))
     if (process.argv.includes('--check-declared-rows')) {
       assert.deepEqual(components.filter(row => !plugins.some(plugin => plugin.entryId === row.entryId)), [],
@@ -155,7 +151,7 @@ export async function apply(ctx, config) {
     await stop(); await start(); check()
   }
   console.log(JSON.stringify({ dsh: JSON.parse(await readFile(installAnchor, 'utf8')).version, packages: names.length,
-    components: 8, manager: Boolean(Manager), result: 'passed' }))
+    components: 9, manager: Boolean(Manager), result: 'passed' }))
 } finally {
   await ctx?.fiber.dispose()
   await rm(temporary, { recursive: true, force: true })

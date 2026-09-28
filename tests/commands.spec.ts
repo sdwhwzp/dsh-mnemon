@@ -56,6 +56,19 @@ describe('/mnemon command', () => {
     expect(service.status).toHaveBeenCalledOnce()
   })
 
+  it('reports Mnemon Native as optional when its CLI is missing', async () => {
+    const service = {
+      config: { writeEnabled: true, defaultRecallLimit: 10 },
+      status: vi.fn(async () => ({
+        healthy: true, commandFound: false, cliPath: 'mnemon', dataDir: '/tmp/mnemon', mnemonDefaultStore: 'default',
+        dshActiveStores: ['mem0-notes'], writeEnabled: true, defaultRecallLimit: 10, stats: { totalInsights: 4, edgeCount: 0, deletedInsights: 0 },
+      })),
+    }
+    const result = await createMnemonCommand(runtime(service), coordinator()).handler(invocation('status'))
+    expect(result).toEqual(expect.objectContaining({ kind: 'success', text: expect.stringMatching(/^Mnemon Native: 未安装 CLI[\s\S]*DSH 已激活: mem0-notes[\s\S]*有效记忆: 4/u) }))
+    expect((result as { text: string }).text).not.toContain('CLI: mnemon')
+  })
+
   it('runs a bounded recall and includes full ids', async () => {
     const service = {
       config: { writeEnabled: true, defaultRecallLimit: 20 },

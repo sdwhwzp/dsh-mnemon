@@ -4,6 +4,7 @@ export { defineMemoryPlugin, defineMemorySource, defineMemoryStrategy, defineMem
 export { record as memoryInputRecord, text as memoryInputText, integer as memoryInputInteger, stringArray as memoryInputStringArray, truncate as truncateMemoryText, receipt as createMemoryMutationReceipt, migrationLineage as memoryInputMigrationLineage } from './input.ts'
 export { memoryConfigurationDigest } from './input.ts'
 export { defineMemoryStrategyConfiguration } from './strategy-configuration.ts'
+export { defineMemoryViewExtension, memoryViewExtensionValues, validateMemoryViewExtension } from './view-extensions.ts'
 export type { MemoryStrategyConfiguration, MemoryStrategyConfigurationField, MemoryLocalizedText } from './strategy-configuration.ts'
 export { withMemoryStorageLock } from './storage-lock.ts'
 export type {
@@ -38,4 +39,6 @@ export type {
   MemoryViewSourcePresentation,
   MemoryViewSpec,
   MemoryViewGuidance,
+  MemoryViewExtensionSlot,
+  MemoryViewExtensionValues,
 } from "../core/contracts/index.ts"

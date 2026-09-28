@@ -1,8 +1,6 @@
 import type { MemoryProviderConfigField, MemoryProviderDescriptor } from '../contracts.ts'
 import type { MnemonKey, MnemonTranslate } from 'dsh-mnemon/client'
 
-export function providerDisplayLabel(_providerId: string, label: string): string { return label }
-
 export function providerSummary(t: MnemonTranslate, provider: MemoryProviderDescriptor): string {
   if (provider.summaryI18nKey === undefined) return provider.summary
   const localized = t(provider.summaryI18nKey as MnemonKey)

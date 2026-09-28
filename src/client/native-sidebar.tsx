@@ -7,17 +7,15 @@ import type { MnemonNativeSidebarSeat } from './native-sidebar-seat.ts'
 import type { MnemonWorkspaceController } from './workspace-controller.ts'
 import { mountMnemonSidebarEntry } from './sidebar-entry.ts'
 import { coordinateSidebarPanels } from './workspace-mount.tsx'
-import { MEMORY_ICON_PATHS } from './memory-icon.ts'
+import { MemoryIcon } from './memory-icon.tsx'
 import css from './MnemonWorkspace.module.css'
 
 export const MNEMON_MAIN_PANEL_ID = 'mnemon' as MainPanelId
 const ICON_SELECTOR = '[data-dsh-plugin="dsh-mnemon"][data-dsh-part="sidebar-icon"]'
 
 /** The native Sidebar owns the surrounding button, label, tooltip and state. */
-export function MnemonSidebarIcon({ size }: Pick<PropsRuntime<'sidebar.panellist'>, 'size'>): JSX.Element {
-  return <svg data-dsh-plugin="dsh-mnemon" data-dsh-part="sidebar-icon" aria-hidden="true" viewBox="0 0 16 16" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-    {MEMORY_ICON_PATHS.map(path => <path key={path} d={path} />)}
-  </svg>
+function MnemonSidebarIcon({ size }: Pick<PropsRuntime<'sidebar.panellist'>, 'size'>): JSX.Element {
+  return <MemoryIcon size={size} data-dsh-plugin="dsh-mnemon" data-dsh-part="sidebar-icon" />
 }
 
 /** DSH selects this seat; the shell registration retains Source render authority. */
@@ -61,8 +59,6 @@ export function mountMnemonSidebarNavigation(
   }
   const stopPanels = coordinateSidebarPanels(controller, navigation.close)
   let stopNative: (() => void) | undefined
-  let stopService: (() => void) | undefined
-  let currentLayout: MnemonClientContext['layout'] | undefined
   // Legacy overlay peers can take over before their asynchronous DOM flag is
   // observed. A repeated native navigation must still dismiss those overlays.
   const reassert = (event: MouseEvent): void => {
@@ -74,52 +70,40 @@ export function mountMnemonSidebarNavigation(
     if (disposed) return
     disposed = true
     document.removeEventListener('click', reassert, true)
-    stopService?.()
     stopPanels()
     stopNative?.()
     stopFallback?.()
     controller.close()
   }
-  const reconcileNative = (): void => {
-    // Replacement shells may not provide the native layout service or panel seats.
-    const layout = ctx.layout
-    if (currentLayout === layout) return
-    stopNative?.()
-    stopNative = undefined
-    currentLayout = layout
-    if (layout !== undefined) {
-      stopNative = ctx.slots.inject('main', () => ctx.slots.inject('sidebar.panellist', () => {
-        const stopMain = ctx.slots.register({
-          name: 'main', key: MNEMON_MAIN_PANEL_ID, inject: () => ({ seat, controller }),
-        }, MnemonMainPanel)
-        let stopIcon: (() => void) | undefined
-        try {
-          stopIcon = ctx.slots.register({
-            name: 'sidebar.panellist', id: MNEMON_MAIN_PANEL_ID, order: 30,
-            label: () => t('tab.label'), locale: 'mnemon',
-          }, MnemonSidebarIcon)
-          seat.setAvailable(true)
-          reconcileFallback()
-          if (controller.getSnapshot().open) navigation.open()
-        } catch (error) {
-          seat.setAvailable(false)
-          stopIcon?.()
-          stopMain()
-          throw error
-        }
-        return () => {
-          controller.close()
-          seat.setAvailable(false)
-          stopIcon?.()
-          stopMain()
-          reconcileFallback()
-        }
-      }))
-    }
-  }
   try {
-    reconcileNative()
-    stopService = ctx.on('internal/service', name => { if (name === 'layout') reconcileNative() })
+    // Replacement shells may not declare the native panel seats; the fallback entry covers them.
+    stopNative = ctx.slots.inject('main', () => ctx.slots.inject('sidebar.panellist', () => {
+      const stopMain = ctx.slots.register({
+        name: 'main', key: MNEMON_MAIN_PANEL_ID, inject: () => ({ seat, controller }),
+      }, MnemonMainPanel)
+      let stopIcon: (() => void) | undefined
+      try {
+        stopIcon = ctx.slots.register({
+          name: 'sidebar.panellist', id: MNEMON_MAIN_PANEL_ID, order: 30,
+          label: () => t('tab.label'), locale: 'mnemon',
+        }, MnemonSidebarIcon)
+        seat.setAvailable(true)
+        reconcileFallback()
+        if (controller.getSnapshot().open) navigation.open()
+      } catch (error) {
+        seat.setAvailable(false)
+        stopIcon?.()
+        stopMain()
+        throw error
+      }
+      return () => {
+        controller.close()
+        seat.setAvailable(false)
+        stopIcon?.()
+        stopMain()
+        reconcileFallback()
+      }
+    }))
     document.addEventListener('click', reassert, true)
     reconcileFallback()
     return { ...navigation, dispose }

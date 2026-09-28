@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os'
 import { delimiter, dirname, join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
 import { resolveMemorySpacesConfig } from "../src/config.ts"
-import { createRunner, findMnemonCommand } from '../src/runner.ts'
+import { createRunner } from '../src/runner.ts'
+import { findMnemonCommand } from '../src/native-cli.ts'
 
 const enabled = process.platform === 'win32' && process.env.RUN_WINDOWS_MNEMON_SMOKE === '1'
 const temporaryDirectories: string[] = []

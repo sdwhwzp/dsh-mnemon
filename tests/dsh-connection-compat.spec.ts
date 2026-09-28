@@ -7,11 +7,9 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import * as Mnemon from '../src/host/plugin.ts'
-import { memorySettings } from './helpers/account-settings.ts'
 import type {
   HostConnectionHandle,
   HostRpcHandler,
-  HostRpcRegistrationOptions,
   HostSettingsService,
 } from "../src/host/dsh.ts"
 import { registerSettingsRpc } from "../src/host/settings.ts"
@@ -24,11 +22,7 @@ interface RegisteredRoute {
 
 interface BranchFreeConnection {
   rpc: {
-    handle(
-      channel: string,
-      handler: HostRpcHandler,
-      options: HostRpcRegistrationOptions,
-    ): () => Promise<void>
+    handle(channel: string, handler: HostRpcHandler): () => Promise<void>
   }
 }
 
@@ -54,7 +48,13 @@ describe('released and source DSH Connection compatibility', () => {
         registerUpgrade() { return () => {} }
       }
       await context.plugin(RouteRegistry)
-      context.provide('settings', memorySettings() as never)
+      const config = { accountDataDir: root, cliPath: '/unused/mnemon', remoteAccess: 'trusted-host' as const }
+      const entry = { id: 'include:mnemon', options: { id: 'mnemon', config } }
+      context.provide('settings', {
+        writable: true, configure: () => () => {},
+        describe: () => [{ ns: 'mnemon', value: config, base: config, user: {}, revision: 0, applies: 'live' }],
+      } as never)
+      context.provide('configEditor', { entries: () => [entry] } as never)
       context.provide('tools', { register: () => () => {} } as never)
       context.provide('commands', { register: () => () => {} } as never)
       context.provide('agents', { get: () => undefined, roots: () => [] } as never)
@@ -66,7 +66,10 @@ describe('released and source DSH Connection compatibility', () => {
       const Connection = HostConnectionService as unknown as BranchFreeConnectionConstructor
       const connection = new Connection(context, [], { isAuthenticated: () => true, authorizeIndex: () => true, authenticatedUrl: value => value }) as unknown as HostConnectionService
       new TypertGatewayService(context, { websocketHeartbeatIntervalMs: 2_000 })
-      await context.plugin(Mnemon, { accountDataDir: root, cliPath: '/unused/mnemon', remoteAccess: 'trusted-host' })
+      await context.plugin({ ...Mnemon, apply(ctx: Context, value: Mnemon.MnemonConfig) {
+        Object.assign(ctx.fiber, { entry })
+        Mnemon.apply(ctx, value)
+      } }, config)
       for (const runtime of context.registry.values()) for (const fiber of runtime.fibers) await fiber.await()
       const response = await connection.createSharedFetchHandler('/api').fetch(new Request('http://127.0.0.1/api/dshMnemon/settings', {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
@@ -74,7 +77,8 @@ describe('released and source DSH Connection compatibility', () => {
         }),
       }))
       expect(response.status).toBe(200)
-      expect(await response.json()).toMatchObject({ result: { ok: true, value: { ok: true, value: { value: { accountDataDir: root, defaultRecallLimit: 10 } } } } })
+      const reply = await response.json()
+      expect(reply, JSON.stringify(reply)).toMatchObject({ result: { ok: true, value: { ok: true, value: { value: { accountDataDir: root, defaultRecallLimit: 10 } } } } })
       expect(routes.some(route => route.path === '/dsh-mnemon-settings')).toBe(true)
     } finally {
       await context.fiber.dispose()

@@ -21,11 +21,14 @@ export function applyMemoryViewGuidance<T extends { sections: Array<{ name: stri
   return withoutMemoryViewContext({ ...assembly, sections })
 }
 
+/** Register once the prompt service is active; Cordis re-runs this if the service is replaced. */
 export function registerGuidance(ctx: HostContextShape, config?: Pick<ResolvedConfig, 'routingGuidance'>): void {
-  const prompt = ctx.get('systemPrompt') as { section?: (value: { name: string; order: number; text: () => string }) => unknown } | undefined
-  prompt?.section?.({
-    name: GUIDANCE_SECTION_NAME,
-    order: 150,
-    text: () => config?.routingGuidance === false ? '' : ROUTING_GUIDANCE,
+  ctx.inject(['systemPrompt'], prompted => {
+    const prompt = prompted.get('systemPrompt') as { section(value: { name: string; order: number; text: () => string }): unknown }
+    prompt.section({
+      name: GUIDANCE_SECTION_NAME,
+      order: 150,
+      text: () => config?.routingGuidance === false ? '' : ROUTING_GUIDANCE,
+    })
   })
 }

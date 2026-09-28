@@ -43,11 +43,9 @@ const relativeReadmeImages = readmeFiles.flatMap((path) => {
     .map(source => `${path}: ${source}`)
 })
 
-// The Starter ships Core/Host, the shared page kit and the legacy Session
-// copy-repair executable; Source/Provider implementations remain separate.
-// Version 0.5.15 with account isolation measures 1,410,951 unpacked bytes.
-// Allow less than 5 KB for metadata while retaining a bounded artifact budget.
-const maximumUnpackedBytes = 1_415_000
+// Core/Host and account isolation ship together; Source and Provider implementations remain separate.
+// The account-scoped 0.5.17 package measures 1,504,500 bytes before final documentation edits.
+const maximumUnpackedBytes = 1_510_000
 
 if (missing.length > 0 || unexpected.length > 0 || hostLeaks.length > 0 || relativeReadmeImages.length > 0 || pack.unpackedSize > maximumUnpackedBytes) {
   if (missing.length > 0) console.error(`Missing package files:\n${missing.map(path => `- ${path}`).join('\n')}`)

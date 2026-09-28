@@ -8,6 +8,7 @@ import { agentScope } from '../src/host/runtime.ts'
 import { MnemonSubagentCoordinator } from '../src/host/subagent.ts'
 import { registerTools } from '../src/host/tools.ts'
 import { compositionFixture } from './fixtures/composition.ts'
+import { sessionLog } from './fixtures/session-log.ts'
 
 const fixtures: Awaited<ReturnType<typeof compositionFixture>>[] = []
 afterEach(async () => { for (const f of fixtures.splice(0)) await f.dispose() })
@@ -20,9 +21,9 @@ async function fixture(enhanced = false, child = false) {
     await f.mount(lightContext, { instanceId: 'light-context' })
     await f.mount(autoCapture, { instanceId: 'auto-capture' })
   }
-  const root = { id: 'root', session: { header: { cwd: f.workspace }, events: [] } } as unknown as HostAgent
+  const root = { id: 'root', session: { header: { cwd: f.workspace }, ...sessionLog() } } as unknown as HostAgent
   const agent = child
-    ? { id: 'child', session: { header: { cwd: f.workspace, origin: 'subagent', parentSession: root.id }, events: [] } } as unknown as HostAgent
+    ? { id: 'child', session: { header: { cwd: f.workspace, origin: 'subagent', parentSession: root.id }, ...sessionLog() } } as unknown as HostAgent
     : root
   const tools = new Map<string, ToolDefinition>()
   const coordinator = new MnemonSubagentCoordinator({} as never, f.live)

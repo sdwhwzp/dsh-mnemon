@@ -47,6 +47,9 @@ export function memoryGenerationOptions(config: ResolvedConfig, workspaceRoot: s
   const userDirectory = config.runtimeUserScope === 'global' ? createStorageRoot({ storageScope: 'global' }).effectiveDataDir() : directory
   return {
     strategyTypeId: config.memoryTopology.strategyId,
+    // A main Strategy switched off in the DSH Plugins page must not leave the
+    // Host without a View while exactly one other Strategy remains.
+    strategyFallback: 'sole-strategy',
     sourceTimeoutMs: config.timeoutMs,
     sourceCapabilities: installed => MEMORY_CAPABILITIES.filter(capability =>
       (config.writeEnabled || !['write', 'archive', 'link', 'forget', 'maintain', 'import'].includes(capability))
@@ -153,7 +156,7 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
   readonly storage: StorageScopeInspector
   readonly packs: MnemonPackManager
 
-  constructor(initial: MnemonRuntimeGraph, private readonly workspaceRegistry: HostWorkspaceRegistry | undefined, private readonly agents: HostAgentsService | undefined, private readonly extensions: MemoryRuntime, private readonly accounts?: MnemonAccounts, private readonly persistence?: HostSessionPersistence) {
+  constructor(initial: MnemonRuntimeGraph, private readonly workspaceRegistry: HostWorkspaceRegistry | undefined, private readonly agents: Pick<HostAgentsService, 'get'> | undefined, private readonly extensions: MemoryRuntime, private readonly accounts?: MnemonAccounts, private readonly persistence?: HostSessionPersistence) {
     this.current = initial
     this.config = liveProxy(() => this.active().config)
     this.storage = liveProxy(() => this.active().storage)

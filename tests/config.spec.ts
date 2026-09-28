@@ -134,10 +134,6 @@ describe('Mnemon config and resolution', () => {
       .toThrow('at least one allowed provider')
   })
 
-  it('retains the rc.2 management authority setting for branch-free rollback compatibility', () => {
-    expect(resolveConfig({ remoteAccess: 'trusted-host' }).remoteAccess).toBe('trusted-host')
-  })
-
   it('keeps explicit conversation-surface opt-outs', () => {
     expect(resolveConfig({ conversationInteraction: { turnBar: false, saveAction: false } }).conversationInteraction)
       .toMatchObject({ turnBar: false, saveAction: false })

@@ -6,20 +6,15 @@ The Starter pins a tested combination of official plugins. The table records ver
 
 | Component | Baseline | What is verified |
 |---|---|---|
-| DSH development baseline | `0.1.5-rc.1` | Published contracts, WebUI and isolated Headless activation |
-| DSH Client compatibility | `0.1.5-rc.2`, `0.1.6-alpha.2` | Full production public types, normal packed npm installs, real WebUI turn-tail peers/toggles/reload and Sidebar/Builtin navigation, packed Headless persistence and Root disable |
-| DSH profile settings | `0.1.7-alpha.1` | Normal packed npm installation; real WebUI activation, combined Core/UI saves, Strategy selection, retained-settings recovery and full Host restart |
-| DSH Session messages | `0.1.5-rc.2`, `0.1.6-alpha.2`, `0.1.7-alpha.1` | Same packed Mnemon artifacts complete real Runtime/status tool calls and persist producer-owned messages in Session V3/V4; alpha.7 restores the conversation and Builtin Runtime data after Host restart |
-| Historical DSH Headless evidence | `0.1.2-rc.1` | Earlier revision: isolated Headless activation and restart; synthetic Session logs migrate through the 0.1.5 public loader after copy repair |
-| Historical DSH evidence | `0.1.1-rc.2` | Prior Sidebar/Builtin reports retain their own revisions; not rerun for this change |
+| DSH | `0.1.7-rc.2` | The only supported host: pinned development baseline and both root peer floors. Published contracts, WebUI and isolated Headless activation, profile settings and retained-settings recovery, producer-owned Session V4 messages, plugin manager activation and the Agent Teams review matrix |
 | Node.js | `22.19` and `24` | Source CI and packed-artifact CI respectively; development requires `^22.19.0 || >=24.0.0` |
 | Node.js 20 | Public package imports only | Does not establish that the DSH Host runs on Node 20 |
 | Mnemon Native CLI | `0.2.8` | Opt-in tests against a real CLI and disposable data; install the CLI separately |
 | Third-party Providers | Adapter contracts and fixtures | Does not establish live cloud-account conformance or upstream availability |
 
-The development lockfile remains on `0.1.5-rc.1`. Turn memory registers with a stable ID for the alpha list slot and retains the RC chain selector. The component also checks that the turn is complete before reading or showing activity. Sidebar and Settings follow DSH's public default/main session binding; Builtin and Better Sidebar keep their explicit owning session.
+Both root DSH peer ranges are `^0.1.7-rc.2`; the official plugins' peer ranges are unchanged. Older DSH releases are no longer supported: keep dsh-mnemon `v0.5.16`, the last release verified with DSH `0.1.5-rc.1` through `0.1.7-alpha.1`, until the host is upgraded. Earlier Headless and WebUI records remain historical evidence.
 
-The current Client requires the public UI Session service. Both root DSH peer ranges are `^0.1.5-rc.1 || ^0.1.6-alpha.2 || ^0.1.7-alpha.1`; no official plugin peer or version changes. Older Headless and WebUI records remain historical evidence. Roll back an older DSH together with the Mnemon release previously verified for that host. DSH 0.1.7 moves live settings into profile Config. Mnemon adapts its existing settings pages to that writer and recovers retained legacy preferences as described below. Memory data and Provider formats do not change.
+Turn memory registers with a stable ID in DSH's `conversation.chat.turnTail` list slot and checks that the turn is complete before reading or showing activity. Sidebar and the `dsh-mnemon` page under Plugins follow DSH's public default/main session binding; Builtin and Better Sidebar keep their explicit owning session. DSH 0.1.7 keeps live settings in profile Config and edits a plugin's configuration on its page under Plugins; Mnemon's configuration page writes through it and recover retained legacy preferences as described below. Memory data and Provider formats do not change.
 
 See [DSH 0.1.7 settings verification](../../pr-assets/issue-267-settings-migration/README.md), [RC/alpha verification and before/after screenshots](../../pr-assets/issue-261-dsh-slots/README.md), [DSH 0.1.5 verification](../../pr-assets/issue-223-dsh-015/README.md), [Host compatibility evidence](../../pr-assets/dsh-rc1-compat/README.md), [upgrade evidence](../../pr-assets/main-rebase-20260904/README.md), and [current development checks](../development/README.md). A passing mechanism test is not an LLM quality benchmark. OS-specific and real-CLI checks may be skipped unless their environment is explicitly available.
 
@@ -27,7 +22,7 @@ The historical v0.5.2 capture found unusable settings layout at 390px; [that fai
 
 ## Desktop profile generations
 
-Desktop may remove private `@deepseek-ai/*` packages from a plugin generation and use its own framework versions. Mnemon checks the host's public Volatile APIs before importing the live settings schema. Hosts carrying Cosmokit `1.8.3` use the existing ordinary Config and Settings path; hosts with the live APIs keep revision-checked profile settings.
+Desktop may remove private `@deepseek-ai/*` packages from a plugin generation and use its own framework versions. Mnemon builds its live settings schema from the host's public Volatile APIs, which DSH `0.1.7-rc.2` provides through Cosmokit `1.8.5`. A generation whose host carries an older Cosmokit without them, such as `1.8.3`, is an unsupported host; keep dsh-mnemon `v0.5.16` there.
 
 In the affected `0.5.13` install, Desktop's fallback hides a missing `createVolatile` export behind `Cannot find package 'dsh-mnemon'`. Flattening `mnemon-bundle` does not fix that import failure. The Starter retains its group, root disable gate, independent Source/Strategy choices, private Provider children and existing settings namespaces. Update Mnemon in the owning profile and restart; no memory or configuration migration is required for this fix.
 
@@ -35,14 +30,14 @@ See the [original Desktop reproduction and verification](../../pr-assets/issue-2
 
 ## DSH 0.1.7 bundle component list
 
-In DSH `0.1.7-rc.2`, the **Plugins → dsh-mnemon** detail page lists the internal `cordis:group` / `mnemon-bundle` container as an off component. Even with all eight real components running, the count can read “9 total · 8 running · 1 off.” Clicking the container switch returns `unknown-plugin`; the Chinese UI reports “组件启用失败：找不到该插件”. See the [original screenshot](../../pr-assets/sidebar-native-20260926/before-bundle-toggle-error.jpg) and [upstream issue #649](https://github.com/dsh-external/issues/issues/649).
+In DSH `0.1.7-rc.2`, the **Plugins → dsh-mnemon** detail page lists the internal `cordis:group` / `mnemon-bundle` container as an off component. Even with all nine real components running, the count can read “10 total · 9 running · 1 off.” Clicking the container switch returns `unknown-plugin`; the Chinese UI reports “组件启用失败：找不到该插件”. See the [original screenshot](../../pr-assets/sidebar-native-20260926/before-bundle-toggle-error.jpg) and [upstream issue #649](https://github.com/dsh-external/issues/issues/649).
 
 The host's display and management inventories disagree: its bundle declaration list includes native groups, but its manageable plugin inventory deliberately excludes them. This container's off state does not mean the Mnemon core or its children are disabled, and does not establish whether memory reads and writes work.
 
 When this happens:
 
 1. Inspect **Memory System → Status** and the actual Source and Strategy components. If only the container is incorrectly shown as off, while the required components and reads/writes work, you can continue using Mnemon. Actual component errors or failed operations still need separate investigation.
-2. Use the top-level `dsh-mnemon` bundle switch or the core component with entry ID `mnemon` to stop and restore the composition. Do not use the `cordis:group` row's switch.
+2. Use the top-level `dsh-mnemon` bundle switch or the core component with entry ID `mnemon` to stop and restore the composition. Do not use the `cordis:group` row's switch. The `dsh-mnemon` configuration page says this right above the component list.
 3. Keep existing configuration and memory. This display issue requires neither a data reset nor configuration or memory migration.
 
 The Starter retains the stable group ID and the existing `mnemon` configuration target. Disabling the core stops its Sources, Strategies and private Provider children; re-enabling it restores their independent choices. Removing the group leaves enabled dependents waiting for the missing core, while making the group anonymous can leave old instances alive after a profile reload. Do not remove the container, its stable ID or alter the group declaration to hide the row. The [published lifecycle regression](../development/README.md#test-ownership-and-coverage) checks manager persistence, restarts and literal or expression-based legacy disable flags without changing the installed host.
@@ -51,7 +46,7 @@ An [upstream candidate patch](../../pr-assets/sidebar-native-20260926/upstream-f
 
 ## DSH 0.1.7 settings recovery
 
-DSH `0.1.7-alpha.1` replaces `settings.register()` and `settings-file` with Config-backed forms. Mnemon exposes live Config fields and persists its existing UI operations through the host's revision-checked profile writer. Changes to transport authority still require a normal plugin reload. DSH `0.1.5-rc.2` and `0.1.6-alpha.2` retain their existing settings path.
+DSH 0.1.7 replaces `settings.register()` and `settings-file` with Config-backed forms. Mnemon exposes live Config fields and persists its existing UI operations through the host's revision-checked profile writer. Changes to transport authority still require a normal plugin reload.
 
 Mnemon messages use the producer-owned `dsh-mnemon` source kind accepted by both Session V3 and V4. Historical wrappers and DSH's migrated `plugin:dsh-mnemon` messages remain recognizable for filtering and deduplication; no existing Session files are rewritten by this change.
 
@@ -59,7 +54,7 @@ On startup, Mnemon can recover the retained `<profile home>/settings.yaml.import
 
 If the original `settings.yaml` still exists when Mnemon starts, DSH owns that import. Restart the profile once more after it finishes to recover Mnemon-specific preferences. DSH exposes no completion signal for its importer, so Mnemon deliberately waits for a new host process instead of racing it. A read-only or ambiguous root cannot be edited; malformed relevant sections are not partially imported or marked complete. Retain the backup and review the startup diagnostic before repairing it. Custom root IDs and another profile's hashed namespaces are not guessed.
 
-When rolling back DSH, keep a copy of the profile patch and retained settings backup. Settings subsequently edited on 0.1.7 are not automatically exported back to the older settings file; restore the matching backup or reapply those preferences in the older host. Runtime, Documents, Memory Spaces, and Provider data are unaffected.
+When rolling back DSH, keep a copy of the profile patch and retained settings backup, and reinstall dsh-mnemon `v0.5.16` with the older host. Settings subsequently edited on 0.1.7 are not automatically exported back to the older settings file; restore the matching backup or reapply those preferences in the older host. Runtime, Documents, Memory Spaces, and Provider data are unaffected.
 
 ## Upgrade the default installation
 

@@ -1,6 +1,5 @@
 import type { Context } from '@deepseek-ai/cordis'
-import { defineMemoryPlugin, installMemory, defineMemoryStrategyConfiguration } from 'dsh-mnemon/extension-sdk'
-import { defineThreeTierExtension, validateThreeTierExtension } from 'dsh-mnemon-strategy-default-three-tier/extension-sdk'
+import { defineMemoryPlugin, defineMemoryViewExtension, installMemory, defineMemoryStrategyConfiguration, validateMemoryViewExtension } from 'dsh-mnemon/extension-sdk'
 
 export interface Config { maxProjectionCharacters?: number }
 export const name = 'dsh-mnemon-strategy-light-context'
@@ -8,15 +7,15 @@ export const inject = ['mnemonMemory']
 export const memoryPlugin = defineMemoryPlugin({
   packageName: name,
   label: { en: 'Light context', 'zh-CN': '轻量上下文' },
-  description: { en: 'Narrow resident context while keeping on-demand reads.', 'zh-CN': '收窄常驻内容预算，保留按需读取。' },
+  description: { en: 'Reduce resident content while keeping on-demand reads available.', 'zh-CN': '减少常驻内容，同时保留按需读取能力。' },
   roles: ['strategy-extension'],
-  provides: [{ id: 'strategy.default-three-tier.projection', exclusive: true }],
-  requires: ['strategy.default-three-tier'],
+  provides: [{ id: 'strategy.projection', exclusive: true }],
+  requires: ['strategy'],
 })
 
 export function createLightContextExtension(config: Config = {}) {
-  const projection = validateThreeTierExtension('projection', { maxProjectionCharacters: config.maxProjectionCharacters ?? 4_096 })
-  return defineThreeTierExtension({ typeId: 'light-context', packageName: name, slot: 'projection', contribute: () => projection })
+  const projection = validateMemoryViewExtension('projection', { maxProjectionCharacters: config.maxProjectionCharacters ?? 4_096 })
+  return defineMemoryViewExtension({ typeId: 'light-context', packageName: name, slot: 'projection', contribute: () => projection })
 }
 
 export function apply(ctx: Context, config: Config = {}): void {

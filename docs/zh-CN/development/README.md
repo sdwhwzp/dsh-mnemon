@@ -4,11 +4,9 @@
 
 ## 环境与命令
 
-插件的 Node engine 下限为 20；锁定的完整 DSH 开发 Profile 是正式发布的 0.1.5-rc.1，需要 Node `^22.19.0 || >=24.0.0`，建议开发使用 Node 24。Root、Source Client 测试和外部制品消费者均使用该 rc.1 依赖族；`dsh-invariants` 闭合 peer 图，`dsh-client-store` 则提供子 Agent projection 适配器使用的公开 selector 类型。CI 另在 Node 20 冒烟导入公开 Node 入口；源码覆盖工具保留用于明确请求的调查。
+插件的 Node engine 下限为 20；锁定的完整 DSH 开发 Profile 是正式发布的 0.1.7-rc.2，需要 Node `^22.19.0 || >=24.0.0`，建议开发使用 Node 24。Root、Source Client 测试和外部制品消费者均使用该依赖族；`dsh-invariants` 闭合 peer 图，`dsh-client-store` 则提供子 Agent projection 适配器使用的公开 selector 类型。CI 另在 Node 20 冒烟导入公开 Node 入口。
 
-DSH 0.1.5 UI primitives 在制品中导入 Markdown/高亮依赖，但其已发布 manifest 将这些包列为开发依赖。Root、三个 Source 与外部消费者显式声明完整依赖族，使独立 Client 测试可执行；Host 制品仍使用 DSH 提供的 UI 模块。测试同步使用公开的异步 Agent 工厂及持久化 `assistant/message` 事件。`tests/legacy-session-repair.spec.ts` 对普通和压缩格式的合成历史日志执行已发布 v0 → v3 迁移，检查显式副本修复、冷启动重读和带时间戳的 stream 回放。审计用例覆盖三个旧 Mnemon summary、兼容 v2 descriptor、packed 占位值展开、null→空字符串 delta name，以及具有已记录 provider ID 的闭合工具链；另验证多调用 provenance、owner 引用拒绝、原件及其他插件保留。`pnpm e2e:serve --legacy-session-replay` 还要求实际 WebUI 的回环续写服务器核对历史 wire call/result ID 与正文，匹配后才返回成功。
-
-pnpm 11 可能在 rc.1 仍处于发布时间隔离窗口时安装这组已审核制品，因此 `minimumReleaseAgeExclude` 逐项列出精确版本。组合测试要求该列表与 lockfile 中的 rc.1 包完全一致，并拒绝 scope 通配符，使后续发布的 `@deepseek-ai` 包仍受隔离策略约束。
+DSH 0.1.7 UI primitives 在制品中导入 Markdown/高亮依赖，但其已发布 manifest 将这些包列为开发依赖。Root、三个 Source 与外部消费者显式声明完整依赖族，使独立 Client 测试可执行；Host 制品仍使用 DSH 提供的 UI 模块。测试同步使用公开的异步 Agent 工厂及持久化 `assistant/message` 事件。`tests/legacy-session-repair.spec.ts` 对普通和压缩格式的合成历史日志执行已发布 v0 → v3 迁移，检查显式副本修复、冷启动重读和带时间戳的 stream 回放。审计用例覆盖三个旧 Mnemon summary、兼容 v2 descriptor、packed 占位值展开、null→空字符串 delta name，以及具有已记录 provider ID 的闭合工具链；另验证多调用 provenance、owner 引用拒绝、原件及其他插件保留。`pnpm e2e:serve --legacy-session-replay` 还要求实际 WebUI 的回环续写服务器核对历史 wire call/result ID 与正文，匹配后才返回成功。
 
 ```sh
 pnpm install --frozen-lockfile
@@ -16,7 +14,7 @@ pnpm run verify
 pnpm run verify:plugins
 ```
 
-`verify` 包含类型检查、根包确定性构建、独立插件构建、完整测试集、真实隔离 DSH Headless 和包出口/内容验证。独立插件检查在所有公开制品构建完成后分阶段执行。不要用 `pnpm -r verify` 同时清理重建制品和运行读取它们的测试；整个工作区使用 `pnpm verify`。`verify:plugins` 在工作区**外部**，基于 semver 安装的 tarball 重复验证，并测试外部 Source/Strategy/Provider/Client 消费者；还向真实 DSH 仅安装根包 tarball，从 loopback registry 解析全部十六个官方插件，不使用工作区链接或改写 manifest，再单独验证三个随附增强从默认停用到同时启用。外部消费者还通过完整 Strategy 的打包 SDK 编译自己实现的策略贡献。
+`verify` 包含类型检查、根包确定性构建、独立插件构建、完整测试集、真实隔离 DSH Headless 和包出口/内容验证。独立插件检查在所有公开制品构建完成后分阶段执行。不要用 `pnpm -r verify` 同时清理重建制品和运行读取它们的测试；整个工作区使用 `pnpm verify`。`verify:plugins` 在工作区**外部**，基于 semver 安装的 tarball 重复验证，并测试外部 Source/Strategy/Provider/Client 消费者；还向真实 DSH 仅安装根包 tarball，从 loopback registry 解析全部十七个官方插件，不使用工作区链接或改写 manifest，再单独验证三个随附增强从默认停用到同时启用。外部消费者还通过完整 Strategy 的打包 SDK 编译自己实现的策略贡献。
 
 ## 仓库归属
 
@@ -40,7 +38,7 @@ scripts/      reproducible build, artifacts, Headless and Web fixtures
 cordis.patch.yml   default Starter composition
 ```
 
-根包拥有 Core/SDK、DSH Host 和默认 Starter，不拥有 Source 存储实现。`plugins/` 下每个目录都是可独立发布的项目。默认发行包按公开 semver 依赖全部十六个官方插件；三个增强包由 Starter 安装但其 Entry 默认停用。Source/Strategy 通过 peer 使用 Core SDK，策略贡献使用其完整 Strategy 的公开 SDK，Provider 使用 Memory Spaces SDK。peer/开发关系会产生包管理器环依赖提示；生产代码导入边界另有独立检查。
+根包拥有 Core/SDK、DSH Host 和默认 Starter，不拥有 Source 存储实现。`plugins/` 下每个目录都是可独立发布的项目。默认发行包按公开 semver 依赖全部十七个官方插件；三个增强包由 Starter 安装但其 Entry 默认停用。Source/Strategy 通过 peer 使用 Core SDK，策略贡献使用其完整 Strategy 的公开 SDK，Provider 使用 Memory Spaces SDK。peer/开发关系会产生包管理器环依赖提示；生产代码导入边界另有独立检查。
 
 不再保留私有工作区包、控制器转发文件、业务 binding 或 compatibility 目录。兼容指用户配置、数据与使用流程，不是延续历史内部符号。
 
@@ -68,7 +66,7 @@ pnpm --filter dsh-mnemon-source-runtime verify
 
 工作区身份、Client 平台边界和委派工作区范围测试还会在 Windows 的 Node 22.19 与 24 上运行。它们覆盖真实文件系统错误和 junction 别名，并包含模拟 Windows 对文件后代返回 `ENOENT` 的跨平台回归；该模拟不能替代真实 Windows 运行。
 
-`tests/bundle-activation.spec.mjs` 用正式发布的 DSH Loader 启动临时激活计数器，覆盖 Starter 的全部十七个包。锁定的宿主验证旧版 `mnemon` 配置／停用目标及组件独立选择。设置 `MNEMON_BUNDLE_TEST_PROFILE=/absolute/profile` 后，还会调用该安装的正式插件管理器（已在 `0.1.7-rc.2` 验证）：真实组件和 bundle 开关必须在重载、重启后保持，核心总开关必须停止全部运行中的子项，任何包都不能留下重复实例。夹具创建自己的临时 profile，不修改所提供的安装。它验证生命周期契约；真实 Mnemon 行为仍由制品 Headless 和 WebUI 检查负责。执行 `node --expose-internals tests/fixtures/bundle-activation.mjs /absolute/profile manager --check-declared-rows` 可额外要求每个声明的 bundle 组件都可由管理器操作；该诊断会在[兼容性说明](../reference/compatibility.md#dsh-017-bundle-组件列表)中的 `0.1.7-rc.2` 原生 group 列表缺陷处失败。
+`tests/bundle-activation.spec.mjs` 用正式发布的 DSH Loader 启动临时激活计数器，覆盖 Starter 的全部十八个包。它验证旧版 `mnemon` 配置／停用目标及组件独立选择，再调用正式插件管理器：真实组件和 bundle 开关必须在重载、重启后保持，核心总开关必须停止全部运行中的子项，任何包都不能留下重复实例。两组用例都在锁定的宿主上运行；设置 `MNEMON_BUNDLE_TEST_PROFILE=/absolute/profile` 可改为检查另一份安装。夹具创建自己的临时 profile，不修改所提供的安装。它验证生命周期契约；真实 Mnemon 行为仍由制品 Headless 和 WebUI 检查负责。执行 `node --expose-internals tests/fixtures/bundle-activation.mjs /absolute/profile manager --check-declared-rows` 可额外要求每个声明的 bundle 组件都可由管理器操作；该诊断会在[兼容性说明](../reference/compatibility.md#dsh-017-bundle-组件列表)中的 `0.1.7-rc.2` 原生 group 列表缺陷处失败。
 
 远程 Provider 使用可控 HTTP 响应；Native 进程测试使用可控命令 runner，另有可选 Windows 二进制冒烟。额外的 opt-in 测试接受经过官方 checksum 校验的 Native 二进制，创建临时记忆空间，通过 View 写入、召回并删除：
 
@@ -83,7 +81,7 @@ OpenViking 提供显式启用的回环集成测试：`MNEMON_OPENVIKING_TEST_END
 
 Runtime 用例在 View 固定后，通过真实 Host 工具创建并激活两个 Native 空间，归档两条完整检查点并验证待新增内容。路由决策由本地脚本固定，不调用模型 API。
 
-可选 Agent Teams 矩阵通过包出口加载隔离的正式 DSH profile：`MNEMON_TEAM_TEST_PROFILE=/absolute/profile pnpm exec vitest run tests/agent-team-review-host.spec.ts`。使用匹配的 DSH/Teams 0.1.7-rc.1 组合；DSH 0.1.5-rc.2 与 Teams 0.1.5-alpha.2 则另设 `MNEMON_TEAM_TEST_LEGACY=1`。测试执行真实 fork/spawn、原生/Code Mode 工具、全部三个 Strategy 增强、子代理执行限制、Runtime 提交与父 Team 工具。普通 CI 跳过这组额外安装。[Issue #275 记录](../../pr-assets/issue-275-agent-teams/README.zh-CN.md)提供复现 profile、制品 WebUI 夹具与人工验收证据。
+Agent Teams 矩阵只通过包出口加载正式发布的 DSH 包，并随常规测试在锁定的宿主上运行；`MNEMON_TEAM_TEST_PROFILE=/absolute/profile pnpm exec vitest run tests/agent-team-review-host.spec.ts` 可检查同一 DSH/Teams 版本的另一份安装。测试执行真实 fork/spawn、原生/Code Mode 工具、全部三个 Strategy 增强、子代理执行限制、Runtime 提交与父 Team 工具。[Issue #275 记录](../../pr-assets/issue-275-agent-teams/README.zh-CN.md)提供复现 profile、制品 WebUI 夹具与人工验收证据。
 
 可选的 Flash 压力测试使用四个真实 DSH 会话、委派写入者、独立维护任务和临时 Native 存储，保留默认 10 KiB 上限，验证反复归档后的精确原文、命名空间路由和无会话 Web 管理。通过 `DEEPSEEK_API_KEY` 提供 DeepSeek 凭据，通过 `MNEMON_NATIVE_TEST_CLI` 提供已验证的 CLI，然后运行：
 
@@ -136,19 +134,19 @@ Issue #233 使用 `node scripts/fixtures/openviking-protocol.mjs` 与 `pnpm e2e:
 
 [2026-08-30 npm 回归记录](../../pr-assets/npm-sidebar-cli/README.md#简体中文)保留了旧 Taskboard/SSH 与 CLI 调查。已移除的历史夹具不是当前 checkout 的命令；当前 WebUI 验证使用 `pnpm e2e:serve`。
 
-上一条 DSH 0.1.1-rc.2 版本线对 Bundle 变化的 Client 卸载并不完整；验证该回滚目标并修改 Client 包/locale 注册后应刷新页面。Mnemon 普通设置仍实时生效。区分上游 Profile/传输告警与 Mnemon 故障，不隐藏控制台。
+区分上游 Profile/传输告警与 Mnemon 故障，不隐藏控制台。
 
 文档归档回归使用 `pnpm e2e:serve --document-archive`：创建并启用临时的精确写入记忆空间，新建档案后从工作台归档。标题包含 `REJECT` 时夹具故意选择无效目标，检查档案仍为 active 且没有新增索引，再改名重试。在 Mnemon E2E 对话的三个回合中依次发送 `archive-tool-222 prepare`、`archive-tool-222 update`、`archive-tool-222`，会驱动真实的新建 → 更新 → 归档工具调用，并断言返回的 lineage。只有模型决策由脚本控制，存储、工具、传输和浏览器均为真实实现。搭配旧 Host 构建时，同一夹具可复现旧的回执序号不匹配错误。
 
 Runtime 写入范围回归使用 `MNEMON_CLI_PATH=/absolute/path/to/mnemon pnpm e2e:serve --runtime-write-scope --strategy-extensions`，并启动全新临时夹具。在 Mnemon E2E 中发送 `archive-scope-250`。脚本模型先保存两条检查点，在已固定的 View 内创建并激活两个真实 Native 空间，再新增一条越限检查点。基线版本会在空间已激活的情况下拒绝新增；修复后的 Host 会把原文归档到两个有权限的目标，再提交新增内容。发送 `archive-scope-250 retry` 可在新回合重试同一份待新增输入。夹具限制子 Agent 调用次数，且必须收到真实 create/update 回执才完成调用。
 
-## 可选 DSH 源码覆盖
+`pnpm e2e:serve --idle-review --strategy-extensions` 通过确定性回环模型选择验证部分失败。连续发送两个至少 150 字符的合成用户回合，再等待五秒；真实 reviewer 创建一份档案和一条 Runtime 记忆后，夹具故意返回模型错误。刷新记忆系统状态核对两份已提交回执，再发送更多回合，确认每会话一次的上限阻止新增子 Agent。与生产默认值的差别只有防抖和最小尝试间隔（均为 5 秒）以及 1 次会话上限。该夹具不模拟真实 Agent Teams policy；该组合由上文的可选 Agent Teams 矩阵覆盖。不使用个人凭据或记忆。详见[双语复现与证据](../../pr-assets/idle-review-agent-team/README.zh-CN.md)。
 
-`pnpm e2e:serve --idle-review --strategy-extensions` 通过确定性回环模型选择验证部分失败。连续发送两个至少 150 字符的合成用户回合，再等待五秒；真实 reviewer 创建一份档案和一条 Runtime 记忆后，夹具故意返回模型错误。刷新记忆系统状态核对两份已提交回执，再发送更多回合，确认每会话一次的上限阻止新增子 Agent。与生产默认值的差别只有防抖和最小尝试间隔（均为 5 秒）以及 1 次会话上限。该夹具不模拟真实 Agent Teams policy；组合验证需要已发布 rc.2 / alpha.2 包。不使用个人凭据或记忆。详见[双语复现与证据](../../pr-assets/idle-review-agent-team/README.zh-CN.md)。
+`pnpm e2e:serve --general-strategy` 启动时已选中通用策略，并停用分层策略。先发送 `general-strategy-check remember`，下一回合再发送 `general-strategy-check recall`。脚本模型检查系统提示中包含通用记忆协议，且 Runtime、项目档案和记忆空间三个 Source 均已接入；随后通过具名 Runtime 工具保存一条事实，并且只有当这条事实以常驻记忆投影出现时，第二回合才答出它。夹具以 `General strategy:` 行输出每项检查。只有模型决策是脚本化的；策略、其 View、Runtime 写入和浏览器均为真实运行。
 
-默认使用 registry 制品，本次 0.1.5 验证也全部使用已发布包。维护者明确要求调查源码版时，可通过 `DSH_SOURCE_ROOT` 指定独立构建的 Harness checkout，使用 `pnpm dsh:link-source` 链接，结束后用 `pnpm dsh:restore-registry` 恢复原始链接。工具只更改生成的 `node_modules`，不改已发布依赖版本或 tsconfig 源码路径。目标 checkout 必须提供当前依赖族，再按该目标选择适用检查。
+`pnpm e2e:serve --without-mnemon-cli` 把 `cliPath` 指向不存在的文件，即使 PATH 中有 Mnemon CLI，Host 也按未安装处理。用它确认：状态页不显示 Mnemon Native 卡片，版本对话框把 CLI 列为可选，插件页停用向量测试，新建记忆空间从已就绪的 Provider 开始。先连接一个 Provider，例如在“插件 → 可组合记忆”页面中连接 Provider Lab 的服务。
 
-历史 0.1.2-alpha.5 的完整测试流程只属于原记录对应的 revision；当前夹具需要 0.1.5 的会话迁移和消息契约，不能将旧流程当成本 checkout 的验证命令。参见[早期 registry/源码记录](../../pr-assets/main-rebase-20260904/README.md)与[当前 0.1.5 验证](../../pr-assets/issue-223-dsh-015/README.zh-CN.md)。
+`pnpm e2e:serve --trusted-host=memory.test:4331` 把该授权主机加入 DSH 的浏览器信任边界，用于以远程页面身份检查 WebUI；再加 `--remote-management` 即设置 `remoteAccess: trusted-host`。同时设置 `MNEMON_E2E_PORT=4331` 使端口一致，在测试浏览器中把该名称解析到 127.0.0.1（Chrome 可用 `--host-resolver-rules="MAP memory.test 127.0.0.1"` 并加 `--no-proxy-server`），再把打印出的启动 URL 中的回环地址换成 `memory.test:4331` 打开。未授权时“插件 → 可组合记忆”页面为只读；授权后，保存会经 API Gateway 持久化。
 
 ## 发布
 

@@ -1,12 +1,24 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { ClientConnectionHandle, ClientSettingsScope } from "../src/host/dsh.ts"
+import type { ClientConnectionHandle } from "../src/host/dsh.ts"
 import type { TurnMemoryActivitySnapshot } from '../src/host/protocol.ts'
 import type { Config } from "../src/host/config.ts"
 import { MnemonSaveAction } from '../src/client/MnemonSaveAction.tsx'
 import { MnemonTurnTail, memoryPageForTool } from '../src/client/MnemonTurnTail.tsx'
 import { consumeMnemonAnchor, dispatchMnemonAnchor, subscribeMnemonAnchor } from '../src/client/anchor.ts'
+import { settingsScope } from './helpers/settings-scope.ts'
+
+// DSH's Modal and Tooltip measure their surfaces before showing them; jsdom
+// has no layout engine, so report an empty box as soon as one is observed.
+globalThis.ResizeObserver ??= class {
+  constructor(private readonly callback: ResizeObserverCallback) {}
+  observe(target: Element): void {
+    this.callback([{ target, borderBoxSize: [{ inlineSize: 0, blockSize: 0 }] } as unknown as ResizeObserverEntry], this as unknown as ResizeObserver)
+  }
+  unobserve(): void {}
+  disconnect(): void {}
+} as unknown as typeof ResizeObserver
 
 afterEach(() => {
   cleanup()
@@ -27,17 +39,8 @@ function createLocaleRuntime() {
   }
 }
 const localeRuntime = createLocaleRuntime()
-const writableSettingsSnapshot = { status: 'ready' as const, value: {}, writable: true, mode: 'host' as const }
-const readOnlySettingsSnapshot = { status: 'unavailable' as const, writable: false, mode: 'host' as const }
-const writableSettingsScope = {
-  getSnapshot: () => writableSettingsSnapshot,
-  subscribe: () => () => {},
-  set: async () => {}, unset: async () => {}, setPath: async () => {}, unsetPath: async () => {},
-} satisfies ClientSettingsScope<Config>
-const readOnlySettingsScope = {
-  ...writableSettingsScope,
-  getSnapshot: () => readOnlySettingsSnapshot,
-} satisfies ClientSettingsScope<Config>
+const writableSettingsScope = settingsScope<Config>({ status: 'ready', value: {}, writable: true, mode: 'host' })
+const readOnlySettingsScope = settingsScope<Config>({ status: 'unavailable', writable: false, mode: 'host' })
 
 function deferred<T>() {
   let resolve!: (value: T) => void
@@ -90,7 +93,7 @@ describe('conversation interaction surfaces', () => {
     { turn: '2', status: 'closed' },
   ])('does not request or display activity for an open or invalid turn: %j', async turn => {
     const rpcCall = vi.fn(async () => ({ ok: true as const, value: { cursor: 12, activities: [] } }))
-    render(<MnemonTurnTail turn={turn} seq={12} openFile={vi.fn()} sessionId="session-a" connection={{ rpc: { call: rpcCall } } as ClientConnectionHandle} localeRuntime={localeRuntime} t={translate} />)
+    render(<MnemonTurnTail turn={turn} seq={12} openFile={vi.fn()} sessionId="session-a" connection={{ rpc: { call: rpcCall }, isLoopback: true } as ClientConnectionHandle} localeRuntime={localeRuntime} t={translate} />)
 
     await act(async () => {})
     expect(rpcCall).not.toHaveBeenCalled()
@@ -101,7 +104,7 @@ describe('conversation interaction surfaces', () => {
     const rpcCall = vi.fn(async () => ({ ok: true as const, value: {
       cursor: 12, activities: [{ turn: 2, count: 1, names: ['mnemon_runtime_memory'], recalls: 0, writes: 1, documentSearches: 0, inspections: 0, failures: 0 }],
     } }))
-    const props = { seq: 12, openFile: vi.fn(), sessionId: 'session-a', connection: { rpc: { call: rpcCall } } as ClientConnectionHandle, localeRuntime, t: translate }
+    const props = { seq: 12, openFile: vi.fn(), sessionId: 'session-a', connection: { rpc: { call: rpcCall }, isLoopback: true } as ClientConnectionHandle, localeRuntime, t: translate }
     const view = render(<MnemonTurnTail {...props} turn={{ turn: 2, status: 'open', closing: null }} />)
     await act(async () => {})
     expect(rpcCall).not.toHaveBeenCalled()
@@ -115,7 +118,7 @@ describe('conversation interaction surfaces', () => {
 
   it('hides a completed turn with no memory activity', async () => {
     const rpcCall = vi.fn(async () => ({ ok: true as const, value: { cursor: 12, activities: [] } }))
-    render(<MnemonTurnTail turn={{ turn: 2, status: 'closed' }} seq={12} openFile={vi.fn()} sessionId="session-a" connection={{ rpc: { call: rpcCall } } as ClientConnectionHandle} localeRuntime={localeRuntime} t={translate} />)
+    render(<MnemonTurnTail turn={{ turn: 2, status: 'closed' }} seq={12} openFile={vi.fn()} sessionId="session-a" connection={{ rpc: { call: rpcCall }, isLoopback: true } as ClientConnectionHandle} localeRuntime={localeRuntime} t={translate} />)
 
     await act(async () => {})
     expect(rpcCall).toHaveBeenCalledTimes(1)
@@ -125,7 +128,7 @@ describe('conversation interaction surfaces', () => {
   it('ignores an in-flight activity result after its turn becomes open', async () => {
     const request = deferred<{ ok: true; value: TurnMemoryActivitySnapshot }>()
     const rpcCall = vi.fn(() => request.promise)
-    const props = { seq: 12, openFile: vi.fn(), sessionId: 'session-a', connection: { rpc: { call: rpcCall } } as ClientConnectionHandle, localeRuntime, t: translate }
+    const props = { seq: 12, openFile: vi.fn(), sessionId: 'session-a', connection: { rpc: { call: rpcCall }, isLoopback: true } as ClientConnectionHandle, localeRuntime, t: translate }
     const view = render(<MnemonTurnTail {...props} turn={{ turn: 2, status: 'closed' }} />)
     expect(rpcCall).toHaveBeenCalledTimes(1)
     view.rerender(<MnemonTurnTail {...props} turn={{ turn: 2, status: 'open' }} />)
@@ -142,7 +145,7 @@ describe('conversation interaction surfaces', () => {
     const rpcCall = vi.fn(async () => ({ ok: true as const, value: {
       cursor: 12, activities: [{ turn: 2, count: 1, names: ['mnemon_runtime_memory'], recalls: 0, writes: 1, documentSearches: 0, inspections: 0, failures: 0 }],
     } }))
-    const props = { seq: 12, openFile: vi.fn(), sessionId: 'session-a', connection: { rpc: { call: rpcCall } } as ClientConnectionHandle, localeRuntime, t: translate }
+    const props = { seq: 12, openFile: vi.fn(), sessionId: 'session-a', connection: { rpc: { call: rpcCall }, isLoopback: true } as ClientConnectionHandle, localeRuntime, t: translate }
     const view = render(<MnemonTurnTail {...props} turn={{ turn: 2, status: 'closed' }} />)
     await screen.findByRole('button', { name: /turnTail\.label/ })
 
@@ -163,7 +166,7 @@ describe('conversation interaction surfaces', () => {
         },
       }
     })
-    const connection = { rpc: { call: rpcCall } } as ClientConnectionHandle
+    const connection = { rpc: { call: rpcCall }, isLoopback: true } as ClientConnectionHandle
     const received: string[] = []
     const unsubscribe = subscribeMnemonAnchor('session-a', anchor => received.push(anchor.page))
     render(<MnemonTurnTail turn={{ turn: 2, status: 'closed' }} seq={12} openFile={vi.fn()} sessionId="session-a" connection={connection} localeRuntime={localeRuntime} t={translate as never} />)
@@ -189,7 +192,7 @@ describe('conversation interaction surfaces', () => {
       if (endpoint === 'supervise') return supervision.promise
       throw new Error(`unexpected endpoint: ${endpoint}`)
     })
-    const connection = { rpc: { call: rpcCall } } as ClientConnectionHandle
+    const connection = { rpc: { call: rpcCall }, isLoopback: true } as ClientConnectionHandle
 
     render(<MnemonSaveAction messageId="message-1" sessionId="session-a" connection={connection} settingsScope={writableSettingsScope} localeRuntime={localeRuntime} t={translate as never} />)
     const action = screen.getByRole('button', { name: 'saveAction.button' })
@@ -274,7 +277,7 @@ describe('conversation interaction surfaces', () => {
       if (endpoint === 'assistant-message') return { ok: true as const, value: { messageId: 'message-1', text: 'Original candidate.' } }
       throw new Error(`unexpected endpoint: ${endpoint}`)
     })
-    render(<MnemonSaveAction messageId="message-1" sessionId="session-a" connection={{ rpc: { call: rpcCall } } as ClientConnectionHandle} settingsScope={writableSettingsScope} localeRuntime={locale} t={t} />)
+    render(<MnemonSaveAction messageId="message-1" sessionId="session-a" connection={{ rpc: { call: rpcCall }, isLoopback: true } as ClientConnectionHandle} settingsScope={writableSettingsScope} localeRuntime={locale} t={t} />)
     expect(screen.getByRole('button', { name: 'zh:saveAction.button' })).toBeTruthy()
     act(() => locale.select('en'))
     fireEvent.click(screen.getByRole('button', { name: 'en:saveAction.button' }))
@@ -293,7 +296,7 @@ describe('conversation interaction surfaces', () => {
     const rpcCall = vi.fn(async () => ({ ok: true as const, value: {
       cursor: 12, activities: [{ turn: 2, count: 1, names: ['mnemon_runtime_memory'], recalls: 0, writes: 1, documentSearches: 0, inspections: 0, failures: 0 }],
     } }))
-    render(<MnemonTurnTail turn={{ turn: 2, status: 'closed' }} seq={12} openFile={vi.fn()} sessionId="session-a" connection={{ rpc: { call: rpcCall } } as ClientConnectionHandle} localeRuntime={locale} t={t} />)
+    render(<MnemonTurnTail turn={{ turn: 2, status: 'closed' }} seq={12} openFile={vi.fn()} sessionId="session-a" connection={{ rpc: { call: rpcCall }, isLoopback: true } as ClientConnectionHandle} localeRuntime={locale} t={t} />)
     fireEvent.click(await screen.findByRole('button', { name: /zh:turnTail\.label/ }))
     act(() => locale.select('en'))
     expect(screen.getByRole('button', { name: /en:turnTail\.label/ }).getAttribute('aria-expanded')).toBe('true')

@@ -48,7 +48,7 @@ function isLoopbackHostname(hostname: string): boolean {
 function isRemoteConnection(connection: ClientConnectionHandle): boolean {
   const hostname = globalThis.location?.hostname
   const remotePage = typeof hostname === 'string' && hostname !== '' && !isLoopbackHostname(hostname)
-  return remotePage || connection.isLoopback === false
+  return remotePage || !connection.isLoopback
 }
 
 /** Route only paired remote pages through API Gateway; local clients retain legacy channels. */

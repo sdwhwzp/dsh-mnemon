@@ -1,3 +1,6 @@
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import * as p0 from 'dsh-mnemon-provider-mnemon-native'
 import * as p1 from 'dsh-mnemon-provider-openviking'
 import * as p2 from 'dsh-mnemon-provider-honcho'
@@ -39,3 +42,10 @@ export function createService(
   adapters = adapterRegistry(),
   providers = catalog,
 ) { return new MemorySpacesService(runner, config, bodies ?? createRegistry(runner), quality, adapters, providers) }
+
+/** An executable stub so the runner sees an installed Mnemon CLI; tests fake the process it would start. */
+export function installedCliStub(): string {
+  const path = join(mkdtempSync(join(tmpdir(), 'mnemon-cli-stub-')), process.platform === 'win32' ? 'mnemon.exe' : 'mnemon')
+  writeFileSync(path, '#!/bin/sh\nexit 0\n', { mode: 0o755 })
+  return path
+}

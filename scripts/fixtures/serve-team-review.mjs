@@ -126,6 +126,8 @@ await new Promise(done => model.listen(0, '127.0.0.1', done))
 // Fail fixture startup before browser acceptance if the published adapter cannot
 // parse either text or tool-use SSE from this model endpoint.
 const require = createRequire(join(profile, 'package.json'))
+// The Teams profile package must match the DSH release installed in --profile.
+const dshVersion = JSON.parse(await readFile(require.resolve('@deepseek-ai/dsh/package.json'), 'utf8')).version
 const { DeepSeekAdapter, resolveAdapterOptions } = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-llm-deepseek')).href)
 const adapter = new DeepSeekAdapter({
   options: () => resolveAdapterOptions({ baseURL: `http://127.0.0.1:${model.address().port}`, thinking: 'disabled' }),
@@ -141,13 +143,13 @@ for (const [input, type] of [['Protocol smoke check', 'text'], ['TEAM_CHECK', 't
   assert(chunks.some(chunk => chunk.type === 'block-end' && chunk.block.type === type), `Published adapter must parse ${type}`)
   assert(chunks.some(chunk => chunk.type === 'finish'), 'Published adapter must finish the stream')
 }
-await privateFile('protocol-smoke.json', JSON.stringify({ publishedAdapter: '0.1.7-rc.1', text: true, toolCall: true }) + '\n')
+await privateFile('protocol-smoke.json', JSON.stringify({ publishedAdapter: dshVersion, text: true, toolCall: true }) + '\n')
 const env = { ...process.env, DSH_HOME: dshHome, DSH_TELEMETRY_DISABLED: '1',
   DEEPSEEK_API_KEY: 'isolated-test-key', DEEPSEEK_BASE_URL: `http://127.0.0.1:${model.address().port}`,
   MNEMON_DATA_DIR: join(state, 'data'), npm_config_registry: registryUrl, NPM_CONFIG_REGISTRY: registryUrl }
 const dshBin = join(profile, 'node_modules/@deepseek-ai/dsh/lib/bin.js')
 await privateFile('install.log', await run(process.execPath, [dshBin, 'plugin', '--profile', 'web', 'add',
-  `file:${packages.get('dsh-mnemon').path}`, '@deepseek-ai/dsh-experimental-agent-team-profile@0.1.7-rc.1', '--registry', registryUrl], { cwd: workspace, env }))
+  `file:${packages.get('dsh-mnemon').path}`, `@deepseek-ai/dsh-experimental-agent-team-profile@${dshVersion}`, '--registry', registryUrl], { cwd: workspace, env }))
 // Keep the official Coding preset and all its services, including PTC. Only
 // replace the native directory dialog with the published browser picker.
 const disabled = ['directory-picker']

@@ -2,8 +2,10 @@ import type { HostSettingsService } from '../../src/host/dsh.ts'
 
 export function memorySettings(): HostSettingsService {
   const values = new Map<string, { base: object; user: Record<string, unknown>; revision: number; validate?: (value: never) => void }>()
+  const listeners = new Set<(namespace: string, value: unknown) => void>()
   return {
     writable: true,
+    onUpdated: listener => { listeners.add(listener); return () => { listeners.delete(listener) } },
     register: (namespace, _schema, options) => {
       if (!values.has(namespace)) values.set(namespace, { base: options.base ?? {}, user: {}, revision: 0, ...(options.validate === undefined ? {} : { validate: options.validate }) })
       return { get: () => ({ ...values.get(namespace)!.base, ...values.get(namespace)!.user }) as never }
@@ -21,6 +23,7 @@ export function memorySettings(): HostSettingsService {
       value.validate?.({ ...value.base, ...next } as never)
       value.user = next
       value.revision++
+      for (const listener of listeners) listener(ns, { ...value.base, ...value.user })
     },
   }
 }

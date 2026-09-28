@@ -42,6 +42,12 @@ async function profile() {
       current.revision += 1
       emit('settings/updated', namespace, next)
     }),
+    onUpdated: listener => {
+      const entries = listeners.get('settings/updated') ?? new Set()
+      entries.add(listener)
+      listeners.set('settings/updated', entries)
+      return () => { entries.delete(listener) }
+    },
   }
   const ctx = {
     settings,

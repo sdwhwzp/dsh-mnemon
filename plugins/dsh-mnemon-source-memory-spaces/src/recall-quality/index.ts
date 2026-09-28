@@ -14,4 +14,4 @@ export {
   STRICT_RECALL_QUALITY_POLICY,
 } from './policies.ts'
 export { applyRecallQualityPolicy, prepareRecallQualityPolicy, type PreparedRecallQualityPolicy } from './engine.ts'
-export { RecallQualityPolicyRegistry, recallQualityPolicies, registerRecallQualityPolicy } from './registry.ts'
+export { RecallQualityPolicyRegistry, recallQualityPolicies } from './registry.ts'

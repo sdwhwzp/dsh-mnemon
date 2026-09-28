@@ -1,5 +1,5 @@
 import type { MemoryJsonValue } from '../core/contracts/index.ts'
-import type { MemoryPluginPreference, MemoryViewPreferences } from './view-protocol.ts'
+import type { MemoryPluginSavedPreference, MemoryViewPreferences } from './view-protocol.ts'
 
 /** Explicit profile rows, not the Loader's resolved defaults or effective config. */
 export interface LegacySettingsEntryOverride {
@@ -103,7 +103,7 @@ function view(value: unknown, label: string): Partial<MemoryViewPreferences> {
   if (Object.hasOwn(result, 'strategyTypeId') && (typeof result.strategyTypeId !== 'string' || !STRATEGY_ID.test(result.strategyTypeId))) {
     throw new Error(`${label} contains an invalid Strategy type id`)
   }
-  const entries: Record<string, MemoryPluginPreference> = {}
+  const entries: Record<string, MemoryPluginSavedPreference> = {}
   if (Object.hasOwn(result, 'entries')) {
     const values = object(result.entries, `${label}.entries`)
     if (Object.keys(values).length > 64) throw new Error(`${label} contains too many Entries`)
@@ -111,10 +111,11 @@ function view(value: unknown, label: string): Partial<MemoryViewPreferences> {
       entryId(id, label)
       const item = copiedObject(raw, `${label}.entries`)
       fields(item, ['enabled', 'config'], `${label}.entries`)
-      if (typeof item.enabled !== 'boolean') throw new Error(`${label} Entry enabled must be boolean`)
+      // Enablement moves into the profile patch once DSH's plugin manager runs.
+      if (Object.hasOwn(item, 'enabled') && typeof item.enabled !== 'boolean') throw new Error(`${label} Entry enabled must be boolean`)
       const config = Object.hasOwn(item, 'config') ? copiedObject(item.config, `${label} Entry config`) : {}
       if (JSON.stringify(config).length > 64 * 1024) throw new Error(`${label} Entry config exceeds 64 KiB`)
-      entries[id] = { enabled: item.enabled, config }
+      entries[id] = { ...(typeof item.enabled === 'boolean' ? { enabled: item.enabled } : {}), config }
     }
   }
   return {
@@ -123,12 +124,12 @@ function view(value: unknown, label: string): Partial<MemoryViewPreferences> {
   }
 }
 
-function sources(value: unknown, label: string, sourceEntryIds: ReadonlySet<string>, diagnostics: string[]): Record<string, MemoryPluginPreference> {
+function sources(value: unknown, label: string, sourceEntryIds: ReadonlySet<string>, diagnostics: string[]): Record<string, MemoryPluginSavedPreference> {
   const result = copiedObject(value, label)
   fields(result, ['sources'], label)
   const values = Object.hasOwn(result, 'sources') ? object(result.sources, `${label}.sources`) : {}
   if (Object.keys(values).length > 64) throw new Error(`${label} contains too many Source Entries`)
-  const entries: Record<string, MemoryPluginPreference> = {}
+  const entries: Record<string, MemoryPluginSavedPreference> = {}
   for (const [id, raw] of Object.entries(values)) {
     entryId(id, label)
     const item = copiedObject(raw, `${label}.sources`)
@@ -143,7 +144,7 @@ function sources(value: unknown, label: string, sourceEntryIds: ReadonlySet<stri
   return entries
 }
 
-function applyEntryOverrides(entries: Record<string, MemoryPluginPreference>, overrides: readonly LegacySettingsEntryOverride[], sourceEntryIds: ReadonlySet<string>, diagnostics: string[]): void {
+function applyEntryOverrides(entries: Record<string, MemoryPluginSavedPreference>, overrides: readonly LegacySettingsEntryOverride[], sourceEntryIds: ReadonlySet<string>, diagnostics: string[]): void {
   if (!Array.isArray(overrides)) throw new Error('Explicit Entry overrides must be an array')
   const matching = new Map<string, { disabled?: unknown; config?: unknown }>()
   for (const raw of overrides) {

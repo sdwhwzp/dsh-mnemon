@@ -31,10 +31,7 @@ class ThisBoundSettingsScope implements ClientSettingsScope<Config> {
       this.listeners.delete(listener)
     }
   }
-  async set(): Promise<void> {}
-  async unset(): Promise<void> {}
-  async setPath(): Promise<void> {}
-  async unsetPath(): Promise<void> {}
+  async mutate(): Promise<void> {}
 }
 
 /** Rejecting RPC is fine: both views catch async load failures; only the synchronous render path matters here. */

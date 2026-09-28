@@ -4,7 +4,7 @@
 
 `dsh-mnemon` is the memory-system control plane for DeepSeek Harness (DSH). It does not force every kind of knowledge into one database. It organizes frequent context, complete project narratives, and retrievable long-term memory into three tiers, then brings nine long-term-memory providers into one workflow for creation, activation, recall, distillation, and observation.
 
-Runtime, Documents and Memory Spaces are independent Source plugins. A Strategy selects their instance-specific projections, retrieval routes and actions into an immutable per-turn View. Core provides only `ctx.mnemonMemory`; Sources own their data and optional pages, while Memory Spaces owns its private Provider children. The `dsh-mnemon` Starter preserves the default three-tier experience. See [Architecture](../development/architecture.md) and [Plugin development](../development/extensions.md).
+Runtime, Documents and Memory Spaces are independent Source plugins. A Strategy selects their instance-specific projections, retrieval routes and actions into an immutable per-turn View. Core provides only `ctx.mnemonMemory`; Sources own their data and optional pages, while Memory Spaces owns its private Provider children. The `dsh-mnemon` Starter starts with the Layered strategy. See [Architecture](../development/architecture.md) and [Plugin development](../development/extensions.md).
 
 The short decision rule is: **keep every-turn context in Runtime, complete narratives in Documents, and cross-task evidence in Memory Spaces.**
 
@@ -47,7 +47,7 @@ In the default Starter, Runtime and Documents use their own local Source storage
 | **ByteRover** | Local `brv` CLI | Code knowledge and curate workflows | Follows workspace by default; directory override allowed |
 | **Supermemory** | HTTP container | Document ingestion and container sharing | Container tag |
 
-Settings owns reusable **service configuration** and enable switches. Memory Spaces owns **instance configuration**, activation, and local metadata. Providers are off by default and participate in discovery and routing only after being enabled and saved. See [Long-term memory providers](./memory-providers.md) for the complete capability and field matrix.
+Memory Spaces' component page, opened from its name on the `dsh-mnemon` page under **Plugins**, owns reusable **service configuration** and enable switches. The Memory System's Memory Spaces page owns **instance configuration**, activation, and local metadata. Providers are off by default and participate in discovery and routing only after being enabled and saved. See [Long-term memory providers](./memory-providers.md) for the complete capability and field matrix.
 
 ## Who works after a click
 
@@ -65,7 +65,7 @@ These user-visible capabilities do not reuse the main conversation history or co
 - **Document archive** creates a cold reference before the Host may move the original;
 - **Smart Provider selection** calls a model only when hard rules leave multiple candidates.
 
-Tasks follow the DSH new-session model route by default. **Settings → Memory System → Background task Agent** can select a separate Provider and model. On DSH 0.1.1-rc.2, image-capable catalog entries are labeled **Image input**, including `deepseek-official/deepseek-v4-flash-vision-exp`; current Mnemon task prompts remain text-only. Tasks are isolated: one failure is reported on its own Memory Space or operation surface instead of blocking the page.
+Tasks follow the DSH new-session model route by default. **Task Agent model** under Background tasks, on the Layered strategy's page (**Plugins → dsh-mnemon**, then the component's name), can select a separate Provider and model. On DSH 0.1.1-rc.2, image-capable catalog entries are labeled **Image input**, including `deepseek-official/deepseek-v4-flash-vision-exp`; current Mnemon task prompts remain text-only. Tasks are isolated: one failure is reported on its own Memory Space or operation surface instead of blocking the page.
 
 Bounded workers may still perform structured judgment internally, but that is an implementation detail. The UI and product documentation consistently call the user-visible unit an **independent task Agent**.
 

@@ -3,7 +3,7 @@ export interface MnemonWorkspaceScope {
   cwd?: string
 }
 
-export interface MnemonBetterSidebarPlacement {
+interface MnemonBetterSidebarPlacement {
   target: HTMLElement
   scope: MnemonWorkspaceScope
   visible: boolean
