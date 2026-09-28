@@ -347,10 +347,10 @@
     },
     {
       "name": "dsh-plugin-subscriptions",
-      "version": "0.9.4-dsh.20260923.1",
-      "file": "dsh-plugin-subscriptions-0.9.4-dsh.20260923.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260923-harness-rc1/artifacts/dsh-plugin-subscriptions-0.9.4-dsh.20260923.1.tgz",
-      "sha256": "59003cded2013302743d03c26985f55d39b62a373e7230b19c1888a11f8c5978"
+      "version": "0.9.4-dsh.20260928.1",
+      "file": "dsh-plugin-subscriptions-0.9.4-dsh.20260928.1.tgz",
+      "sha256": "f6f26ee2a45e1b42f4cd223a84e2ecf7fb4dfed94f3babe2e21dab163ab6ece7",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260928-fork-audit-0827-r2/artifacts/dsh-plugin-subscriptions-0.9.4-dsh.20260928.1.tgz"
     },
     {
       "name": "dsh-shandong-tizhi-brand",
