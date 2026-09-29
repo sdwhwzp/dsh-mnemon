@@ -1,5 +1,6 @@
 import type { JSX } from 'react'
 import { createContext, useContext } from 'react'
+import { IconSearchOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import { translateZh, type MnemonTranslate } from './locales.ts'
 import { MnemonDialog, type MnemonDialogProps } from './MnemonDialog.tsx'
 import { appearanceClass } from './view-styles.ts'
@@ -72,10 +73,13 @@ export function SidebarModal(props: Omit<MnemonDialogProps, 'closeLabel'>): JSX.
   return <MnemonDialog {...props} closeLabel={t('common.close')} />
 }
 
+/** The search glyph is drawn with DSH's search icon, as every search field shows it. */
+const SEARCH_GLYPH = '⌕'
+
 export function EmptyState(props: { glyph: string; title: string; children: string }): JSX.Element {
   return (
     <div className={css.emptyState}>
-      <div className={css.emptyGlyph} aria-hidden="true"><span>{props.glyph}</span></div>
+      <div className={css.emptyGlyph} aria-hidden="true">{props.glyph === SEARCH_GLYPH ? <IconSearchOutlineRegular size={18} /> : <span>{props.glyph}</span>}</div>
       <div><h3>{props.title}</h3><p>{props.children}</p></div>
     </div>
   )

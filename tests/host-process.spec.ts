@@ -27,6 +27,7 @@ describe('bounded subprocess UTF-8 output', () => {
     const out = Buffer.from(stdout)
     const err = Buffer.from(stderr)
     const result = runProcess('test-cli', [], { timeoutMs: 1000, maxOutputBytes: out.length + err.length })
+    expect(spawn).toHaveBeenCalledWith('test-cli', [], expect.objectContaining({ windowsHide: true, shell: false, stdio: ['ignore', 'pipe', 'pipe'] }))
     for (let index = 0; index < Math.max(out.length, err.length); index++) {
       if (index < out.length) child.stdout.emit('data', out.subarray(index, index + 1))
       if (index < err.length) child.stderr.emit('data', err.subarray(index, index + 1))

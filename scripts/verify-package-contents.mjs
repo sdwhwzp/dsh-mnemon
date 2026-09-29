@@ -43,9 +43,8 @@ const relativeReadmeImages = readmeFiles.flatMap((path) => {
     .map(source => `${path}: ${source}`)
 })
 
-// Core/Host and account isolation ship together; Source and Provider implementations remain separate.
-// The account-scoped 0.5.17 package measures 1,504,500 bytes before final documentation edits.
-const maximumUnpackedBytes = 1_510_000
+// Host, shared page controls and account isolation ship together; Sources and Providers remain separate.
+const maximumUnpackedBytes = 1_540_000
 
 if (missing.length > 0 || unexpected.length > 0 || hostLeaks.length > 0 || relativeReadmeImages.length > 0 || pack.unpackedSize > maximumUnpackedBytes) {
   if (missing.length > 0) console.error(`Missing package files:\n${missing.map(path => `- ${path}`).join('\n')}`)

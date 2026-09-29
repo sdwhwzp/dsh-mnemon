@@ -68,11 +68,11 @@ function resultItems(value: unknown): MemoryActivityItem[] {
 function writeItem(argsValue: unknown, operationId: string): MemoryActivityItem {
   const outer = object(argsValue) ?? {}
   const input = object(outer.input) ?? outer
-  const content = bounded(input.content ?? input.description ?? input.reason ?? input.summary, MAX_EXCERPT)
+  // A removal names the text it removed; an item with no text is known only by its id.
+  const content = bounded(input.content ?? input.description ?? input.reason ?? input.summary ?? input.old_text ?? input.oldText, MAX_EXCERPT)
   const explicitTitle = bounded(input.title ?? input.name, MAX_TITLE)
   const identity = bounded(input.id ?? input.memoryBodyId ?? input.targetMemoryBodyId ?? input.sourceId, 300)
-  const action = bounded(input.action ?? input.operation, 40)
-  const title = explicitTitle ?? bounded(content, MAX_TITLE) ?? identity ?? action ?? operationId
+  const title = explicitTitle ?? bounded(content, MAX_TITLE) ?? identity ?? operationId
   return {
     id: identity ?? operationId,
     title,

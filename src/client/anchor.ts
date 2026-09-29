@@ -15,7 +15,11 @@ export type MnemonAnchorPage = 'status' | `${string}/${string}`
 export interface MnemonAnchor {
   /** Target workspace page. */
   page: MnemonAnchorPage
-  /** Optional context seed (recall query for explore, candidate text for remember). */
+  /**
+   * Optional context seed the target page opens with: a recall query for
+   * Memory Spaces explore, candidate text for remember, a document id for
+   * Project Documents, an entry's text for runtime memory.
+   */
   seed?: string
   /** Session the dispatch belongs to; omitted dispatches address every session. */
   sessionId?: string

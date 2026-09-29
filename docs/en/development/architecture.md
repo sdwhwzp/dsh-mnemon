@@ -12,7 +12,8 @@ flowchart TB
   Starter --> Runtime["dsh-mnemon-source-runtime"]
   Starter --> Docs["dsh-mnemon-source-documents"]
   Starter --> Spaces["dsh-mnemon-source-memory-spaces"]
-  Starter --> Strategy["dsh-mnemon-strategy-default-three-tier"]
+  Starter --> Strategy["dsh-mnemon-strategy-default-three-tier · Layered, the default"]
+  Starter --> General["dsh-mnemon-strategy-general · alternative, disabled"]
   Starter --> Helpers["three shipped enhancements · disabled"]
   Helpers -. selection / projection / capture .-> Strategy
   Spaces --> Providers["dsh-mnemon-provider-* · private child Fibers"]
@@ -22,7 +23,7 @@ Solid edges show Starter installation ownership; the dotted edge shows Strategy 
 
 Memory Spaces authors its **own** child Fibers and Provider protocol. Each configured Provider is an explicitly installed module; two Source instances can use the same child id without sharing their registry or credentials. No dependency scan or global Provider registry selects implementations.
 
-Like a Spring Boot starter, the default distribution chooses dependencies and explicit defaults. It does not turn Source business code into Core. Users still install only `dsh-mnemon`; 16 plugin packages can be independently built, tested and published. The Starter installs every official package, with three Strategy enhancements shipped as disabled Entries that join the View only after their Settings switches are enabled. Complete Strategy replacement remains explicit.
+Like a Spring Boot starter, the default distribution chooses dependencies and explicit defaults. It does not turn Source business code into Core. Users still install only `dsh-mnemon`; 17 plugin packages can be independently built, tested and published. The Starter installs every official package. The General strategy and three Strategy enhancements ship as disabled Entries: an enhancement joins the View once its switch is on, and the General strategy composes it only after it is chosen as the main strategy. Replacing the main strategy is always an explicit choice.
 
 | Owner | Owns | Does not own |
 |---|---|---|
@@ -48,11 +49,12 @@ The Host passes the resolved directory to each default Source. Sources continue 
 | `dsh-mnemon-source-runtime` | Runtime JSON, USER/MEMORY projections, branch filtering, capacity | Exact working context, eager |
 | `dsh-mnemon-source-documents` | Managed Markdown, index, search, revision and archive | Bounded narrative cover and search route |
 | `dsh-mnemon-source-memory-spaces` | Space directory, private Providers, capability/quality policy | Bounded durable-evidence cover and recall/related routes |
-| `dsh-mnemon-strategy-default-three-tier` | No memory storage | Selects the three roles and allocates projection/routes/actions |
+| `dsh-mnemon-strategy-default-three-tier` | No memory storage | The Layered strategy: selects the three roles and allocates projection/routes/actions |
+| `dsh-mnemon-strategy-general` | No memory storage | Offered instead of Layered: admits every available Source in one shared budget and lets the model route |
 
 The nine independent Provider plugin packages are `dsh-mnemon-provider-{mnemon-native,openviking,honcho,mem0,hindsight,holographic,retaindb,byterover,supermemory}`. A Provider runs *inside* Memory Spaces as its storage/retrieval driver, not as a new Core contribution. A Git/Notion/health plugin should normally be a Source; an alternate way to combine them is a Strategy.
 
-The unextended default Strategy rejects duplicate roles. Enable `strategy-scoped` to compose multiple instances explicitly; disabling restores that ambiguity check rather than guessing by load order. The default Strategy owns its three extension slots. Core only carries bounded contributions and enforces the existing budget and authority contract.
+The unextended Layered strategy rejects duplicate roles. Enable `strategy-scoped` to compose multiple instances explicitly; disabling restores that ambiguity check rather than guessing by load order. The `selection`, `projection` and `capture` extension slots are standard: both shipped main strategies declare them, so an enhancement keeps working when the main strategy changes. Core only carries bounded contributions and enforces the existing budget and authority contract.
 
 ## View data flow
 
@@ -110,7 +112,7 @@ Each Source owns its optional `./client` DSH module, pages, management operation
 
 The Host supplies a scoped management client and sanitized instance metadata, not raw RPC/Host Context or an LLM grant. Reads and confirmed revision-fenced mutations address one Source. Default workflow assistance (such as Document-to-Space archival) lives in Host coordination and uses those same public operations.
 
-One shared workspace has two mutually exclusive DSH placements. Sidebar contributes the matching `mnemon` entry to the public `sidebar.panellist` and `main` slots, available since the supported DSH 0.1.5-rc.1 floor. DSH owns the button, icon size, label, selected state and main-panel navigation. The `shell.overlay` registration retains Source child-render authority and portals the workspace into a persistent native main seat, preserving page state across panel switches and the independent Better Sidebar seat. Replacement layouts without the native panel contracts retain the existing launcher and overlay fallback. Sidebar opens without a conversation, keeps its own workspace selection, coordinates with Taskboard/SSH and returns through `layout.selectPanel(null)`. Builtin uses `conversation.view` and the owning session's storage scope for reads, writes and tasks, with no independent workspace picker. Both placements render the same Source-owned child Slots. No separate React root, fallback page registry or cloned business page exists.
+One shared workspace has two mutually exclusive DSH placements. Sidebar contributes the matching `mnemon` entry to the public `sidebar.panellist` and `main` slots of the supported DSH releases, 0.1.7-rc.2 and 0.2.0-rc.1. DSH owns the button, icon size, label, selected state and main-panel navigation. The `shell.overlay` registration retains Source child-render authority and portals the workspace into a persistent native main seat, preserving page state across panel switches and the independent Better Sidebar seat. Replacement layouts without the native panel contracts retain the existing launcher and overlay fallback. Sidebar opens without a conversation, keeps its own workspace selection, coordinates with Taskboard/SSH and returns through `layout.selectPanel(null)`. The conversation tab (`builtin`) uses `conversation.view` and the owning session's storage scope for reads, writes and tasks, with no independent workspace picker. Both placements render the same Source-owned child Slots. No separate React root, fallback page registry or cloned business page exists.
 
 ## Compatibility and future evolution
 

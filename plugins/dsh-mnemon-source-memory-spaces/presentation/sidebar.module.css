@@ -160,12 +160,12 @@
 .shell .bodyCardHeader > [class*='bodySwitch'] { flex: 0 0 auto; }
 .shell article[class*='bodyCard'] > p {
   display: -webkit-box;
-  min-height: 60px;
-  max-height: 60px;
+  min-height: 40px;
+  max-height: 40px;
   margin: 10px 0;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
 }
 .shell .bodyCardFooter {
   display: grid;

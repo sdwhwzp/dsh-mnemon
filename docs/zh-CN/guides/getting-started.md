@@ -2,109 +2,34 @@
 
 **简体中文** | [English](../../en/guides/getting-started.md) | [文档中心](../README.md)
 
-本页从空白环境走到第一次可验证召回，默认采用 Sidebar、全局存储和保留原使用体验的 `default-three-tier` 组合。普通使用不需要配置 View、Strategy 或 generation 概念。
+本页从装好 dsh-mnemon 的 DSH 开始，一直走到对话真正用上记忆。全程使用默认设置：记忆系统位于侧栏、全局存储、分层策略。日常使用不需要了解 View 或 Strategy。
 
-安装完成后可直接跳到[首次验证](#6-完成第一次验证)。已有安装先看[兼容性与升级](../reference/compatibility.md)；特定旧版本的迁移细节保留在对应发布记录中。
+第一次使用？先看[安装与启动](./installation.md)：从安装 Node.js 开始，到在插件页一键安装并启用 dsh-mnemon，再到第一条记忆，每一步都有截图。已经安装好了？直接跳到[打开记忆系统](#2-打开记忆系统)。准备升级？请按[兼容性与升级](../reference/compatibility.md)操作。
 
-## 1. 前置条件
+## 1. 命令行安装与升级
 
-你需要：
+本节写给熟悉命令行的用户，也包括开发检出、云端访问与 Headless。需要：
 
-- DSH 0.1.7-rc.2 基线所需的 Node.js `^22.19.0 || >=24.0.0`；
-- 一个可以启动的 DSH Web 或 Headless profile；
-- 仅在使用 Mnemon Native 时需要本地可执行的 `mnemon` CLI（其他 Provider 使用各自的服务）；
-- 一个能够创建独立任务 Agent 的 DSH 模型路由。
+- DSH `0.1.7-rc.2`（npm `latest`）或 `0.2.0-rc.1`（npm `next`），以及 Node.js `^22.19.0 || >=24.0.0` 与 pnpm；
+- 一个能够创建独立任务 Agent 的 DSH 模型路由；
+- 仅在使用 Mnemon Native 时需要本地的 `mnemon` CLI，各平台的安装方式见[安装与启动](./installation.md#mnemon-cli-的其他安装方式)；其他 Provider 连接各自的服务。
 
-普通语义任务优先使用名为 `spawn` 的 Provider，并要求 `toolFilter`、`persona` 与 `depthLimit`。Mnemon 固定注册一个 `mnemon_subagent_result` 工具，并为每个子任务签发可撤销的 `requestId`。子任务返回 `{ requestId, result }`；Host 按该操作的 schema 校验 `result`，拒绝过期或其他子任务提交的结果，不依赖 Provider 的 `outputSchema` 路径。可选后台审查默认通过受 guard 保护的 `spawn` 子 Agent 读取有界检查点；完整上下文 `fork` 需显式选择。审查提供独立开关、冷却时间与尝试预算，详见[审查兼容性和限制](../reference/configuration.md)。
-
-Composable v0.5.6 精确固定经过验证的十六个官方插件组合。请阅读[补丁说明](../releases/v0.5.6.md)和[兼容性矩阵](../reference/compatibility.md)。DSH 基线为 0.1.7-rc.2，完整 profile 需要 Node `^22.19.0 || >=24.0.0`；Mnemon 的 Node 20 公开入口检查不代表完整 Host 兼容。当前界面示例来自 v0.5.4 浅色模式，先将备份导入隔离存储再采集；旧发布记录保留原版本身份。
-
-安装并核对已验证的 DSH 版本：
+安装并核对 DSH：
 
 ```sh
-npm install -g @deepseek-ai/dsh@0.1.7-rc.2
+npm install -g @deepseek-ai/dsh
 dsh --version
 npm view @deepseek-ai/dsh dist-tags
 ```
 
-## 2. 安装 Mnemon
+Starter 固定一组经过测试的官方插件组合，详见[兼容性矩阵](../reference/compatibility.md)。Mnemon 的 Node 20 入口检查不代表完整的 Host 兼容。
 
-只有 Mnemon Native 使用 Mnemon CLI。记忆空间使用其他 Provider 时可跳过这一步，以后再安装。macOS、Linux 和 Windows 均推荐使用 npm（Node.js 22+）。在运行 DSH 的宿主机器上执行：
+<details>
+<summary>任务 Agent 如何启动</summary>
 
-```sh
-npm install --global @mnemon-dev/mnemon@latest
-mnemon --version
-```
+语义任务优先使用名为 `spawn` 的 DSH Provider，并要求 `toolFilter`、`persona` 与 `depthLimit`。Mnemon 固定注册一个 `mnemon_subagent_result` 工具，并为每个子任务签发可撤销的 `requestId`。子任务返回 `{ requestId, result }`；Host 按该操作的 schema 校验 `result`，拒绝过期或其他子任务提交的结果。可选的后台审查默认通过受保护的 `spawn` 子 Agent 读取有界检查点，完整上下文 `fork` 需要显式选择。参见[审查兼容性与限制](../reference/configuration.md#provider-要求)。
 
-后续通过 `mnemon update` 更新；状态页识别到所属 npm 安装时，也可使用“检查版本”中的更新操作。若从 Homebrew、Go 或下载的二进制迁移，请让 npm 全局命令目录在 PATH 中优先于旧命令，并同步调整 `MNEMON_CLI_PATH` / `mnemon.cliPath`。改变宿主环境后重启 DSH，再在状态页核对可执行文件路径。
-
-macOS 也可选择 Homebrew Cask：
-
-```sh
-brew install --cask mnemon-dev/tap/mnemon
-```
-
-macOS 和 Linux 可通过 Go 安装：
-
-```sh
-go install github.com/mnemon-dev/mnemon@latest
-```
-
-验证二进制：
-
-```sh
-mnemon --version
-```
-
-如果选择在 Windows 手工安装，官方发行包同时提供 AMD64 与 ARM64 ZIP。下面的 PowerShell 会把 v0.2.3 安装到可自动发现的用户 Programs 目录，并使用官方 checksum 校验下载内容：
-
-```powershell
-$version = '0.2.3'
-$arch = if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq 'Arm64') { 'arm64' } else { 'amd64' }
-$archiveName = "mnemon_${version}_windows_${arch}.zip"
-$releaseBase = "https://github.com/mnemon-dev/mnemon/releases/download/v${version}"
-$archive = Join-Path $env:TEMP $archiveName
-$checksumFile = Join-Path $env:TEMP "mnemon_${version}_checksums.txt"
-Invoke-WebRequest "${releaseBase}/${archiveName}" -OutFile $archive
-Invoke-WebRequest "${releaseBase}/checksums.txt" -OutFile $checksumFile
-$line = Get-Content $checksumFile | Where-Object { $_.EndsWith("  $archiveName") } | Select-Object -First 1
-if (-not $line) { throw "Checksum entry not found for $archiveName" }
-$expected = (($line -split '\s+')[0]).ToLowerInvariant()
-$actual = (Get-FileHash -Path $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($actual -ne $expected) { throw "Checksum mismatch for $archiveName" }
-$installDir = Join-Path $env:LOCALAPPDATA 'Programs\mnemon'
-New-Item -ItemType Directory -Force -Path $installDir | Out-Null
-Expand-Archive -Path $archive -DestinationPath $installDir -Force
-$mnemon = Join-Path $installDir 'mnemon.exe'
-& $mnemon --version
-```
-
-如果已经安装 Go 工具链，也可以继续使用 Go：
-
-```powershell
-go install github.com/mnemon-dev/mnemon@latest
-$mnemonBin = go env GOBIN
-if (-not $mnemonBin) {
-  $mnemonBin = Join-Path (((go env GOPATH) -split ';')[0]) 'bin'
-}
-$mnemon = Join-Path $mnemonBin 'mnemon.exe'
-& $mnemon --version
-```
-
-Windows 上，dsh-mnemon 会从 `PATH`、导出的 `GOBIN` 或 `GOPATH`、默认 `%USERPROFILE%\go\bin`、`%LOCALAPPDATA%\Programs\mnemon` 和 Program Files 中发现原生 `mnemon.exe`。同时支持官方 npm 的 `mnemon.cmd` 启动器：验证包身份后通过 Node 调用其 JavaScript 入口，全程不使用 shell。其他 `.cmd` 与 `.bat` wrapper 仍不受支持。
-
-DSH 内嵌在 Electron 桌面主进程时，经过验证的 npm 启动器会在子进程中以 `ELECTRON_RUN_AS_NODE=1` 运行，覆盖记忆命令、版本检查和 npm 更新，并保留已保存的 embedding 设置。桌面应用自身的环境变量不变。如果桌面壳关闭了 Electron 的 `runAsNode` fuse，请将 `mnemon.cliPath` 指向当前平台的 Mnemon 原生二进制，详见[故障排查](./operations.md#故障排查)。
-
-如果 DSH 仍无法找到二进制，请设置 `MNEMON_CLI_PATH`，或在用户 settings 中写入绝对路径；不要为此整体替换插件的 profile patch：
-
-```yaml
-mnemon:
-  cliPath: 'C:\Users\alice\AppData\Local\Programs\mnemon\mnemon.exe'
-```
-
-`mnemon status` 会打开有效 Store，可能初始化数据或执行上游迁移，不要把它当作完全无副作用的安装探测。
-
-## 3. 安装 dsh-mnemon
+</details>
 
 需要完整工作台时安装到 Web profile：
 
@@ -124,7 +49,7 @@ dsh plugin --profile web add "link:/absolute/path/to/dsh-mnemon"
 dsh --profile web
 ```
 
-如果需要通过云端域名访问 Web profile，不要直接发布 3080 端口。DSH 通过 Host 启动时输出的一次性 URL 建立浏览器会话，并用它认证全部 Mnemon RPC 与 stream。请按[云端 WebUI](./operations.md#cloud-hosted-webui)同时配置 HTTPS 反向代理或访问网关与可信 authority，再打开该启动 URL；同一节保留了 DSH 0.1.1-rc.2 的历史 `remoteAccess` 步骤，回滚时须配套使用之前针对该宿主验证过的 Mnemon 版本。
+如果需要通过云端域名访问 Web profile，不要直接发布 3080 端口。DSH 通过 Host 启动时输出的一次性 URL 建立浏览器会话，并用它认证全部 Mnemon RPC 与 stream。请按[云端 WebUI](./operations.md#cloud-hosted-webui)同时配置 HTTPS 反向代理或访问网关与可信 authority，再打开该启动 URL。
 
 升级与卸载：
 
@@ -133,7 +58,7 @@ dsh plugin --profile web update dsh-mnemon
 dsh plugin --profile web remove dsh-mnemon
 ```
 
-卸载只移除插件注册，不删除全局、工作区或自定义目录中的记忆数据。
+更新后重启 DSH。新版本发布后的 24 小时内，pnpm 11 的 `update` 会停留在已安装的版本，这时请带版本号安装新版本（`dsh plugin --profile web add dsh-mnemon@<版本>`）。卸载只移除插件注册，不删除全局、工作区或自定义目录中的记忆数据。
 
 不同 profile 的插件清单彼此独立。一次性任务也需要记忆时，应另行安装到 Headless：
 
@@ -146,105 +71,74 @@ dsh --profile headless "回答前先检查持久化的项目上下文。"
 
 `storageScope=workspace` 时，Headless 直接解析 `<启动命令 cwd>/.mnemon`，不需要 Web 工作区目录。一次性 runner 会在 Agent 进入 idle 后退出，因此尚未开始的评分后台审查会在关闭时取消；任务内已经完成的显式或模型引导写入仍会持久化。
 
-## 4. 选择入口与存储范围
+## 2. 打开记忆系统
 
-在 DSH 侧边栏打开“插件”，选择**可组合记忆 (dsh-mnemon)**，全部配置都在这个页面；在记忆系统工作台中，也可以点击顶部的**配置**（齿轮）打开同一页面。
+在侧栏点击**记忆系统**，默认进入**状态**页。
 
-[交互指南](./ui-guide.md)展示当前配置与可选增强。
+![状态页：每个记忆组件与 Provider](../../assets/webui-v0.5.19/zh-CN/memory-status.jpg)
 
-### 工作台入口
+请确认：
 
-默认点击 DSH 侧边栏中的“记忆系统”打开独立工作台。在该页面“界面 → 记忆系统入口”中选择“会话标签页”，或配置 `displayMode: builtin`，可将同一组 Source 页面放入会话 Tab。选择后立即生效，入口实时切换，不改变记忆数据。
+- 顶栏显示**已连接**，并写明主策略，默认为“分层策略”；
+- 记忆引擎卡片显示 dsh-mnemon 的版本；如果安装了 Mnemon CLI，它会出现在**记忆 Provider** 中；
+- 运行时记忆、项目档案与记忆空间各有一张没有错误的卡片；
+- 存储根目录与你选择的存储范围一致。
 
-### 存储范围
+即使使用全局存储，项目档案也需要 DSH 工作区。请为对话选择工作区；“等待工作区”表示缺少项目上下文，而不是缺少 CLI。如果缺少 Mnemon CLI，可在 macOS 或 Linux 上运行 `command -v mnemon` 与 `mnemon --version`，在 Windows 上运行 `Get-Command mnemon`。其他问题见[故障排查](./operations.md#故障排查)。
 
-| 范围 | 根目录 | 适合场景 |
-|---|---|---|
-| **全局**（默认） | `MNEMON_DATA_DIR` 或 `~/.mnemon` | 多个工作区共享同一套记忆 |
-| **工作区** | `<workspace>/.mnemon` | 项目隔离，并允许在工作台切换查看其他工作区 |
-| **自定义** | `dataDir` | 专用磁盘、挂载卷或明确的数据目录 |
-| **集中工作区** | `<集中根>/workspaces/<工作区路径哈希>/` | 在统一目录集中备份，同时按项目隔离 |
+## 3. 保存第一批记忆
 
-“存储”组中的“存储范围”选择全局、工作区或集中存储，“数据目录”再选择“默认”或“自定义”：全局范围下自定义路径即为 `custom` 目录；集中存储下它是集中根目录，数据保存为 `<集中根>/workspaces/<工作区路径哈希>/`。切换模式时保留旧根。
+**运行时记忆。** 打开**运行时记忆**，点击**添加记忆**，在用户画像中写一条偏好，或在工作记忆中写一条项目事实。之后的每一轮都会注入它。
 
+**一份档案。** 打开**项目档案**，点击**新建档案**，保存一份简短的设计说明或检查清单。问题需要时，Agent 会检索档案。
 
-点击存储改动旁的**应用**后，会先初始化新运行图，再原子切换 Host；页面自动清理旧状态并重新读取，无需刷新浏览器。切换范围不会自动迁移、合并或删除旧数据。
+**一个记忆空间。** 打开**记忆空间 → 概览**，点击**创建记忆空间**：
 
-### 默认记忆层
+1. 选择 Provider。安装 CLI 后会出现本地默认的 Mnemon Native；第三方 Provider 需要先在[记忆空间页面](./ui-guide.md#在插件页中)启用。
+2. 起一个范围明确的名称，例如“项目决策”，并说明其中应该保存什么。
+3. 保持激活，对话才能读取它。
 
-首次安装应看到 Runtime、Documents、Memory Spaces 三个默认 Source，且均已启用。每层只有一个总开关；开启只是允许系统按需使用，不会强制每回合召回。关闭会一起停止该层的上下文、工具、后台处理和数据面 Web/RPC，但不会删除数据；Sidebar Tab 会标记“已关闭”，重新开启即可恢复。第一次使用建议保持默认值。
+在空的存储根目录中，第一个 Mnemon Native 空间使用 Mnemon 的 `default` Store ID，同时保留你填写的名称与说明；其他 Provider 上的空间使用各自的 ID。接着点击**存入记忆**，写下稳定且不含机密的内容，点击**交给任务 Agent**；独立任务 Agent 会选择空间、去重并写入，回执写明存到了哪里。
 
-在工作区模式下，对话 Agent、工具与生命周期使用当前会话的实际根；从 Sidebar 启动的独立任务 Agent 会显式使用正在查看的工作区，即使没有选中主 session 也一样。两者不一致时顶部会提示并提供一键对齐。Builtin 的读写和任务使用所属会话的范围，因此不显示存储模式、工作区选择器或对齐控件。
+**验证一下。** 打开**记忆空间 → 检索**，提一个具体的问题，点击**直接检索**。每条结果都保留所属记忆空间、分类、重要性与分数；需要时可以复制 ID。
 
-## 5. 打开 Sidebar 工作台
+![在已激活的记忆空间中直接检索](../../assets/webui-v0.5.19/zh-CN/memory-recall.jpg)
 
-点击左侧栏“记忆系统”，先查看“状态”：
-
-![当前状态、Native 就绪情况与记忆数量](../../assets/webui-v0.5.4/zh-CN/status.jpg)
-
-确认：
-
-- 右上角显示“已连接”；
-- Mnemon 与 dsh-mnemon 能显示当前版本；
-- 存储根与刚才选择的范围一致；
-- 运行时、档案、记忆空间与已启用的记忆层一致；
-- Runtime、Documents 和 Memory Spaces 没有错误提示。
-
-全局或自定义存储下，档案仍需要 DSH 工作区身份。先为当前会话选择工作区，或在工作区存储下选择查看对象。“等待工作区”表示缺少项目上下文，并非 CLI 未安装。
-
-如果 Mnemon 不可用，macOS/Linux 先运行 `command -v mnemon` 与 `mnemon --version`；Windows PowerShell 运行 `Get-Command mnemon` 与 `Test-Path "$env:LOCALAPPDATA\Programs\mnemon\mnemon.exe"`。更多症状见[故障排查](./operations.md#故障排查)。
-
-## 6. 完成第一次验证
-
-<a id="创建记忆体"></a>
-
-### 创建记忆空间
-
-1. 打开“记忆空间 → 概览”。
-2. 点击“创建记忆空间”。
-3. 选择一个已就绪的 Provider。对话框默认选中第一个：安装 CLI 后即为官方本地优先的 **Mnemon Native**。三方服务需先在**插件 → 可组合记忆**页面中启用。
-4. 使用主题明确的名称，例如“项目决策”。
-5. 在说明中写清“哪些内容属于这里，以及什么任务应召回它”，然后开启读取激活开关。
-
-空存储根的第一个记忆空间会使用 Mnemon 原生 `default` Store ID，但仍显示你填写的名称与说明；激活开关只影响 DSH。
-
-**智能选择属于“记忆空间 → 沉淀策略”，不是创建弹窗的另一种模式。** 它先由 Host 强制执行候选白名单、数据边界和能力要求。只剩一个候选时直接按规则确定；仍有多个候选时，独立任务 Agent 才会参考软偏好与策略 Prompt。Provider 凭据不会进入模型上下文，最终卡片会保留选择来源、理由与置信度。
-
-连接外部服务或 CLI 前先阅读[长期记忆 Provider](./memory-providers.md)。
-
-### 沉淀一条测试信息
-
-点击右上角“沉淀记忆”，填写一条稳定、自包含、未来仍有用且不含秘密的信息。默认不要展开高级选项，让独立任务 Agent 自己选择目标、查重与提炼。
-
-只有点击确认才会启动独立任务 Agent 执行写入；取消弹窗不会改变状态。
-
-### 验证召回
-
-1. 打开“记忆空间 → 检索”。
-2. 输入一个能命中刚才内容的具体问题。
-3. 先用“直接检索”检查原始证据。
-4. 确认结果包含记忆空间来源、分类、重要性、分数和 ID。
-
-也可以在对话中运行：
+也可以使用对话命令：
 
 ```text
 /mnemon status
-/mnemon recall <聚焦查询>
+/mnemon recall <具体的问题>
 ```
 
-## 7. 验证对话内记忆
+## 4. 在对话中使用记忆
 
-在一个确实依赖历史信息的问题中，让 Agent 自主判断是否需要召回。完成后：
+提一个依赖已保存内容的问题，让 Agent 自己判断是否需要记忆。回复完成后：
 
-- 若本轮调用了记忆工具，回复下方会出现“本回合记忆”；
-- 展开后可以看到具体工具名，并点击跳到对应页面；
-- “存入记忆”会先打开可编辑确认弹窗，取消不会写入。
+- 如果这一轮用到了记忆，会出现**本回合记忆**，展开后按工具列出读到和写入的档案与记忆，点击一条即在所在页面打开它；
+- 回复下的脑形图标是**存入记忆**，打开可编辑的对话框，“取消”不会写入任何内容，交给任务 Agent 后会收到回执。
 
-普通聊天不应强制召回。当前请求、现有源文件和实时工具结果应优先于历史内容。
+![一条回答用到了工作记忆、项目档案与记忆空间，回合记忆栏列出读到的内容](../../assets/webui-v0.5.19/zh-CN/chat-recall.jpg)
 
-## 8. 下一步
+普通对话不会强制召回。当前请求、仓库文件与实时工具结果的优先级高于历史记忆。
 
-- 用 [Sidebar 与对话交互指南](./ui-guide.md) 认识全部页面。
-- 用[存储模型](../reference/storage-model.md)决定信息应进入运行时、档案还是记忆空间。
-- 用[配置参考](../reference/configuration.md)设置工作区范围、只读模式或生命周期开关。
-- 用[运维指南](./operations.md)导出第一份 ZIP 备份并建立升级前检查流程。
+## 5. 选择记忆的组合方式
+
+打开**插件 → 可组合记忆**，或点击记忆系统顶栏的齿轮。
+
+![记忆组合面板](../../assets/webui-v0.5.19/zh-CN/plugin-composition.jpg)
+
+- **主策略**：保留**分层策略**，或选择**通用策略**，在同一份预算内提供全部可用来源，由模型决定如何使用。
+- **记忆来源**：运行时记忆、项目档案与记忆空间，各有一个开关。关闭后停止它的上下文、工具与后台任务，但不删除数据。
+- **增强**：主动记录、轻量上下文与范围组合默认关闭，两个主策略都可以使用。
+- **存储**：全局（默认）让所有工作区共用一个目录；工作区把每个工作区的记忆放在它自己的 `.mnemon`；集中存储把每个工作区放在同一个根目录下。**数据目录**在“默认”与“自定义”之间选择。两者的改动都不会搬移已有数据。
+- **界面**：记忆系统可以在侧栏或会话标签页中打开，也可以开关对话中的两个控件。
+
+开关与选择器立即生效，存储的改动需要点击**应用**。[界面指南](./ui-guide.md#在插件页中)介绍了每个页面，[配置参考](../reference/configuration.md)列出了它们背后的设置项。
+
+## 6. 下一步
+
+- 在[界面指南](./ui-guide.md)中熟悉每个页面。
+- 用[存储模型](../reference/storage-model.md)判断内容该放进运行时记忆、项目档案还是记忆空间。
+- 用[运维指南](./operations.md)导出第一个 ZIP 备份，并做好升级前的准备。
+- 用 [Provider 指南](./memory-providers.md)接入长期记忆后端。

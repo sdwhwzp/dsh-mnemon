@@ -16,6 +16,7 @@ import type { MnemonKey, MnemonTranslate } from './locales.ts'
 import { message } from './page-kit.tsx'
 import { Reveal } from './feedback.tsx'
 import { ProviderIcon } from './ProviderIcon.tsx'
+import { SelectField } from './page-controls.tsx'
 import {
   providerFieldLabel,
   providerOptionLabel,
@@ -149,7 +150,7 @@ function ServiceField(props: {
   const input = props.field.input === 'boolean'
     ? <label className={css.providerBoolean}><input aria-label={label} type="checkbox" checked={Boolean(props.value)} disabled={props.disabled} onChange={event => props.onChange(event.target.checked)} /><span>{label}</span></label>
     : props.field.input === 'select'
-      ? <label>{label}<select aria-label={label} value={String(props.value ?? '')} required={required} disabled={props.disabled} onChange={event => props.onChange(event.target.value)}>{props.field.options?.map(option => <option key={option.value} value={option.value}>{providerOptionLabel(props.t, option)}</option>)}</select></label>
+      ? <SelectField label={label} value={String(props.value ?? '')} disabled={props.disabled} options={(props.field.options ?? []).map(option => ({ value: option.value, label: providerOptionLabel(props.t, option) }))} onChange={next => props.onChange(next)} />
       : <label>{label}<div className={secret ? css.providerSecretInput : undefined}><input aria-label={label} type={secret ? secretVisible ? 'text' : 'password' : props.field.input === 'number' ? 'number' : props.field.input === 'url' ? 'url' : 'text'} value={displayValue} required={required} disabled={props.disabled} autoComplete={secret ? 'new-password' : undefined} placeholder={props.field.placeholder ?? (secret ? props.t('overview.providerApiKeyOptional') : undefined)} maxLength={props.field.maxLength ?? (secret ? 8000 : 2000)} min={props.field.min} max={props.field.max} pattern={props.field.pattern} step={props.field.input === 'number' ? 'any' : undefined} onFocus={event => {
         if (showingSavedMask) event.currentTarget.select()
       }} onClick={event => {

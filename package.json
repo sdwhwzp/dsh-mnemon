@@ -1,6 +1,6 @@
 {
   "name": "dsh-mnemon",
-  "version": "0.5.17-dsh.20260928.1",
+  "version": "0.5.20-dsh.20260929.1",
   "description": "Composable, view-based memory for DeepSeek Harness. Pluggable sources and strategies, with layered memory out of the box.",
   "keywords": [
     "deepseek-harness",
@@ -89,7 +89,15 @@
       "default": "./lib/testing.js"
     },
     "./package.json": "./package.json",
-    "./locale/*.json": "./locale/*.json"
+    "./locale/*.json": "./locale/*.json",
+    "./starter": {
+      "types": "./lib/types/src/starter.d.ts",
+      "default": "./lib/starter.js"
+    },
+    "./bundle": {
+      "types": "./lib/types/src/bundle.d.ts",
+      "default": "./lib/bundle.js"
+    }
   },
   "files": [
     "locale",
@@ -146,31 +154,32 @@
   "dependencies": {
     "@deepseek-ai/cosmokit": "^1.8.5",
     "@deepseek-ai/schemastery": "^3.18.4",
-    "dsh-mnemon-provider-byterover": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-provider-hindsight": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-provider-holographic": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-provider-honcho": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-provider-mem0": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-provider-mnemon-native": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-provider-openviking": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-provider-retaindb": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-provider-supermemory": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-source-documents": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-source-memory-spaces": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-source-runtime": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-strategy-auto-capture": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-strategy-default-three-tier": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-strategy-general": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-strategy-light-context": "0.5.17-dsh.20260928.1",
-    "dsh-mnemon-strategy-scoped": "0.5.17-dsh.20260928.1",
+    "dsh-mnemon-provider-byterover": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-provider-hindsight": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-provider-holographic": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-provider-honcho": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-provider-mem0": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-provider-mnemon-native": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-provider-openviking": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-provider-retaindb": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-provider-supermemory": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-source-documents": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-source-memory-spaces": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-source-runtime": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-strategy-auto-capture": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-strategy-default-three-tier": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-strategy-general": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-strategy-light-context": "0.5.20-dsh.20260929.1",
+    "dsh-mnemon-strategy-scoped": "0.5.20-dsh.20260929.1",
     "fflate": "^0.8.3",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.4",
-    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.7-rc.2",
-    "@deepseek-ai/dsh-typert-protocol": "^0.1.7-rc.2",
+    "@deepseek-ai/dsh-app-boot": "^0.1.7-rc.2 || ^0.2.0-rc.1",
+    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.7-rc.2 || ^0.2.0-rc.1",
+    "@deepseek-ai/dsh-typert-protocol": "^0.1.7-rc.2 || ^0.2.0-rc.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -182,6 +191,7 @@
     "@deepseek-ai/dsh-agent": "0.1.7-rc.2",
     "@deepseek-ai/dsh-agent-loop": "0.1.7-rc.2",
     "@deepseek-ai/dsh-api-gateway": "0.1.7-rc.2",
+    "@deepseek-ai/dsh-app-boot": "0.1.7-rc.2",
     "@deepseek-ai/dsh-client-connection": "0.1.7-rc.2",
     "@deepseek-ai/dsh-client-locale": "0.1.7-rc.2",
     "@deepseek-ai/dsh-client-store": "0.1.7-rc.2",
@@ -247,5 +257,10 @@
   },
   "bin": {
     "dsh-mnemon-repair-session": "bin/repair-legacy-session.mjs"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-app-boot": {
+      "optional": true
+    }
   }
 }

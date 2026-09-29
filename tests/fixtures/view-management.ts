@@ -25,7 +25,7 @@ const requireDsh = createRequire(realpathSync(new URL('../../node_modules/@deeps
 const { Loader } = await import(requireDsh.resolve('@deepseek-ai/cordis-plugin-loader')) as { Loader: Plugin }
 interface TestLoader extends MemoryPluginLoader {
   import(name: string): Promise<unknown>
-  root: { update(entries: object[]): Promise<void>; stop(): Promise<void> }
+  root: { update(entries: object[]): Promise<void>; stop(): void }
   resolve(id: string): MemoryPluginLoaderEntry
   write(): void
 }

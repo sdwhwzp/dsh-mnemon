@@ -6,7 +6,7 @@ import { CATEGORIES, type Category, type EntityView, type Insight, type MemorySp
 import type { MemorySpacesPageClient } from './api.ts'
 import { ProviderIcon } from './ProviderIcon.tsx'
 import { providerFieldLabel, providerOptionLabel, providerSummary } from './provider-presentation.ts'
-import { type MnemonKey, type MnemonTranslate, useRequestVersion, appearanceClass, useLocale, humanBytes, message, short, PageHeader, SectionSpinner, ProgressiveFooter, SidebarModal, EmptyState } from 'dsh-mnemon/client'
+import { type MnemonKey, type MnemonTranslate, useRequestVersion, appearanceClass, useLocale, humanBytes, message, short, PageHeader, SectionSpinner, ProgressiveFooter, SidebarModal, EmptyState, SearchField, SelectField, TaskAgentTag, WriteReceipt } from 'dsh-mnemon/client'
 
 import type { MemoryPersistenceStrategy } from '../contracts.ts'
 
@@ -41,6 +41,11 @@ function readyProviderId(providers: readonly MemoryProviderDescriptor[], current
   return ready.find(provider => provider.id === current)?.id ?? (ready.find(provider => provider.origin === 'native') ?? ready[0])?.id
 }
 
+/** Ready Providers first, in catalog order, so the choices that work lead the list. */
+function readyFirst(providers: readonly MemoryProviderDescriptor[]): MemoryProviderDescriptor[] {
+  return [...providers].sort((left, right) => Number(left.serviceConfigured === false) - Number(right.serviceConfigured === false))
+}
+
 /** Why a provider cannot be chosen: Mnemon Native needs its CLI, the others a service configured on the dsh-mnemon page under Plugins. */
 function providerUnavailableKey(provider: MemoryProviderDescriptor): 'overview.nativeCliRequired' | 'overview.providerServiceRequired' {
   return provider.origin === 'native' ? 'overview.nativeCliRequired' : 'overview.providerServiceRequired'
@@ -71,7 +76,7 @@ function ProviderMemoryFields(props: {
       const input = field.input === 'boolean'
         ? <input aria-label={label} type="checkbox" checked={Boolean(value)} onChange={event => props.onChange(field.key, event.target.checked)} />
         : field.input === 'select'
-          ? <select aria-label={label} value={String(value)} required={required} onChange={event => props.onChange(field.key, event.target.value)}>{field.options?.map(option => <option key={option.value} value={option.value}>{providerOptionLabel(t, option)}</option>)}</select>
+          ? <SelectField hideLabel label={label} value={String(value)} options={(field.options ?? []).map(option => ({ value: option.value, label: providerOptionLabel(t, option) }))} onChange={next => props.onChange(field.key, next)} />
           : <input aria-label={label} type={field.input === 'secret' ? 'password' : field.input === 'number' ? 'number' : field.input === 'url' ? 'url' : 'text'} value={String(value)} required={required} autoComplete={field.input === 'secret' ? 'new-password' : undefined} placeholder={savedSecret ? t('overview.providerApiKeyKeep') : field.placeholder ?? (field.input === 'secret' ? t('overview.providerApiKeyOptional') : undefined)} maxLength={field.maxLength ?? (field.input === 'secret' ? 8000 : 2000)} min={field.min} max={field.max} pattern={field.pattern} step={field.input === 'number' ? 'any' : undefined} onChange={event => props.onChange(field.key, event.target.value)} />
       return <div key={field.key} className={css.providerFieldControl}><label>{label}{input}</label>{props.body !== undefined && field.input === 'secret' && savedSecret && props.onClearSecretsChange !== undefined && <label className={css.providerSecretClear}><input type="checkbox" checked={clearingSecret} onChange={event => props.onClearSecretsChange!(event.target.checked ? [...new Set([...(props.clearSecrets ?? []), field.key])] : (props.clearSecrets ?? []).filter(key => key !== field.key))} />{t('overview.providerSecretClear')}</label>}</div>
     })}</div>
@@ -143,7 +148,7 @@ function InsightCard(props: {
   const [confirming, setConfirming] = useState(false)
   const [forgetting, setForgetting] = useState(false)
   const { insight } = props
-  const neutralActionClass = appearanceClass(css.ghostButton, sidebarCss.itemActionButton)
+  const neutralActionClass = appearanceClass(css.ghostButton, appearanceClass(sidebarCss.itemActionButton, sidebarCss.itemEditAction))
   const forgetActionClass = appearanceClass(css.dangerButton, appearanceClass(sidebarCss.itemActionButton, sidebarCss.itemDangerAction))
   const providerLabel = insight.memoryProviderLabel ?? insight.memoryProviderId
   const supportsRelated = insight.memoryCapabilities?.related === true
@@ -153,7 +158,7 @@ function InsightCard(props: {
     providerLabel,
     insight.category !== undefined ? categoryLabel(t, insight.category) : undefined,
     insight.importance !== undefined ? t('common.importance', { value: insight.importance }) : undefined,
-    insight.score !== undefined ? `score ${insight.score.toFixed(3)}` : undefined,
+    insight.score !== undefined ? t('common.score', { value: insight.score.toFixed(2) }) : undefined,
     insight.depth !== undefined ? t('common.hops', { count: insight.depth }) : undefined,
   ].filter((entry): entry is string => entry !== undefined)
 
@@ -172,7 +177,6 @@ function InsightCard(props: {
     <article className={css.insightCard}>
       <div className={css.cardTop}>
         <div className={css.badges}>{meta.map(entry => <span key={entry} className={css.badge}>{entry}</span>)}</div>
-        <code className={css.id} title={insight.id}>{insight.id.slice(0, 8)}</code>
       </div>
       <p className={css.content}>{insight.content}</p>
       {(insight.tags?.length ?? 0) > 0 && <div className={css.tags}>{insight.tags!.map(tag => <span key={tag}>#{tag}</span>)}</div>}
@@ -188,7 +192,7 @@ function InsightCard(props: {
         )}
       </div>
     </article>
-    {confirming && <SidebarModal title={t('card.confirmText')} description={`${insight.memoryBodyName ?? insight.memoryBodyId ?? ''}${insight.memoryBodyName === undefined && insight.memoryBodyId === undefined ? '' : ' · '}${insight.id}`} busy={forgetting} onClose={() => setConfirming(false)} footer={<div className={css.modalFooterActions}><button type="button" data-dialog-close data-autofocus className={css.ghostButton} disabled={forgetting} onClick={() => setConfirming(false)}>{t('common.cancel')}</button><button type="button" className={css.dangerSolidButton} disabled={forgetting} onClick={() => void forget()}>{forgetting ? t('card.processing') : t('card.confirmForget')}</button></div>}><div className={css.bodyDeleteConfirm}><div className={css.bodyDeleteSummary}><p className={css.bodyDeleteContent}>{insight.content}</p><span>{meta.join(' · ')}</span></div></div></SidebarModal>}
+    {confirming && <SidebarModal title={t('card.confirmText')} description={`${insight.memoryBodyName ?? insight.memoryBodyId ?? ''}${insight.memoryBodyName === undefined && insight.memoryBodyId === undefined ? '' : ' · '}${insight.id}`} busy={forgetting} onClose={() => setConfirming(false)} footer={<div className={css.modalFooterActions}><button type="button" data-dialog-close data-autofocus className={css.secondaryButton} disabled={forgetting} onClick={() => setConfirming(false)}>{t('common.cancel')}</button><button type="button" className={css.dangerSolidButton} disabled={forgetting} onClick={() => void forget()}>{forgetting ? t('card.processing') : t('card.confirmForget')}</button></div>}><div className={css.bodyDeleteConfirm}><div className={css.bodyDeleteSummary}><p className={css.bodyDeleteContent}>{insight.content}</p><span>{meta.join(' · ')}</span></div></div></SidebarModal>}
     </>
   )
 }
@@ -631,7 +635,7 @@ function MemoryGraph(props: { graph: MemoryGraphSnapshot; selectedId?: string | 
   )
 }
 
-export function OverviewPage(props: { client: MemorySpacesPageClient; metadataClient: MemorySpacesPageClient; revision: number; activationEnabled: boolean; writeEnabled: boolean; agentAvailable: boolean; fallbackBodies: MemorySpaceView[]; fallbackDirectory: string | undefined; catalogKnown: boolean; onMutate: () => void; onAgentRefresh: () => void; onBodyReconnect: (body: MemorySpaceView) => void; onBodyMetadata: (updates: readonly MemorySpaceMetadataUpdate[]) => void; onExplore: (query: string) => void }): JSX.Element {
+export function OverviewPage(props: { client: MemorySpacesPageClient; metadataClient: MemorySpacesPageClient; revision: number; reloadKey?: number; activationEnabled: boolean; writeEnabled: boolean; agentAvailable: boolean; fallbackBodies: MemorySpaceView[]; fallbackDirectory: string | undefined; catalogKnown: boolean; onMutate: () => void; onAgentRefresh: () => void; onBodyReconnect: (body: MemorySpaceView) => void; onBodyMetadata: (updates: readonly MemorySpaceMetadataUpdate[]) => void; onExplore: (query: string) => void }): JSX.Element {
   const t = useT()
   const locale = useLocale()
   const spaceCreateFormId = useId()
@@ -725,6 +729,13 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
     initialSyncStarted.current = true
     void load()
   }, [load])
+  // The workspace's refresh reloads the whole directory quietly.
+  const seenReload = useRef(props.reloadKey)
+  useEffect(() => {
+    if (seenReload.current === props.reloadKey) return
+    seenReload.current = props.reloadKey
+    void load(true)
+  }, [load, props.reloadKey])
   useEffect(() => {
     if (!catalogUnavailable || !props.catalogKnown || directoryRetryStarted.current) return
     directoryRetryStarted.current = true
@@ -919,7 +930,7 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
     </section>
     <section className={css.createSection}>
       <div className={css.createSectionHeading}><span>02</span><div><strong>{t('overview.createPlacementTitle')}</strong><small>{t('overview.createPlacementHint')}</small></div></div>
-      <fieldset className={css.providerChoice}><legend>{t('overview.providerLabel')}</legend>{providers.map(provider => {
+      <fieldset className={css.providerChoice}><legend>{t('overview.providerLabel')}</legend>{readyFirst(providers).map(provider => {
         const serviceMissing = provider.serviceConfigured === false
         return <label key={provider.id} data-selected={spaceProviderId === provider.id || undefined} data-native={provider.origin === 'native' || undefined} data-disabled={serviceMissing || undefined}>
           <input type="radio" name="memory-provider" value={provider.id} checked={spaceProviderId === provider.id} disabled={serviceMissing} onChange={() => setSpaceProviderId(provider.id)} />
@@ -928,6 +939,7 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
           <i className={css.choiceControl} data-kind="radio" aria-hidden="true" />
         </label>
       })}</fieldset>
+      {providers.some(provider => provider.serviceConfigured === false) && <small className={css.providerEnableHint}>{t('overview.providerEnableHint')}</small>}
       {selectedProvider !== undefined && selectedProvider.origin !== 'native' && <ProviderMemoryFields provider={selectedProvider} connection={providerDrafts[selectedProvider.id] ?? {}} onChange={(key, value) => updateProviderDraft(selectedProvider.id, key, value)} />}
     </section>
   </form>
@@ -937,11 +949,11 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
   return (
     <div className={css.page}>
       <PageHeader title={t('nav.overview')} description={t(('overview.pageDescription'))} meta={fullSyncAge} {...(loading ? { loadingLabel: catalogLoading ? t('overview.directoryLoading') : graphLoading ? t('overview.snapshotLoading') : t('overview.healthLoading') } : {})}
-        action={<button type="button" className={css.secondaryButton} disabled={loading} onClick={() => void load()}>{loading ? t('overview.syncing') : t('overview.syncNow')}</button>} />
+ />
       {error !== null && <div className={css.inlineError} role="alert">{error}</div>}
       <section className={css.bodyDirectory} aria-label={t('overview.directory')}>
         <div className={css.bodyDirectoryHeader}>
-          <div><h3>{t('overview.directory')}</h3><p>{t('overview.directory.description')}</p><code className={css.bodyDirectoryPath}>{catalogUnavailable ? t('overview.directory.unsynced') : catalog?.directory || props.fallbackDirectory || t('overview.directory.waiting')}</code></div>
+          <div><h3>{t('overview.directory')}</h3><p>{t('overview.directory.description')}</p>{catalogUnavailable && <code className={css.bodyDirectoryPath}>{t('overview.directory.unsynced')}</code>}</div>
           <div className={appearanceClass(css.bodyDirectoryControls, sidebarCss.bodyDirectoryActions)}>
             <strong>{catalogUnavailable ? t('overview.directory.unsyncedBadge') : `${catalog?.activeCount ?? '—'} / ${catalog?.total ?? '—'} ${t('common.active')}`}</strong>
             {props.writeEnabled && !catalogUnavailable && <button type="button" className={spaceEditActionClass} title={!props.agentAvailable ? t('overview.metadataUnavailable') : undefined} onClick={() => { setMetadataSelection([]); setMetadataTasks({}); setMetadataOpen(true); if (!props.agentAvailable) props.onAgentRefresh() }}>{t('overview.metadataAction')}</button>}
@@ -957,7 +969,7 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
               if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return
               event.preventDefault(); void reconnect(body)
             }}>
-              {<><div className={sidebarCss.bodyCardHeader}><div className={sidebarCss.bodyCardIdentity}><span className={css.bodySignal} /><div><strong>{body.name}</strong><div className={sidebarCss.bodyCardMeta}><code>{body.id}</code><MemoryProviderBadge providerId={body.provider.id} label={body.provider.label} /><small className={css.bodyHealth}>{reconnectingSpace === body.id ? t('overview.reconnecting') : body.statusLoading ? t('overview.storageChecking') : body.healthy ? t('overview.storageHealthy') : t('overview.storageUnhealthy')}</small>{body.mnemonDefault && <small className={css.mnemonDefaultBadge}>{t('overview.mnemonDefault')}</small>}</div></div></div>{spaceToggle(body)}</div><p title={body.description || t('overview.noDescription')}>{body.description || t('overview.noDescription')}</p>{placementReceipt(body)}<footer className={sidebarCss.bodyCardFooter}><div className={sidebarCss.bodyCardStats}>{!nativeSpaceProvider(body.provider) ? <><span className={css.bodyFooterBlock} title={t(body.provider.kind === 'remote' ? 'overview.providerRemote' : 'overview.providerLocal')}>{t(body.provider.kind === 'remote' ? 'overview.providerRemote' : 'overview.providerLocal')}</span><span className={`${css.bodyFooterBlock} ${css.bodyFooterGrow}`} title={body.provider.location || body.provider.label}>{body.provider.location || body.provider.label}</span></> : <><span className={css.bodyFooterBlock} title={t('common.memories', { count: body.stats?.totalInsights ?? 0 })}>{t('common.memories', { count: body.stats?.totalInsights ?? 0 })}</span><span className={css.bodyFooterBlock} title={t('common.edges', { count: body.stats?.edgeCount ?? 0 })}>{t('common.edges', { count: body.stats?.edgeCount ?? 0 })}</span><span className={css.bodyFooterBlock} title={humanBytes(body.stats?.dbSizeBytes ?? 0)}>{humanBytes(body.stats?.dbSizeBytes ?? 0)}</span></>}</div><div className={css.bodyCardActions}><button type="button" className={spaceEditActionClass} aria-label={t('overview.editSpaceAria', { name: body.name })} disabled={!props.writeEnabled || deletingSpace === body.id} onClick={() => beginEdit(body)}>{t('overview.editSpace')}</button><button type="button" className={spaceDeleteActionClass} aria-label={t(!nativeSpaceProvider(body.provider) ? 'overview.disconnectSpaceAria' : 'overview.deleteSpaceAria', { name: body.name })} title={canDeleteSpace(body) ? undefined : t('overview.lastStoreDeleteHint')} disabled={!props.writeEnabled || deletingSpace === body.id || !canDeleteSpace(body)} onClick={() => setConfirmingDeleteSpace(body.id)}>{!nativeSpaceProvider(body.provider) ? t('overview.disconnectSpace') : t('overview.deleteSpace')}</button></div></footer></>}
+              {<><div className={sidebarCss.bodyCardHeader}><div className={sidebarCss.bodyCardIdentity}><span className={css.bodySignal} /><div><strong title={body.id}>{body.name}</strong><div className={sidebarCss.bodyCardMeta}><MemoryProviderBadge providerId={body.provider.id} label={body.provider.label} /><small className={css.bodyHealth}>{reconnectingSpace === body.id ? t('overview.reconnecting') : body.statusLoading ? t('overview.storageChecking') : body.healthy ? t('overview.storageHealthy') : t('overview.storageUnhealthy')}</small>{body.mnemonDefault && <small className={css.mnemonDefaultBadge}>{t('overview.mnemonDefault')}</small>}</div></div></div>{spaceToggle(body)}</div><p title={body.description || t('overview.noDescription')}>{body.description || t('overview.noDescription')}</p>{placementReceipt(body)}<footer className={sidebarCss.bodyCardFooter}><div className={sidebarCss.bodyCardStats}>{!nativeSpaceProvider(body.provider) ? <><span className={css.bodyFooterBlock} title={t(body.provider.kind === 'remote' ? 'overview.providerRemote' : 'overview.providerLocal')}>{t(body.provider.kind === 'remote' ? 'overview.providerRemote' : 'overview.providerLocal')}</span><span className={`${css.bodyFooterBlock} ${css.bodyFooterGrow}`} title={body.provider.location || body.provider.label}>{body.provider.location || body.provider.label}</span></> : <><span className={css.bodyFooterBlock} title={t('common.memories', { count: body.stats?.totalInsights ?? 0 })}>{t('common.memories', { count: body.stats?.totalInsights ?? 0 })}</span><span className={css.bodyFooterBlock} title={t('common.edges', { count: body.stats?.edgeCount ?? 0 })}>{t('common.edges', { count: body.stats?.edgeCount ?? 0 })}</span><span className={css.bodyFooterBlock} title={humanBytes(body.stats?.dbSizeBytes ?? 0)}>{humanBytes(body.stats?.dbSizeBytes ?? 0)}</span></>}</div><div className={css.bodyCardActions}><button type="button" className={spaceEditActionClass} aria-label={t('overview.editSpaceAria', { name: body.name })} disabled={!props.writeEnabled || deletingSpace === body.id} onClick={() => beginEdit(body)}>{t('overview.editSpace')}</button><button type="button" className={spaceDeleteActionClass} aria-label={t(!nativeSpaceProvider(body.provider) ? 'overview.disconnectSpaceAria' : 'overview.deleteSpaceAria', { name: body.name })} title={canDeleteSpace(body) ? undefined : t('overview.lastStoreDeleteHint')} disabled={!props.writeEnabled || deletingSpace === body.id || !canDeleteSpace(body)} onClick={() => setConfirmingDeleteSpace(body.id)}>{!nativeSpaceProvider(body.provider) ? t('overview.disconnectSpace') : t('overview.deleteSpace')}</button></div></footer></>}
             </article>
           ))}
           {catalog?.total === 0 && <div className={css.bodyDirectoryEmpty}><span>◇</span><div><strong>{catalogUnavailable ? t('overview.unsyncedTitle') : t('overview.emptyTitle')}</strong><p>{catalogUnavailable ? t('overview.unsyncedShort') : t('overview.emptyShort')}</p></div></div>}
@@ -965,8 +977,8 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
 
       </section>
       <div className={css.asyncRegion}><ReadSourcePanel title={t('overview.snapshotSources')} hint={t('overview.snapshotSourcesHint')} sources={graphSources} /></div>
-      {creatingSpaceOpen && <SidebarModal title={t('overview.createTitle')} description={t('overview.createDialogHint')} busy={creating} wide onClose={() => setCreatingSpaceOpen(false)} footer={<div className={css.modalFooterActions}><button type="button" data-dialog-close className={css.ghostButton} disabled={creating} onClick={() => setCreatingSpaceOpen(false)}>{t('common.cancel')}</button><button type="submit" form={spaceCreateFormId} className={css.primaryButton} disabled={creating || spaceName.trim() === '' || spaceDescription.trim() === '' || !providerDraftComplete(selectedProvider, providerDrafts[spaceProviderId])}>{creating ? t('overview.creating') : t('overview.createAction')}</button></div>}>{spaceCreateForm}</SidebarModal>}
-      {metadataOpen && <SidebarModal title={t('overview.metadataTitle')} description={t('overview.metadataDescription')} busy={metadataBusy} wide onClose={() => setMetadataOpen(false)} footer={<><p className={css.modalFooterNote}>{t('overview.metadataSafety')}</p><div className={css.modalFooterActions}><button type="button" data-dialog-close className={css.ghostButton} disabled={metadataBusy} onClick={() => setMetadataOpen(false)}>{t('common.cancel')}</button><button type="button" className={css.primaryButton} disabled={!props.agentAvailable || metadataSelection.length === 0} title={!props.agentAvailable ? t('overview.metadataUnavailable') : undefined} onClick={maintainMetadata}>{t('overview.metadataGenerate', { count: metadataSelection.length })}</button></div></>}><div className={css.metadataDialog}>
+      {creatingSpaceOpen && <SidebarModal title={t('overview.createTitle')} description={t('overview.createDialogHint')} busy={creating} wide onClose={() => setCreatingSpaceOpen(false)} footer={<div className={css.modalFooterActions}><button type="button" data-dialog-close className={css.secondaryButton} disabled={creating} onClick={() => setCreatingSpaceOpen(false)}>{t('common.cancel')}</button><button type="submit" form={spaceCreateFormId} className={css.primaryButton} disabled={creating || spaceName.trim() === '' || spaceDescription.trim() === '' || !providerDraftComplete(selectedProvider, providerDrafts[spaceProviderId])}>{creating ? t('overview.creating') : t('overview.createAction')}</button></div>}>{spaceCreateForm}</SidebarModal>}
+      {metadataOpen && <SidebarModal title={t('overview.metadataTitle')} description={t('overview.metadataDescription')} busy={metadataBusy} wide onClose={() => setMetadataOpen(false)} footer={<><p className={css.modalFooterNote}>{t('overview.metadataSafety')}</p><div className={css.modalFooterActions}><button type="button" data-dialog-close className={css.secondaryButton} disabled={metadataBusy} onClick={() => setMetadataOpen(false)}>{t('common.cancel')}</button><button type="button" className={css.primaryButton} disabled={!props.agentAvailable || metadataSelection.length === 0} title={!props.agentAvailable ? t('overview.metadataUnavailable') : undefined} onClick={maintainMetadata}>{t('overview.metadataGenerate', { count: metadataSelection.length })}</button></div></>}><div className={css.metadataDialog}>
         {!props.agentAvailable && <div className={css.inlineError} role="status">{t('overview.metadataUnavailable')}</div>}
         <div className={css.metadataToolbar}><span>{t('overview.metadataSelected', { count: metadataSelection.length })}{metadataRunningCount > 0 && <em>{t('overview.metadataRunningCount', { count: metadataRunningCount })}</em>}</span><button type="button" className={css.ghostButton} disabled={metadataSelectable.length === 0} onClick={() => setMetadataSelection(metadataAllSelected ? [] : metadataSelectable.map(body => body.id))}>{metadataAllSelected ? t('overview.metadataClear') : t('overview.metadataSelectAll')}</button></div>
         <div className={css.metadataList} aria-live="polite">{metadataCandidates.length === 0 && <div className={css.metadataEmpty}>{catalogLoading ? t('overview.metadataLoading') : t('overview.metadataEmpty')}</div>}{metadataCandidates.map(body => {
@@ -975,8 +987,8 @@ export function OverviewPage(props: { client: MemorySpacesPageClient; metadataCl
           return <label key={body.id} data-provider={body.provider.id} data-selected={selected || undefined} data-refreshing={task?.status === 'running' || undefined} data-refreshed={task?.status === 'success' || undefined} data-failed={task?.status === 'error' || undefined}><input type="checkbox" checked={selected} disabled={task?.status === 'running'} onChange={event => setMetadataSelection(current => event.target.checked ? [...new Set([...current, body.id])] : current.filter(id => id !== body.id))} /><i className={css.choiceControl} data-kind="check" aria-hidden="true" /><span><strong>{body.name}</strong><small>{body.description || t('overview.noDescription')}</small><span><MemoryProviderBadge providerId={body.provider.id} label={body.provider.label} />{task === undefined ? <code>{body.id}</code> : <small className={css.metadataTaskStatus} data-status={task.status} title={task.error}>{task.status === 'running' ? t('overview.metadataTaskRunning') : task.status === 'success' ? t('overview.metadataTaskSuccess') : t('overview.metadataTaskError', { error: task.error ?? t('overview.metadataTaskUnknown') })}</small>}</span></span></label>
         })}</div>
       </div></SidebarModal>}
-      {editingSpaceView !== undefined && <SidebarModal title={t('overview.editSpaceAria', { name: editingSpaceView.name })} description={editingSpaceView.id} busy={savingSpace === editingSpaceView.id} onClose={() => setEditingSpace(null)} footer={<div className={css.modalFooterActions}><button type="button" data-dialog-close className={css.ghostButton} disabled={savingSpace === editingSpaceView.id} onClick={() => setEditingSpace(null)}>{t('common.cancel')}</button><button type="submit" form={spaceEditFormId} className={css.primaryButton} disabled={savingSpace === editingSpaceView.id || editName.trim() === ''}>{savingSpace === editingSpaceView.id ? t('overview.savingSpace') : t('overview.saveSpace')}</button></div>}>{spaceEditForm(editingSpaceView)}</SidebarModal>}
-      {deletingSpaceView !== undefined && <SidebarModal title={t(!nativeSpaceProvider(deletingSpaceView.provider) ? 'overview.disconnectTitle' : 'overview.deleteTitle', { name: deletingSpaceView.name })} description={deletingSpaceView.id} busy={deletingSpace === deletingSpaceView.id} onClose={() => setConfirmingDeleteSpace(null)} footer={<div className={css.modalFooterActions}><button type="button" data-dialog-close data-autofocus className={css.ghostButton} disabled={deletingSpace === deletingSpaceView.id} onClick={() => setConfirmingDeleteSpace(null)}>{t('common.cancel')}</button><button type="button" className={css.dangerSolidButton} title={canDeleteSpace(deletingSpaceView) ? undefined : t('overview.lastStoreDeleteHint')} disabled={deletingSpace === deletingSpaceView.id || !canDeleteSpace(deletingSpaceView)} onClick={() => void deleteBody(deletingSpaceView)}>{deletingSpace === deletingSpaceView.id ? t('overview.deletingSpace') : t(!nativeSpaceProvider(deletingSpaceView.provider) ? 'overview.disconnectAction' : 'overview.deleteAction')}</button></div>}><div className={css.bodyDeleteConfirm}><p>{t(!nativeSpaceProvider(deletingSpaceView.provider) ? 'overview.disconnectWarning' : 'overview.deleteWarning', { provider: deletingSpaceView.provider.label })}</p><div className={css.bodyDeleteSummary}><strong>{deletingSpaceView.name}</strong><span>{deletingSpaceView.provider.label} · {deletingSpaceView.provider.location || t('common.memories', { count: deletingSpaceView.stats?.totalInsights ?? 0 })}</span></div></div></SidebarModal>}
+      {editingSpaceView !== undefined && <SidebarModal title={t('overview.editSpaceAria', { name: editingSpaceView.name })} description={editingSpaceView.id} busy={savingSpace === editingSpaceView.id} onClose={() => setEditingSpace(null)} footer={<div className={css.modalFooterActions}><button type="button" data-dialog-close className={css.secondaryButton} disabled={savingSpace === editingSpaceView.id} onClick={() => setEditingSpace(null)}>{t('common.cancel')}</button><button type="submit" form={spaceEditFormId} className={css.primaryButton} disabled={savingSpace === editingSpaceView.id || editName.trim() === ''}>{savingSpace === editingSpaceView.id ? t('overview.savingSpace') : t('overview.saveSpace')}</button></div>}>{spaceEditForm(editingSpaceView)}</SidebarModal>}
+      {deletingSpaceView !== undefined && <SidebarModal title={t(!nativeSpaceProvider(deletingSpaceView.provider) ? 'overview.disconnectTitle' : 'overview.deleteTitle', { name: deletingSpaceView.name })} description={deletingSpaceView.id} busy={deletingSpace === deletingSpaceView.id} onClose={() => setConfirmingDeleteSpace(null)} footer={<div className={css.modalFooterActions}><button type="button" data-dialog-close data-autofocus className={css.secondaryButton} disabled={deletingSpace === deletingSpaceView.id} onClick={() => setConfirmingDeleteSpace(null)}>{t('common.cancel')}</button><button type="button" className={css.dangerSolidButton} title={canDeleteSpace(deletingSpaceView) ? undefined : t('overview.lastStoreDeleteHint')} disabled={deletingSpace === deletingSpaceView.id || !canDeleteSpace(deletingSpaceView)} onClick={() => void deleteBody(deletingSpaceView)}>{deletingSpace === deletingSpaceView.id ? t('overview.deletingSpace') : t(!nativeSpaceProvider(deletingSpaceView.provider) ? 'overview.disconnectAction' : 'overview.deleteAction')}</button></div>}><div className={css.bodyDeleteConfirm}><p>{t(!nativeSpaceProvider(deletingSpaceView.provider) ? 'overview.disconnectWarning' : 'overview.deleteWarning', { provider: deletingSpaceView.provider.label })}</p><div className={css.bodyDeleteSummary}><strong>{deletingSpaceView.name}</strong><span>{deletingSpaceView.provider.label} · {deletingSpaceView.provider.location || t('common.memories', { count: deletingSpaceView.stats?.totalInsights ?? 0 })}</span></div></div></SidebarModal>}
       {!catalogUnavailable && graph !== null && graph.nodes.length > 0 ? (
         <div className={css.graphLayout}>
           <section className={css.graphPanel}>
@@ -1031,6 +1043,11 @@ export function ExplorePage(props: { client: MemorySpacesPageClient; agentClient
   const [sources, setSources] = useState<MemoryReadSource[]>([])
   const [searchKind, setSearchKind] = useState<'direct' | 'agent' | null>(null)
   const [agentAnswer, setAgentAnswer] = useState<{ answer: string; citations: string[]; runId: string } | null>(null)
+  /** A citation names the recalled memory it points at, not its identifiers. */
+  const citationLabel = (citation: string): string => {
+    const cited = results.find(result => `${result.memoryBodyId}/${result.id}` === citation || result.id === citation)
+    return cited === undefined ? short(citation.split('/').at(-1) ?? citation, 12) : short(cited.content, 40)
+  }
   const [searched, setSearched] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [relatedTo, setRelatedTo] = useState<{ insight: Insight; request: number } | null>(null)
@@ -1042,6 +1059,14 @@ export function ExplorePage(props: { client: MemorySpacesPageClient; agentClient
   const relatedRequests = useRequestVersion()
 
   useEffect(() => { if (props.seed !== '') setQuery(props.seed) }, [props.seed])
+  // Opening Recall with a query runs it once, with the configured recall limit,
+  // whether a conversation turn or another page sent it.
+  const ranSeed = useRef('')
+  useEffect(() => {
+    if (props.seed === '' || props.status === null || ranSeed.current === props.seed) return
+    ranSeed.current = props.seed
+    void runSearch(false, props.seed)
+  }, [props.seed, props.status])
   useEffect(() => {
     if (relatedTo === null || props.onRevealElement === undefined) return
     const reveal = () => {
@@ -1052,12 +1077,12 @@ export function ExplorePage(props: { client: MemorySpacesPageClient; agentClient
     return () => { if (typeof window.cancelAnimationFrame === 'function') window.cancelAnimationFrame(frame) }
   }, [relatedTo, relatedRequests, props.onRevealElement])
 
-  const runSearch = async (withAgent: boolean) => {
-    if (query.trim() === '') return
+  const runSearch = async (withAgent: boolean, text = query) => {
+    if (text.trim() === '') return
     relatedRequests.begin()
     setSearchKind(withAgent ? 'agent' : 'direct'); setSearched(true); setError(null); setRelatedTo(null); setAgentAnswer(null); setVisibleResultLimit(pageSize); setVisibleRelatedLimit(pageSize)
     try {
-      const request = { query, mode, ...(category === '' ? {} : { category }), limit: props.status?.defaultRecallLimit ?? 10 }
+      const request = { query: text, mode, ...(category === '' ? {} : { category }), limit: props.status?.defaultRecallLimit ?? 10 }
       if (withAgent) {
         const response = await props.agentClient.agentSearch(request)
         setResults(response.results)
@@ -1104,17 +1129,17 @@ export function ExplorePage(props: { client: MemorySpacesPageClient; agentClient
     <div className={css.page}>
       <PageHeader title={t('search.title')} description={t('search.description')} meta={t('search.maxResults', { count: props.status?.defaultRecallLimit ?? '—' })} />
       <form className={css.searchBar} onSubmit={event => void search(event)}>
-        <div className={css.queryField}><span aria-hidden="true">⌕</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('search.placeholder')} aria-label={t('search.queryAria')} /><kbd>↵</kbd></div>
+        <SearchField className={css.queryField} label={t('search.queryAria')} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('search.placeholder')} />
         <div className={css.searchControls}>
-          <label>{t('common.category')}<select value={category} onChange={event => setCategory(event.target.value as Category | '')} aria-label={t('search.categoryAria')}><option value="">{t('common.allCategories')}</option>{CATEGORIES.map(value => <option key={value} value={value}>{categoryLabel(t, value)}</option>)}</select></label>
-          <label>{t('search.strategy')}<select value={mode} onChange={event => setMode(event.target.value as 'smart' | 'keyword' | 'basic')} aria-label={t('search.modeAria')}><option value="smart">{t('search.modeSmart')}</option><option value="keyword">{t('search.modeKeyword')}</option><option value="basic">{t('search.modeBasic')}</option></select></label>
+          <SelectField className={css.searchChoice} label={t('common.category')} ariaLabel={t('search.categoryAria')} value={category} options={[{ value: '' as Category | '', label: t('common.allCategories') }, ...CATEGORIES.map(value => ({ value, label: categoryLabel(t, value) }))]} onChange={setCategory} />
+          <SelectField className={css.searchChoice} label={t('search.strategy')} ariaLabel={t('search.modeAria')} value={mode} options={[{ value: 'smart', label: t('search.modeSmart') }, { value: 'keyword', label: t('search.modeKeyword') }, { value: 'basic', label: t('search.modeBasic') }]} onChange={setMode} />
           <div className={css.searchActions}><button type="submit" className={css.secondaryButton} disabled={searching || query.trim() === ''}>{searchKind === 'direct' ? t('search.searching') : t('search.action')}</button><button type="button" className={css.primaryButton} disabled={searching || query.trim() === '' || !props.agentAvailable} onClick={() => void runSearch(true)}>{searchKind === 'agent' ? t('search.agentSearching') : t('search.agentAction')}</button></div>
         </div>
       </form>
       <ReadSourcePanel title={t('search.sourcesTitle')} sources={sources} />
       <div className={css.asyncResults}>
       {searching && <SectionSpinner label={searchKind === 'agent' ? t('search.agentSearching') : t('search.searching')} />}
-      {agentAnswer !== null && <section className={css.agentAnswer} aria-label={t('search.agentAnswer')}><div className={css.agentAnswerHeading}><div><span>{t('search.agentAnswerHint')}</span><h3>{t('search.agentAnswer')}</h3></div><code>{agentAnswer.runId.slice(0, 8)}</code></div><p>{agentAnswer.answer}</p>{agentAnswer.citations.length > 0 && <div className={css.agentCitations}>{agentAnswer.citations.map(citation => <code key={citation}>{citation}</code>)}</div>}</section>}
+      {agentAnswer !== null && <section className={css.agentAnswer} aria-label={t('search.agentAnswer')}><div className={css.agentAnswerHeading}><div><span>{t('search.agentAnswerHint')}</span><h3>{t('search.agentAnswer')}</h3></div></div><p>{agentAnswer.answer}</p>{agentAnswer.citations.length > 0 && <div className={css.agentCitations}><small>{t('search.citations')}</small>{agentAnswer.citations.map((citation, index) => <span key={citation} title={citation}>{index + 1}. {citationLabel(citation)}</span>)}</div>}</section>}
       {error !== null && <div className={css.inlineError} role="alert">{error}</div>}
       {!searched && <EmptyState glyph="⌕" title={t('search.startTitle')}>{t('search.startText')}</EmptyState>}
       {searched && !searching && results.length === 0 && error === null && <EmptyState glyph="0" title={t('search.emptyTitle')}>{t('search.emptyText')}</EmptyState>}
@@ -1179,7 +1204,7 @@ export function EntitiesPage(props: { client: MemorySpacesPageClient; revision: 
         ? <EmptyState glyph="◎" title={t('entities.unsupportedTitle')}>{t('entities.unsupportedText')}</EmptyState>
         : <div className={css.entityLayout}>
         <aside className={css.entityRail}>
-          <form className={css.entitySearch} onSubmit={submit}><input aria-label={t('entities.nameAria')} value={entity} onChange={event => { setEntity(event.target.value); setEntityFilter(event.target.value) }} onKeyDown={event => { if (event.key === 'Escape' && entityFilter !== '') { event.preventDefault(); setEntityFilter('') } }} placeholder={t('entities.placeholder')} /><button type="submit" className={css.primaryButton} disabled={loading || entity.trim() === ''}>{t('entities.action')}</button></form>
+          <form className={css.entitySearch} onSubmit={submit}><SearchField label={t('entities.nameAria')} value={entity} onChange={event => { setEntity(event.target.value); setEntityFilter(event.target.value) }} onKeyDown={event => { if (event.key === 'Escape' && entityFilter !== '') { event.preventDefault(); setEntityFilter('') } }} placeholder={t('entities.placeholder')} /><button type="submit" className={css.secondaryButton} disabled={loading || entity.trim() === ''}>{t('entities.action')}</button></form>
           <div className={css.entityHeading}><span>{t('entities.top')}</span><small>{entityFilter === '' ? t('entities.frequency') : t('entities.filterHint')}</small></div>
           <div className={css.entityList}>{visibleEntities.map(item => <button key={item.entity} type="button" aria-pressed={view.selected === item.entity} onClick={() => { setEntity(item.entity); void load(item.entity) }}><span>{item.entity}</span><strong>{item.count}</strong></button>)}</div>
           {visibleEntities.length > 0 && filteredTotal > visibleEntityLimit && <ProgressiveFooter compact visible={visibleEntities.length} total={filteredTotal} pageSize={entityPageSize} onMore={() => setVisibleEntityLimit(value => value + entityPageSize)} />}
@@ -1273,7 +1298,7 @@ export function PersistenceStrategyDialog(props: {
     } catch (reason) { setError(message(reason)) } finally { setSaving(false) }
   }
 
-  return <SidebarModal title={t('strategy.title')} description={t('strategy.description')} busy={saving} contentReady={!loading} wide onClose={props.onClose} footer={<div className={css.modalFooterActions}><button type="button" data-dialog-close className={css.ghostButton} disabled={saving} onClick={props.onClose}>{t('common.cancel')}</button><button type="submit" form={strategyFormId} className={css.primaryButton} disabled={loading || saving || !props.writable || !selectedProvidersValid}>{saving ? t('strategy.saving') : t('strategy.save')}</button></div>}>
+  return <SidebarModal title={t('strategy.title')} description={t('strategy.description')} busy={saving} contentReady={!loading} wide onClose={props.onClose} footer={<div className={css.modalFooterActions}><button type="button" data-dialog-close className={css.secondaryButton} disabled={saving} onClick={props.onClose}>{t('common.cancel')}</button><button type="submit" form={strategyFormId} className={css.primaryButton} disabled={loading || saving || !props.writable || !selectedProvidersValid}>{saving ? t('strategy.saving') : t('strategy.save')}</button></div>}>
     <form id={strategyFormId} className={appearanceClass(css.bodyEdit, css.strategyForm)} onSubmit={event => void save(event)}>
       {loading && <div className={css.strategyLoading}><SectionSpinner label={t('strategy.loading')} /><span>{t('strategy.loading')}</span></div>}
       {error !== null && <div className={css.inlineError} role="alert">{error}</div>}
@@ -1288,7 +1313,7 @@ export function PersistenceStrategyDialog(props: {
         <section className={css.createSection}>
           <div className={css.createSectionHeading}><span>02</span><div><strong>{t(mode === 'manual' ? 'strategy.manualTitle' : 'strategy.automaticTitle')}</strong><small>{t(mode === 'manual' ? 'strategy.manualDescription' : 'strategy.automaticDescription')}</small></div></div>
           {mode === 'manual' ? <>
-            <fieldset className={css.providerChoice}><legend>{t('overview.providerLabel')}</legend>{providers.map(provider => {
+            <fieldset className={css.providerChoice}><legend>{t('overview.providerLabel')}</legend>{readyFirst(providers).map(provider => {
               const disabled = provider.serviceConfigured === false
               return <label key={provider.id} data-selected={providerId === provider.id || undefined} data-native={provider.origin === 'native' || undefined} data-disabled={disabled || undefined}>
                 <input type="radio" name="strategy-provider" value={provider.id} checked={providerId === provider.id} disabled={disabled} onChange={() => setProviderId(provider.id)} />
@@ -1299,14 +1324,14 @@ export function PersistenceStrategyDialog(props: {
             })}</fieldset>
             {selectedProvider !== undefined && selectedProvider.origin !== 'native' && <ProviderMemoryFields provider={selectedProvider} connection={providerDrafts[selectedProvider.id] ?? {}} onChange={(key, value) => updateDraft(selectedProvider.id, key, value)} />}
           </> : <section className={css.placementPolicy} aria-label={t('overview.placementPolicy')}>
-            <div className={css.placementPolicyHeading}><div><strong>{t('overview.placementPolicy')}</strong><small>{t('overview.placementPolicyHint')}</small></div><span>{props.agentAvailable ? t('strategy.taskAgentReady') : t('strategy.taskAgentUnavailable')}</span></div>
+            <div className={css.placementPolicyHeading}><div><strong>{t('overview.placementPolicy')}</strong><small>{t('overview.placementPolicyHint')}</small></div><TaskAgentTag available={props.agentAvailable} /></div>
             <label>{t('overview.placementPrompt')}<textarea aria-label={t('overview.placementPrompt')} value={prompt} onChange={event => setPrompt(event.target.value)} placeholder={t('overview.placementPromptPlaceholder')} rows={3} maxLength={4000} /></label>
-            <div className={css.placementRuleGrid}><label>{t('overview.dataBoundary')}<select aria-label={t('overview.dataBoundary')} value={dataBoundary} onChange={event => { const value = event.target.value as 'allow-remote' | 'local-only'; setDataBoundary(value); if (value === 'local-only') setAutomaticProviderIds(current => current.filter(id => providers.find(provider => provider.id === id)?.kind === 'local')) }}><option value="allow-remote">{t('overview.dataBoundaryRemote')}</option><option value="local-only">{t('overview.dataBoundaryLocal')}</option></select></label><label>{t('overview.preference')}<select aria-label={t('overview.preference')} value={preference} onChange={event => setPreference(event.target.value as MemoryPlacementPreference)}><option value="balanced">{t('overview.preferenceBalanced')}</option><option value="local-first">{t('overview.preferenceLocal')}</option><option value="shared-first">{t('overview.preferenceShared')}</option></select></label></div>
+            <div className={css.placementRuleGrid}><SelectField label={t('overview.dataBoundary')} value={dataBoundary} options={[{ value: 'allow-remote', label: t('overview.dataBoundaryRemote') }, { value: 'local-only', label: t('overview.dataBoundaryLocal') }]} onChange={value => { setDataBoundary(value); if (value === 'local-only') setAutomaticProviderIds(current => current.filter(id => providers.find(provider => provider.id === id)?.kind === 'local')) }} /><SelectField label={t('overview.preference')} value={preference} options={[{ value: 'balanced', label: t('overview.preferenceBalanced') }, { value: 'local-first', label: t('overview.preferenceLocal') }, { value: 'shared-first', label: t('overview.preferenceShared') }]} onChange={setPreference} /></div>
             <fieldset className={css.capabilityRules}><legend>{t('overview.requiredCapabilities')}</legend>{(['graph', 'exact-write', 'forget'] as const).map(capability => {
               const selected = requiredCapabilities.includes(capability)
               return <label key={capability} data-selected={selected || undefined}><input type="checkbox" checked={selected} onChange={() => toggleCapability(capability)} /><i className={css.choiceControl} data-kind="check" aria-hidden="true" /><span>{t(`overview.capability.${capability}`)}</span></label>
             })}</fieldset>
-            <div className={css.placementCandidates}>{providers.map(provider => {
+            <div className={css.placementCandidates}>{readyFirst(providers).map(provider => {
               const selected = automaticProviderIds.includes(provider.id)
               // A saved candidate that is no longer ready can still be cleared.
               const disabled = (provider.serviceConfigured === false && !selected) || (dataBoundary === 'local-only' && provider.kind === 'remote')
@@ -1320,9 +1345,10 @@ export function PersistenceStrategyDialog(props: {
   </SidebarModal>
 }
 
-export function RememberPage(props: { client: MemorySpacesPageClient; agentAvailable: boolean; memoryBodies: MemorySpaceView[]; writeEnabled: boolean; seed: string; onMutate: () => void; onClose: () => void; onComplete?: () => void }): JSX.Element {
+export function RememberPage(props: { client: MemorySpacesPageClient; agentAvailable: boolean; memoryBodies: MemorySpaceView[]; writeEnabled: boolean; seed: string; onMutate: () => void; onClose: () => void; onView?: () => void }): JSX.Element {
   const t = useT()
   const rememberFormId = useId()
+  const candidateId = useId()
   const [content, setContent] = useState(props.seed)
   const [category, setCategory] = useState<Category>('general')
   const [importance, setImportance] = useState(3)
@@ -1331,57 +1357,65 @@ export function RememberPage(props: { client: MemorySpacesPageClient; agentAvail
   const [memoryBodyId, setMemoryBodyId] = useState('')
   const [supervising, setSupervising] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [result, setResult] = useState<string | null>(null)
+  const [outcome, setOutcome] = useState<{ content: string; action?: string; summary?: string; error?: string } | null>(null)
   useEffect(() => { if (props.seed !== '') setContent(props.seed) }, [props.seed])
   useEffect(() => {
     if (memoryBodyId === '' && props.memoryBodies.length > 0) setMemoryBodyId((props.memoryBodies.find(body => body.active) ?? props.memoryBodies[0])!.id)
   }, [memoryBodyId, props.memoryBodies])
   const selectedMemoryBody = props.memoryBodies.find(body => body.id === memoryBodyId)
+  const candidate = content.trim()
+  // A receipt answers one text: sending the same text again waits for an edit.
+  const answered = outcome !== null && outcome.content === candidate
+  const busy = supervising || saving
 
   const supervise = async (event: FormEvent) => {
     event.preventDefault()
-    if (content.trim() === '' || !props.agentAvailable) return
-    setSupervising(true); setResult(null)
+    if (candidate === '' || !props.agentAvailable || answered || busy) return
+    setSupervising(true); setOutcome(null)
     try {
-      const response = await props.client.supervise(content)
-      setResult(`${t(response.action === 'skipped' ? 'remember.skipped' : 'remember.completed')}${response.memoryBodyIds.length === 0 ? '' : ` · ${response.memoryBodyIds.join(', ')}`}${response.summary === '' ? '' : ` · ${response.summary}`}`)
+      const response = await props.client.supervise(candidate)
+      setOutcome({ content: candidate, action: response.action, summary: response.summary })
       props.onMutate()
-      if (response.action !== 'skipped') {
-        setContent('')
-        props.onComplete?.()
-      }
-    } catch (reason) { setResult(t('remember.dispatchFailed', { error: message(reason) })) } finally { setSupervising(false) }
+    } catch (reason) { setOutcome({ content: candidate, error: message(reason) }) } finally { setSupervising(false) }
   }
 
   const manualSave = async (event: FormEvent) => {
-    event.preventDefault(); if (content.trim() === '') return
-    setSaving(true); setResult(null)
+    event.preventDefault()
+    if (candidate === '' || busy) return
+    setSaving(true); setOutcome(null)
     try {
-      const response = await props.client.remember({ content, category, importance, tags: tags.split(',').map(value => value.trim()).filter(Boolean), entities: entities.split(',').map(value => value.trim()).filter(Boolean), source: 'user', ...(memoryBodyId === '' ? {} : { memoryBodyId }) })
-      const action = typeof response.action === 'string' ? response.action : 'saved'
-      const summary = typeof response.summary === 'string' ? response.summary : ''
-      setResult(action === 'skipped' ? `${t('remember.skipped')}${summary === '' ? '' : ` · ${summary}`}` : `${t('remember.processed', { action })}${summary === '' ? '' : ` · ${summary}`}`)
-      if (action !== 'skipped') { setContent(''); setTags(''); setEntities(''); props.onMutate(); props.onComplete?.() }
-    } catch (reason) { setResult(t('remember.saveFailed', { error: message(reason) })) } finally { setSaving(false) }
+      const response = await props.client.remember({ content: candidate, category, importance, tags: tags.split(',').map(value => value.trim()).filter(Boolean), entities: entities.split(',').map(value => value.trim()).filter(Boolean), source: 'user', ...(memoryBodyId === '' ? {} : { memoryBodyId }) })
+      setOutcome({ content: candidate, action: typeof response.action === 'string' ? response.action : 'stored', summary: typeof response.summary === 'string' ? response.summary : '' })
+      props.onMutate()
+    } catch (reason) { setOutcome({ content: candidate, error: message(reason) }) } finally { setSaving(false) }
   }
 
   const composer = <section className={css.supervisedComposer}>
     <form id={rememberFormId} className={css.supervisedForm} onSubmit={event => void supervise(event)}>
-      <div className={css.supervisedHeading}><div><h3>{t('remember.delegateTitle')}</h3></div><span className={!props.agentAvailable ? css.sessionMissing : css.sessionReady}>{!props.agentAvailable ? t('remember.noTaskAgent') : t('remember.taskAgentReady')}</span></div>
-      <label className={css.fieldWide}>{t('remember.candidate')}<textarea aria-label={t('remember.candidateAria')} value={content} onChange={event => setContent(event.target.value)} maxLength={8000} rows={8} placeholder={t('remember.placeholder')} /></label>
+      <div className={css.candidateHeading}><label htmlFor={candidateId}>{t('remember.candidate')}</label><TaskAgentTag available={props.agentAvailable} /></div>
+      <textarea id={candidateId} value={content} onChange={event => setContent(event.target.value)} maxLength={8000} rows={8} placeholder={t('remember.placeholder')} />
       {!props.agentAvailable && <p className={css.sessionHint}>{t('remember.taskAgentHint')}</p>}
-      {result !== null && <p className={css.modalInlineStatus} role="status">{result}</p>}
+      {outcome !== null && <WriteReceipt action={outcome.action} summary={outcome.summary} error={outcome.error} onView={props.onView} />}
     </form>
     <details className={css.advancedWrite}>
       <summary><span><strong>{t('remember.advanced')}</strong><small>{t('remember.advancedHint')}</small></span><span>{t('remember.expand')}</span></summary>
       <form className={css.manualForm} onSubmit={event => void manualSave(event)}>
-        <div className={css.formGrid}><label className={css.fieldWide}>{t('remember.target')}<select aria-label={t('remember.target')} value={memoryBodyId} onChange={event => setMemoryBodyId(event.target.value)}>{props.memoryBodies.map(body => <option key={body.id} value={body.id}>{body.name} · {body.provider.label}{body.active ? ` · ${t('common.active')}` : ''}</option>)}</select>{selectedMemoryBody?.provider.capabilities.writeMode === 'async-extracting' && <small className={css.providerWriteHint}>{t('remember.asyncProviderHint')}</small>}</label><label>{t('common.category')}<select value={category} onChange={event => setCategory(event.target.value as Category)}>{CATEGORIES.map(value => <option key={value} value={value}>{categoryLabel(t, value)}</option>)}</select></label><label>{t('common.importanceLabel')}<select value={importance} onChange={event => setImportance(Number(event.target.value))}>{[1, 2, 3, 4, 5].map(value => <option key={value} value={value}>{value} / 5</option>)}</select></label><label className={css.fieldWide}>{t('remember.entities')}<input value={entities} onChange={event => setEntities(event.target.value)} placeholder="SQLite, DSH" /></label><label className={css.fieldWide}>{t('remember.tags')}<input value={tags} onChange={event => setTags(event.target.value)} placeholder="architecture, local-first" /></label></div>
-        <div className={css.manualActions}><p>{t('remember.advancedText')}</p><button type="submit" className={css.secondaryButton} disabled={saving || content.trim() === '' || memoryBodyId === ''}>{saving ? t('remember.saving') : t('remember.advancedAction')}</button></div>
+        <div className={css.formGrid}>
+          <div className={css.fieldWide}>
+            <SelectField label={t('remember.target')} value={memoryBodyId} options={props.memoryBodies.map(body => ({ value: body.id, label: `${body.name} · ${body.provider.label}${body.active ? ` · ${t('common.active')}` : ''}` }))} onChange={setMemoryBodyId} />
+            {selectedMemoryBody?.provider.capabilities.writeMode === 'async-extracting' && <small className={css.providerWriteHint}>{t('remember.asyncProviderHint')}</small>}
+          </div>
+          <SelectField label={t('common.category')} value={category} options={CATEGORIES.map(value => ({ value, label: categoryLabel(t, value) }))} onChange={setCategory} />
+          <SelectField label={t('common.importanceLabel')} value={String(importance)} options={[1, 2, 3, 4, 5].map(value => ({ value: String(value), label: `${value} / 5` }))} onChange={value => setImportance(Number(value))} />
+          <label className={css.fieldWide}>{t('remember.entities')}<input value={entities} onChange={event => setEntities(event.target.value)} placeholder="SQLite, DSH" /></label>
+          <label className={css.fieldWide}>{t('remember.tags')}<input value={tags} onChange={event => setTags(event.target.value)} placeholder="architecture, local-first" /></label>
+        </div>
+        <div className={css.manualActions}><p>{t('remember.advancedText')}</p><button type="submit" className={css.secondaryButton} disabled={busy || candidate === '' || memoryBodyId === '' || answered}>{saving ? t('remember.saving') : t('remember.advancedAction')}</button></div>
       </form>
     </details>
   </section>
 
-  return <SidebarModal title={t('remember.title')} description={t('remember.description')} busy={supervising || saving} onClose={props.onClose} footer={props.writeEnabled ? <div className={css.modalFooterActions}><button type="button" data-dialog-close className={css.ghostButton} disabled={supervising || saving} onClick={props.onClose}>{t('common.cancel')}</button><button type="submit" form={rememberFormId} className={css.primaryButton} disabled={supervising || content.trim() === '' || !props.agentAvailable}>{supervising ? t('remember.processing') : t('remember.action')}</button></div> : undefined}>{props.writeEnabled ? composer : <EmptyState glyph="⊘" title={t('remember.readOnlyTitle')}>{t('remember.readOnlyText')}</EmptyState>}</SidebarModal>
+  return <SidebarModal title={t('remember.title')} description={t('remember.description')} busy={busy} onClose={props.onClose} footer={props.writeEnabled ? <div className={css.modalFooterActions}><button type="button" data-dialog-close className={css.secondaryButton} disabled={busy} onClick={props.onClose}>{t(outcome === null ? 'common.cancel' : 'common.close')}</button><button type="submit" form={rememberFormId} className={css.primaryButton} disabled={busy || candidate === '' || !props.agentAvailable || answered}>{supervising ? t('remember.processing') : t('remember.action')}</button></div> : undefined}>{props.writeEnabled ? composer : <EmptyState glyph="⊘" title={t('remember.readOnlyTitle')}>{t('remember.readOnlyText')}</EmptyState>}</SidebarModal>
 }
 
 export function ListPage(props: { client: MemorySpacesPageClient; revision: number; writeEnabled: boolean; onForget: (insight: Insight) => Promise<void>; onClone: (insight: Insight) => void; onExplore: (query: string) => void }): JSX.Element {
@@ -1411,7 +1445,7 @@ export function ListPage(props: { client: MemorySpacesPageClient; revision: numb
   return (
     <div className={css.page}>
       <PageHeader title={t('content.title')} description={t('content.description')} meta={t('content.count', { count: view === null ? '—' : selectedBodyId === undefined ? view.total : filteredItems.length })} />
-      <form className={css.listToolbar} onSubmit={submit}><input aria-label={t('content.filterAria')} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('content.filterPlaceholder')} /><select aria-label={t('content.categoryAria')} value={category} onChange={event => setCategory(event.target.value as Category | '')}><option value="">{t('common.allCategories')}</option>{CATEGORIES.map(value => <option key={value} value={value}>{categoryLabel(t, value)}</option>)}</select><button type="submit" className={css.primaryButton} disabled={loading}>{loading ? t('common.loading') : t('content.apply')}</button></form>
+      <form className={css.listToolbar} onSubmit={submit}><SearchField label={t('content.filterAria')} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('content.filterPlaceholder')} /><SelectField hideLabel label={t('content.categoryAria')} value={category} options={[{ value: '' as Category | '', label: t('common.allCategories') }, ...CATEGORIES.map(value => ({ value, label: categoryLabel(t, value) }))]} onChange={setCategory} /><button type="submit" className={css.secondaryButton} disabled={loading}>{loading ? t('common.loading') : t('content.apply')}</button></form>
       <div className={css.listNotice}>{t('content.notice')}</div>
       <ReadSourcePanel title={t('content.sourcesTitle')} sources={sources} selectedBodyId={selectedBodyId} onSelect={selectBody} />
       {error !== null && <div className={css.inlineError} role="alert">{error}</div>}

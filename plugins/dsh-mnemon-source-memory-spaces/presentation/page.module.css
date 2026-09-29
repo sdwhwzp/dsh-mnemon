@@ -232,6 +232,7 @@ button.readSourceCard:hover { background: var(--mn-hover); }
 .providerFields details { min-width: 0; }
 .providerFields summary { width: fit-content; color: var(--mn-muted); cursor: pointer; font-size: 12px; line-height: 18px; }
 .providerFields summary:hover { color: var(--mn-text); }
+.providerEnableHint { display: block; margin-top: 8px; color: var(--mn-faint); font-size: 12px; line-height: 18px; }
 .providerAdvancedGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
 .providerFieldControl .providerSecretClear { display: flex; align-items: center; gap: 6px; color: var(--mn-muted); cursor: pointer; font-size: 12px; font-weight: 400; }
 .providerWriteHint { display: block; margin-top: 4px; color: var(--mn-faint); font-size: 12px; line-height: 18px; }
@@ -324,12 +325,8 @@ button.readSourceCard:hover { background: var(--mn-hover); }
 
 /* Search: a DSH Input-style query field over the controls. */
 .searchBar { margin-bottom: 16px; padding: 14px; border: .5px solid var(--mn-card-line); border-radius: var(--dsw-radius-lg); }
-.queryField { display: grid; grid-template-columns: 20px minmax(0, 1fr) 24px; align-items: center; gap: 6px; padding: 0 12px; border: .5px solid var(--mn-field-line); border-radius: var(--dsw-radius-md); background: var(--mn-input); }
-.queryField:focus-within { border-color: var(--mn-accent); }
-.queryField > span { color: var(--mn-faint); font-size: 15px; line-height: 1; }
-.queryField input { width: 100%; height: 40px; border: 0; outline: 0; background: transparent; font-size: 14px; }
-.queryField input::placeholder { color: var(--dsw-alias-label-dimmed); }
-.queryField kbd { color: var(--mn-caption); font: 12px var(--mn-sans); }
+.queryField { width: 100%; height: 40px; }
+.searchChoice { min-width: 160px; }
 .searchControls { display: flex; align-items: flex-end; justify-content: flex-end; gap: 12px; padding-top: 12px; }
 .searchActions { display: flex; align-items: center; gap: 8px; }
 .agentAnswer { margin-bottom: 16px; padding: 16px; border: .5px solid var(--mn-card-line); border-radius: var(--dsw-radius-lg); }
@@ -338,18 +335,10 @@ button.readSourceCard:hover { background: var(--mn-hover); }
 .agentAnswerHeading h3 { margin: 2px 0 0; font-size: 14px; font-weight: 500; line-height: 22px; }
 .agentAnswerHeading > code { color: var(--mn-faint); font-size: 11px; }
 .agentAnswer > p { margin: 12px 0; white-space: pre-wrap; color: var(--mn-text); font-size: 14px; line-height: 22px; }
-.agentCitations { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px; border-top: .5px solid var(--mn-line); }
-.agentCitations code { padding: 1px 8px; border-radius: 999px; color: var(--mn-muted); background: var(--mn-fill); font-size: 11px; line-height: 17px; }
-.searchControls label,
+.agentCitations { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 10px; border-top: .5px solid var(--mn-line); }
+.agentCitations small { color: var(--mn-faint); font-size: 12px; line-height: 18px; }
+.agentCitations span { max-width: 100%; overflow: hidden; padding: 1px 8px; border-radius: 999px; color: var(--mn-muted); background: var(--mn-fill); font-size: 12px; line-height: 18px; text-overflow: ellipsis; white-space: nowrap; }
 .fieldWide { display: grid; gap: 6px; color: var(--mn-muted); font-size: 12px; font-weight: 500; line-height: 18px; }
-.searchControls select,
-.listToolbar input,
-.listToolbar select,
-.entitySearch input { min-width: 140px; height: 32px; border: .5px solid var(--mn-field-line); border-radius: var(--dsw-radius-md); outline: 0; padding: 0 10px; color: var(--mn-text); background: var(--mn-input); font-size: 13px; font-weight: 400; }
-.searchControls select:focus,
-.listToolbar input:focus,
-.listToolbar select:focus,
-.entitySearch input:focus,
 .supervisedForm textarea:focus { border-color: var(--mn-accent); }
 .singleColumn { max-width: 830px; }
 .resultLayout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); gap: 16px; align-items: start; }
@@ -391,12 +380,8 @@ button.readSourceCard:hover { background: var(--mn-hover); }
 .supervisedComposer { border: .5px solid var(--mn-card-line); border-radius: var(--dsw-radius-lg); }
 .supervisedComposer { overflow: hidden; }
 .supervisedForm { padding: 16px; }
-.supervisedHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
-.supervisedHeading h3 { margin: 2px 0 0; font-size: 16px; font-weight: 500; line-height: 24px; }
-.sessionReady,
-.sessionMissing { padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; line-height: 17px; }
-.sessionReady { color: var(--mn-success); background: color-mix(in srgb, var(--mn-success) 10%, transparent); }
-.sessionMissing { color: var(--mn-danger); background: color-mix(in srgb, var(--mn-danger) 10%, transparent); }
+.candidateHeading { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.candidateHeading > label { color: var(--mn-text); font-size: 13px; font-weight: 500; line-height: 20px; }
 .supervisedForm textarea { width: 100%; resize: vertical; border: .5px solid var(--mn-field-line); border-radius: var(--dsw-radius-md); outline: 0; padding: 10px 12px; color: var(--mn-text); background: var(--mn-input); font-size: 14px; line-height: 22px; }
 .sessionHint { margin: 8px 0 0; color: var(--mn-danger); font-size: 12px; line-height: 18px; }
 .fieldWide { grid-column: 1 / -1; }
@@ -416,8 +401,7 @@ button.readSourceCard:hover { background: var(--mn-hover); }
 .manualActions p { max-width: 520px; margin: 0; color: var(--mn-faint); font-size: 12px; line-height: 18px; }
 
 .listToolbar { display: grid; grid-template-columns: minmax(0, 1fr) 180px auto; gap: 8px; padding: 12px; border: .5px solid var(--mn-card-line); border-radius: var(--dsw-radius-lg); }
-.listToolbar input,
-.listToolbar select { width: 100%; min-width: 0; }
+.listToolbar > * { min-width: 0; }
 .listNotice { margin: 10px 2px 16px; color: var(--mn-faint); font-size: 12px; line-height: 18px; }
 .listNotice span { margin-right: 8px; padding: 1px 8px; border-radius: 999px; color: var(--mn-success); background: color-mix(in srgb, var(--mn-success) 10%, transparent); font-size: 11px; font-weight: 500; line-height: 17px; }
 .memoryList { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: start; }
@@ -469,7 +453,6 @@ button.readSourceCard:hover { background: var(--mn-hover); }
   .searchControls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .searchActions { grid-column: 1 / -1; }
   .searchActions > button { flex: 1; }
-  .searchControls select { width: 100%; min-width: 0; }
   .listToolbar { grid-template-columns: 1fr; }
   .bodyDirectoryHeader { display: grid; grid-template-columns: minmax(0, 1fr); }
   .bodyDirectoryHeader > div { min-width: 0; }
@@ -490,8 +473,7 @@ button.readSourceCard:hover { background: var(--mn-hover); }
 @media (max-width: 520px) {
   .memoryHeaderActions { width: 100%; }
   .memoryHeaderActions > button { flex: 1; }
-  .supervisedHeading,
-.cardTop { align-items: flex-start; flex-direction: column; }
+  .cardTop { align-items: flex-start; flex-direction: column; }
   .cardActions { align-items: stretch; flex-wrap: wrap; }
   .cardActions button { flex: 1; }
   .searchControls { grid-template-columns: 1fr; }

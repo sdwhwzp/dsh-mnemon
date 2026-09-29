@@ -86,7 +86,7 @@ describe('MemorySpaceRegistry', () => {
         name: 'project',
         active: true,
         dbPath: join(dataDir, 'data', 'project', 'mnemon.db'),
-        provider: expect.objectContaining({ id: 'mnemon-native', label: 'mnemon', kind: 'local' }),
+        provider: expect.objectContaining({ id: 'mnemon-native', label: 'Mnemon Native', kind: 'local' }),
       }),
     ])
     expect(readFileSync(join(dataDir, 'data', 'project', 'mnemon.db'), 'utf8')).toBe('existing database')

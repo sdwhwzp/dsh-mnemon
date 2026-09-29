@@ -28,6 +28,7 @@
 }
 
 .icon {
+  display: inline-flex;
   width: 16px;
   height: 16px;
   flex: none;
@@ -69,9 +70,15 @@
 .candidate {
   display: block;
 }
-.candidate > span {
-  display: block;
+.candidateHeading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 6px;
+}
+.candidateHeading > label {
   color: var(--dsw-alias-label-primary);
   font-size: 13px;
   font-weight: 500;
@@ -103,24 +110,6 @@
   color: var(--dsw-alias-label-tertiary);
   font-size: 12px;
   line-height: 18px;
-}
-
-.outcome,
-.failure {
-  margin-top: 12px;
-  border-radius: var(--dsw-radius-md);
-  padding: 8px 12px;
-  font-size: 12px;
-  line-height: 18px;
-  overflow-wrap: anywhere;
-}
-.outcome {
-  background: color-mix(in srgb, var(--dsw-alias-state-success-primary) 8%, transparent);
-  color: var(--dsw-alias-state-success-primary);
-}
-.failure {
-  background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 8%, transparent);
-  color: var(--dsw-alias-state-error-primary);
 }
 
 @media (max-width: 640px), (max-height: 560px) {

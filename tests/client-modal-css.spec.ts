@@ -34,11 +34,12 @@ describe('responsive dialog layout invariants', () => {
     expect(sidebarCss).toContain(".shell .modal > [class*='modalFooter'] [class*='modalFooterActions'] button { min-height: 44px;")
   })
 
-  it('escapes host stacking contexts through one body-level top layer', () => {
+  it('escapes host stacking contexts through one body-level layer on DSH\'s modal level', () => {
     expect(dialogSource).toContain("import { createPortal } from 'react-dom'")
     expect(dialogSource).toContain('document.body,')
     expect(dialogSource).toContain('data-mnemon-dialog-portal')
-    expect(viewCss).toContain('.modalPortal { position: fixed; z-index: 2147483647; inset: 0; isolation: isolate; pointer-events: none; }')
+    // DSH menus, tooltips and toasts (z 1100) must open above a dialog, as they do over DSH's own Modal (z 1000).
+    expect(viewCss).toContain('.modalPortal { position: fixed; z-index: 1000; inset: 0; isolation: isolate; pointer-events: none; }')
     expect(viewCss).toContain('.modalTheme.modalTheme.modalTheme { position: absolute; inset: 0;')
   })
 

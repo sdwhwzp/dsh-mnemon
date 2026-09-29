@@ -2,9 +2,8 @@
   "zh": {
     "nav.documents": "档案",
     "documents.title": "项目档案",
-    "documents.description": "在当前工作区维护结构化的项目文档。活跃档案参与近场检索；达到 10 MB 上限前，最久未使用的档案会先在 Mnemon 中建立索引，再迁入归档。",
+    "documents.description": "当前工作区的项目文档：先检索，再按需阅读全文；接近容量上限时，最久未用的档案会归档。",
     "documents.capacity": "{used} / {limit}",
-    "documents.refresh": "刷新",
     "documents.summary": "档案存储摘要",
     "documents.active": "活跃档案",
     "documents.activeHint": "近场检索范围",
@@ -64,9 +63,8 @@
   "en": {
     "nav.documents": "Documents",
     "documents.title": "Project Documents",
-    "documents.description": "Maintain structured project documents in the current workspace. Active documents support near-field search; before the 10 MB limit is exceeded, the least-recently-used document is indexed in Mnemon and moved to the archive.",
+    "documents.description": "Project documents for this workspace: searched first, read in full when needed; near the limit the least-used ones are archived.",
     "documents.capacity": "{used} / {limit}",
-    "documents.refresh": "Refresh",
     "documents.summary": "Document storage summary",
     "documents.active": "Active",
     "documents.activeHint": "Near-field search scope",

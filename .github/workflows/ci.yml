@@ -40,6 +40,13 @@ jobs:
       - name: Test workspace identities and platform paths
         run: pnpm exec vitest run tests/workspace-storage.spec.ts tests/client-platform-boundary.spec.ts tests/async-subagent-memory.spec.ts
 
+      - name: Test desktop CLI process ownership and hidden native launches
+        run: >-
+          pnpm exec vitest run tests/host-process.spec.ts tests/version-updates.spec.ts
+          plugins/dsh-mnemon-source-memory-spaces/tests/npm-native-cli.spec.ts
+          plugins/dsh-mnemon-source-memory-spaces/tests/runner.spec.ts
+          plugins/dsh-mnemon-source-memory-spaces/tests/process.spec.ts
+
   verify-source:
     name: Verify source (Node 22.19)
     runs-on: ubuntu-latest

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ClientConnectionHandle } from "../src/host/dsh.ts"
 import { MnemonClient } from '../src/client/api.ts'
+import { MNEMON_READ_CHANNEL } from '../src/host/protocol.ts'
 
 describe('MnemonClient product transport', () => {
   it('keeps Source management scoped to its instance, workspace and revision', async () => {
@@ -47,6 +48,36 @@ describe('MnemonClient product transport', () => {
       ['/api', 'dshMnemon/viewWrite', 'apply'],
     ])
     expect(call.mock.calls[0]?.[2]).toEqual({ args: { endpoint: 'status-summary', payload: { sessionId: 'session-1' } } })
+  })
+
+  it.each(['dsh-app:', 'file:'])('keeps a %s window the application serves itself on the local channels', async protocol => {
+    // DSH Desktop serves its window from dsh-app://app/ and reports no loopback Connection.
+    vi.stubGlobal('location', { protocol, hostname: protocol === 'file:' ? '' : 'app' })
+    try {
+      const call = vi.fn(async () => ({ ok: true as const, value: { healthy: true } }))
+      const client = new MnemonClient({ isLoopback: false, rpc: { call } } as ClientConnectionHandle)
+
+      await client.statusSummary()
+
+      expect(call).toHaveBeenCalledWith(MNEMON_READ_CHANNEL, 'status-summary', {})
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('routes an application window through the Gateway when DSH declares a transport that does not own the Host', async () => {
+    vi.stubGlobal('location', { protocol: 'dsh-app:', hostname: 'app' })
+    vi.stubGlobal('__DSH_TRANSPORT__', { ownsHost: false })
+    try {
+      const call = vi.fn(async () => ({ ok: true as const, value: { ok: true as const, value: { healthy: true } } }))
+      const client = new MnemonClient({ isLoopback: false, rpc: { call } } as ClientConnectionHandle)
+
+      await client.statusSummary()
+
+      expect(call).toHaveBeenCalledWith('/api', 'dshMnemon/read', { args: { endpoint: 'status-summary', payload: {} } })
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('uses the page origin when a remote desktop reports host ownership as loopback', async () => {

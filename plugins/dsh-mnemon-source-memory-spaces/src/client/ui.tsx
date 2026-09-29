@@ -56,6 +56,16 @@ function MemorySpacesSourceView(props: MemorySourcePageProps & { page: Page }): 
     props.onRevealElement?.(element, (headerRef.current?.getBoundingClientRect().height ?? 0) + 14)
   }, [props.onRevealElement])
   const refresh = useCallback(() => { setRevision(value => value + 1); props.onRefresh?.() }, [props.onRefresh])
+  // The workspace's refresh reloads these pages as well, the directory included;
+  // a change made here reloads only what it touched.
+  const refreshKey = useRef(props.refreshKey)
+  const [reloads, setReloads] = useState(0)
+  useEffect(() => {
+    if (refreshKey.current === props.refreshKey) return
+    refreshKey.current = props.refreshKey
+    setRevision(value => value + 1)
+    setReloads(value => value + 1)
+  }, [props.refreshKey])
   useEffect(() => {
     setPage(props.management !== undefined && props.navigationInput === undefined ? rememberedPages.get(props.management) ?? (props.page === 'remember' ? 'spaces' : props.page) : props.page === 'remember' ? 'spaces' : props.page)
     setRememberOpen(props.page === 'remember')
@@ -82,14 +92,14 @@ function MemorySpacesSourceView(props: MemorySourcePageProps & { page: Page }): 
   return <>
     {error !== null && <div className={css.inlineError} role="alert">{error}</div>}
     {<section className={sidebarCss.memoryWorkspace} ref={headerRef}>
-      <PageHeader title={t('nav.spaces')} description={t('overview.description')} meta={writable ? t('common.agentSupervised') : activationEnabled ? t('common.activationOnly') : t('common.readOnly')} action={<div className={css.memoryHeaderActions}><button type="button" className={appearanceClass(css.primaryButton, sidebarCss.memoryWriteButton)} disabled={!writable} onClick={() => remember()}>{t('nav.rememberAction')}</button>{preferences !== undefined && <button type="button" className={css.secondaryButton} onClick={() => setStrategyOpen(true)}>{t('strategy.action')}</button>}</div>} />
+      <PageHeader title={t('nav.spaces')} description={t('overview.description')} {...(writable ? {} : { meta: activationEnabled ? t('common.activationOnly') : t('common.readOnly') })} action={<div className={css.memoryHeaderActions}><button type="button" className={appearanceClass(css.primaryButton, sidebarCss.memoryWriteButton)} disabled={!writable} onClick={() => remember()}>{t('nav.rememberAction')}</button>{preferences !== undefined && <button type="button" className={css.secondaryButton} onClick={() => setStrategyOpen(true)}>{t('strategy.action')}</button>}</div>} />
       <div className={sidebarCss.memoryNavigation}><div className={sidebarCss.memoryTabs} role="tablist" aria-label={t('nav.memory.aria')}>{TABS.map(tab => <button key={tab.id} type="button" role="tab" aria-selected={page === tab.id} data-active={page === tab.id ? '' : undefined} onClick={() => setPage(tab.id)}>{t(tab.key)}</button>)}</div></div>
     </section>}
-    {page === 'spaces' && <OverviewPage client={client} metadataClient={client} revision={revision} activationEnabled={activationEnabled} writeEnabled={writable} agentAvailable={agentAvailable} fallbackBodies={bodies} fallbackDirectory={status?.memoryBodyDirectory} catalogKnown={status?.memoryBodies !== undefined} onMutate={refresh} onAgentRefresh={refresh} onBodyReconnect={refresh} onBodyMetadata={refresh} onExplore={explore} />}
+    {page === 'spaces' && <OverviewPage client={client} metadataClient={client} revision={revision} reloadKey={reloads} activationEnabled={activationEnabled} writeEnabled={writable} agentAvailable={agentAvailable} fallbackBodies={bodies} fallbackDirectory={status?.memoryBodyDirectory} catalogKnown={status?.memoryBodies !== undefined} onMutate={refresh} onAgentRefresh={refresh} onBodyReconnect={refresh} onBodyMetadata={refresh} onExplore={explore} />}
     {page === 'explore' && <ExplorePage client={client} agentClient={client} agentAvailable={client.canAssist('agent-search')} status={status} seed={seed} writeEnabled={writable} onForget={forget} onRevealElement={revealElement} />}
     {page === 'entities' && <EntitiesPage client={client} revision={revision} writeEnabled={writable} onForget={forget} onExplore={explore} />}
     {page === 'content' && <ListPage client={client} revision={revision} writeEnabled={writable} onForget={forget} onClone={insight => remember(insight.content)} onExplore={explore} />}
-    {rememberOpen && <RememberPage client={client} agentAvailable={agentAvailable} memoryBodies={bodies} writeEnabled={writable} seed={seed} onMutate={refresh} onClose={() => setRememberOpen(false)} onComplete={() => setRememberOpen(false)} />}
+    {rememberOpen && <RememberPage client={client} agentAvailable={agentAvailable} memoryBodies={bodies} writeEnabled={writable} seed={seed} onMutate={refresh} onClose={() => setRememberOpen(false)} onView={() => { setRememberOpen(false); setPage('content') }} />}
     {strategyOpen && preferences !== undefined && <PersistenceStrategyDialog client={client} settingsScope={{ setPath: async (path, value) => {
       if (path.length !== 1 || path[0] !== 'persistenceStrategy') throw new Error('Preference path is outside this Source')
       await preferences.replace(JSON.parse(JSON.stringify({ persistenceStrategy: value })) as MemoryJsonValue)

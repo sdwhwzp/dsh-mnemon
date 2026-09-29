@@ -1,9 +1,11 @@
 import { accessSync, constants, existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
+import { createRequire } from 'node:module'
 import { dirname, join, posix, win32 } from 'node:path'
 
-function manifest(path: string): { name?: string } | undefined {
-  try { return JSON.parse(readFileSync(path, 'utf8')) as { name?: string } } catch { return undefined }
+interface NpmManifest { name?: string; version?: string; optionalDependencies?: Record<string, string> }
+function manifest(path: string): NpmManifest | undefined {
+  try { return JSON.parse(readFileSync(path, 'utf8')) as NpmManifest } catch { return undefined }
 }
 function samePath(left: string, right: string): boolean {
   try { return realpathSync(left) === realpathSync(right) } catch { return false }
@@ -34,6 +36,46 @@ export function mnemonNpmLauncher(command: string): string | undefined {
     } catch {}
   }
   return undefined
+}
+
+/** Resolve only the platform package pinned by the recognized official launcher. */
+function npmNativeBinary(launcher: string): string | undefined {
+  const pkg = manifest(join(dirname(dirname(launcher)), 'package.json'))
+  const target = `${process.platform}-${process.arch}`
+  const alias = `${MNEMON_NPM_PACKAGE}-${target}`
+  const version = typeof pkg?.version === 'string' ? `${pkg.version}-${target}` : undefined
+  if (version === undefined || pkg?.optionalDependencies?.[alias] !== `npm:${MNEMON_NPM_PACKAGE}@${version}`) return undefined
+  try {
+    // Resolve from this launcher (including nested/pnpm installs), never from
+    // the Host's node_modules or a guessed global npm prefix.
+    // Avoid require.resolve's cached symlink target after a package-manager
+    // update while DSH is still running.
+    const packagePath = createRequire(launcher).resolve.paths(alias)?.map(path => join(path, alias, 'package.json')).find(existsSync)
+    if (packagePath === undefined) return undefined
+    const native = manifest(packagePath)
+    if (native?.name !== MNEMON_NPM_PACKAGE || native.version !== version) return undefined
+    const binary = join(dirname(packagePath), 'bin', process.platform === 'win32' ? 'mnemon.exe' : 'mnemon')
+    return isMnemonExecutable(binary) ? binary : undefined
+  } catch {
+    // Preserve the launcher's diagnostics for missing optional dependencies or
+    // a future npm layout we do not recognize.
+    return undefined
+  }
+}
+
+/** Keep CLI subprocesses under our windowsHide, timeout and cancellation policy. */
+export function resolveMnemonInvocation(command: string, args: readonly string[], env?: NodeJS.ProcessEnv): {
+  command: string; args: string[]; env?: NodeJS.ProcessEnv
+} {
+  const launcher = mnemonNpmLauncher(command)
+  if (launcher !== undefined) {
+    // The npm wrapper's nested spawn does not hide Windows console windows.
+    // Its update command owns npm provenance, so retain that special entry.
+    const binary = args.length === 1 && args[0] === 'update' ? undefined : npmNativeBinary(launcher)
+    if (binary === undefined) return { command: process.execPath, args: [launcher, ...args], env: nodeLauncherEnvironment(env) }
+    command = binary
+  }
+  return { command, args: [...args], ...(env === undefined ? {} : { env }) }
 }
 
 const UNIX_COMMON_CLI_PATHS = [

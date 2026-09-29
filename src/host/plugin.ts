@@ -120,16 +120,22 @@ export function apply(rawContext: unknown, rawConfig: MnemonConfig | LiveHostCon
   registerTools(ctx, runtime, coordinator)
   registerCommands(ctx.commands, runtime, coordinator)
   registerGuidance(ctx, resolved)
-  ctx.inject(['connection'], (webContext) => {
+  ctx.inject(['connection', 'webServer'], (webContext) => {
     // `inject` guarantees the service at runtime; retain the defensive guard
     // because HostContextShape also models profiles where it is absent.
-    if (webContext.connection === undefined) return
+    // Connection's RPC getter keeps its provider's injection scope. Carry
+    // the explicitly injected server on our own Context so late registration
+    // works without changing or restarting the shared Connection plugin.
+    const scopedConnection = Context.is(webContext)
+      ? webContext.extend({ webServer: webContext.get('webServer') }).connection
+      : webContext.connection
+    if (scopedConnection === undefined) return
     const managementAuthority = resolved.remoteAccess === 'trusted-host' ? 'trusted-host' : 'loopback'
     const connection = { rpc: {
       handle: (channel: string, handler: import('./dsh.ts').HostRpcHandler) =>
-        webContext.connection!.rpc.handle(channel, (endpoint, payload, signal, caller) => {
-          const principal = caller === undefined ? undefined : webContext.connection!.principalOfPeer === undefined
-            ? caller : webContext.connection!.principalOfPeer(caller)
+        scopedConnection.rpc.handle(channel, (endpoint, payload, signal, caller) => {
+          const principal = caller === undefined ? undefined : scopedConnection.principalOfPeer === undefined
+            ? caller : scopedConnection.principalOfPeer(caller)
           return (accounts?.handler(handler, channel) ?? handler)(endpoint, payload, signal, principal)
         }, { authority: managementAuthority }),
     } }

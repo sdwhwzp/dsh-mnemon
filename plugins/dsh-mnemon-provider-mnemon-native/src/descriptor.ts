@@ -2,7 +2,7 @@ import type { MemoryProviderDescriptor } from 'dsh-mnemon-source-memory-spaces/p
 
 export const descriptor: MemoryProviderDescriptor = {
   "id": "mnemon-native",
-  "label": "mnemon",
+  "label": "Mnemon Native",
   "icon": {
     "kind": "brand",
     "value": "mnemon"

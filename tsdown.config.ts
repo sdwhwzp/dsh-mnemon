@@ -24,7 +24,7 @@ const CSS_VIRTUAL_SUFFIX = '.mjs'
 const host: UserConfig = {
   name: PLUGIN_ID,
   entry: {
-    index: 'src/index.ts', core: 'src/core/plugin.ts', contracts: 'src/core/contracts/index.ts',
+    index: 'src/index.ts', starter: 'src/starter.ts', bundle: 'src/bundle.ts', core: 'src/core/plugin.ts', contracts: 'src/core/contracts/index.ts',
     'extension-sdk': 'src/sdk/index.ts', testing: 'src/sdk/testing.ts',
   },
   outDir: 'lib',

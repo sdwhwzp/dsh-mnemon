@@ -42,7 +42,7 @@ function fixture(options: { editor?: boolean } = {}) {
       inject: ['settings'],
       apply(child: Context, _config: Record<string, unknown>) {
         ctx = child
-        if (attachEntry) (child.fiber as Fiber & { entry?: Entry }).entry = entry
+        if (attachEntry) (child.fiber as unknown as { entry?: Entry }).entry = entry
         settings = new ProfileMnemonSettings(child as unknown as HostContextShape, config)
       },
     }, config)

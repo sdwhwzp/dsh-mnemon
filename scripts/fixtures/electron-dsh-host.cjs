@@ -16,5 +16,8 @@ app.whenReady().then(async () => {
     electron: process.versions.electron, node: process.versions.node,
     type: process.type, runAsNode: process.env.ELECTRON_RUN_AS_NODE ?? null,
   }))
-  await import(pathToFileURL(process.argv[1]).href)
+  const cli = await import(pathToFileURL(process.argv[1]).href)
+  // Published DSH 0.1.7-rc.2 only starts automatically for import.meta.main.
+  // This fixture imports it from Electron's main script instead.
+  if (typeof cli.runCli === 'function') await cli.runCli()
 }).catch(error => { console.error(error); app.exit(1) })

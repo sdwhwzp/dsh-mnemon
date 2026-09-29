@@ -14,7 +14,8 @@ flowchart TB
   Starter --> Runtime["dsh-mnemon-source-runtime"]
   Starter --> Docs["dsh-mnemon-source-documents"]
   Starter --> Spaces["dsh-mnemon-source-memory-spaces"]
-  Starter --> Strategy["dsh-mnemon-strategy-default-three-tier"]
+  Starter --> Strategy["dsh-mnemon-strategy-default-three-tier · 分层策略，默认"]
+  Starter --> General["dsh-mnemon-strategy-general · 可选主策略，默认停用"]
   Starter --> Helpers["三种随附增强 · 默认停用"]
   Helpers -. 选择 / 投影 / 记录 .-> Strategy
   Spaces --> Providers["dsh-mnemon-provider-* · 私有子 Fiber"]
@@ -24,7 +25,7 @@ flowchart TB
 
 Memory Spaces **自己定义内部 Fiber 与 Provider 协议**。每个 Provider 都来自明确安装并配置的子模块；两个 Source 实例可以使用同名子节点，各自持有独立目录和凭据。不存在扫描依赖自动选择实现、全局 Provider 注册表等隐式装配。
 
-借鉴 Spring Boot Starter，默认发行包负责选依赖、给默认配置，不把 Source 业务收回 Core。用户仍只安装 `dsh-mnemon`；16 个插件包可独立开发、测试与发布。Starter 安装全部官方包，其中三个策略增强以停用 Entry 随附，只有设置开关打开后才参与 View；完整 Strategy 的替换仍需显式选择。
+借鉴 Spring Boot Starter，默认发行包负责选依赖、给默认配置，不把 Source 业务收回 Core。用户仍只安装 `dsh-mnemon`；17 个插件包可独立开发、测试与发布。Starter 安装全部官方包，其中通用策略与三个策略增强以停用 Entry 随附：增强在开关打开后参与 View，通用策略只有被选为主策略后才组合 View。更换主策略始终需要显式选择。
 
 | 归属 | 负责 | 不负责 |
 |---|---|---|
@@ -50,11 +51,12 @@ Host 将解析后的目录交给各默认 Source。Source 继续拥有自己的�
 | `dsh-mnemon-source-runtime` | Runtime JSON、USER/MEMORY 投影、分支过滤与容量 | eager 精确工作上下文 |
 | `dsh-mnemon-source-documents` | 受管 Markdown、索引、搜索、修订与归档 | 有界叙事封面与搜索 route |
 | `dsh-mnemon-source-memory-spaces` | 记忆空间目录、内部 Provider、能力与召回质量策略 | 有界持久证据封面与 recall/related route |
-| `dsh-mnemon-strategy-default-three-tier` | 不存储记忆 | 选择三种角色，分配投影、route 与 action |
+| `dsh-mnemon-strategy-default-three-tier` | 不存储记忆 | 分层策略：选择三种角色，分配投影、route 与 action |
+| `dsh-mnemon-strategy-general` | 不存储记忆 | 可替代分层策略：在同一份预算内接入全部可用 Source，由模型决定路由 |
 
 九个独立 Provider 插件包为 `dsh-mnemon-provider-{mnemon-native,openviking,honcho,mem0,hindsight,holographic,retaindb,byterover,supermemory}`。Provider 运行在 Memory Spaces **内部**，负责存储/检索驱动，不是 Core 的新贡献种类。Git、Notion、健康记录通常应实现 Source；不同的组合方式应实现 Strategy。
 
-默认 Strategy 对同一默认角色出现多个实例报歧义错误。可启用 `strategy-scoped` 显式组合多个实例；停用后恢复默认歧义检查，不按加载顺序猜测。三个策略扩展槽归默认 Strategy 所有，Core 只传递有界贡献并执行原有预算/权限校验，不理解这些槽的业务语义。
+未加扩展的分层策略对同一默认角色出现多个实例报歧义错误。可启用 `strategy-scoped` 显式组合多个实例；停用后恢复默认歧义检查，不按加载顺序猜测。`selection`、`projection` 与 `capture` 三个扩展槽是标准槽，两个随附主策略都声明了它们，因此更换主策略后增强仍然生效。Core 只传递有界贡献并执行原有预算/权限校验，不理解这些槽的业务语义。
 
 ## View 数据流
 
@@ -112,7 +114,7 @@ Source 自己拥有可选的 `./client` DSH 模块、页面、管理协议与测
 
 Host 交给页面的是限定实例的管理客户端与脱敏元信息，不是裸 RPC、Host Context 或 LLM grant。读取和带确认、修订栅栏的修改指向一个 Source。档案归档到记忆空间等默认协作由 Host 编排，也只调用公开管理协议。
 
-同一个共用工作台提供两个互斥的 DSH 入口。Sidebar 在公开的 `sidebar.panellist` 与 `main` Slot 中注册配对的 `mnemon` 入口；受支持的最低 DSH 0.1.5-rc.1 已提供这些契约。DSH 负责按钮、图标尺寸、标签、选中状态和主面板导航。`shell.overlay` 注册保留 Source 子 Slot 的渲染权限，将工作台 portal 到持久的原生主面板挂载点，从而保留切换面板时的页面状态和独立的 Better Sidebar 挂载点。未提供原生面板契约的替换布局继续使用现有入口及浮层回退。Sidebar 无会话也可打开，保留自己的工作区选择，与 Taskboard/SSH 协调，并通过 `layout.selectPanel(null)` 返回会话。Builtin 使用 `conversation.view`，读写和任务均使用所属会话的存储范围，不提供独立工作区选择器。两个入口渲染同一组 Source 自有子 Slot，不创建第二个 React root、兜底页面注册表或复制业务页面。
+同一个共用工作台提供两个互斥的 DSH 入口。Sidebar 在受支持的 DSH（0.1.7-rc.2 与 0.2.0-rc.1）公开的 `sidebar.panellist` 与 `main` Slot 中注册配对的 `mnemon` 入口。DSH 负责按钮、图标尺寸、标签、选中状态和主面板导航。`shell.overlay` 注册保留 Source 子 Slot 的渲染权限，将工作台 portal 到持久的原生主面板挂载点，从而保留切换面板时的页面状态和独立的 Better Sidebar 挂载点。未提供原生面板契约的替换布局继续使用现有入口及浮层回退。Sidebar 无会话也可打开，保留自己的工作区选择，与 Taskboard/SSH 协调，并通过 `layout.selectPanel(null)` 返回会话。会话标签页（`builtin`）使用 `conversation.view`，读写和任务均使用所属会话的存储范围，不提供独立工作区选择器。两个入口渲染同一组 Source 自有子 Slot，不创建第二个 React root、兜底页面注册表或复制业务页面。
 
 ## 使用兼容与未来演进
 

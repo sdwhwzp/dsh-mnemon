@@ -2,7 +2,11 @@
 
 **简体中文** | [English](../../en/guides/memory-providers.md) | [文档中心](../README.md)
 
-记忆空间是 dsh-mnemon 可替换的第三层：记忆空间契约保持稳定，Provider 负责具体数据面。**Mnemon Native 是官方优先、默认实现**；三方 Provider 是显式选择的集成，适合已经使用其他记忆引擎，或需要不同共享、提炼与召回模型的团队。
+记忆空间保存 dsh-mnemon 的长期记忆，其后端是可以替换的 Provider：记忆空间契约保持稳定，Provider 负责具体数据面。**Mnemon Native 是官方优先、默认实现**；三方 Provider 是显式选择的集成，适合已经使用其他记忆引擎，或需要不同共享、提炼与召回模型的团队。
+
+只有 Mnemon Native 需要 Mnemon CLI。缺少 CLI 时，其他已就绪的 Provider 也可以为记忆空间服务，已保存的 Provider 选择依然有效。
+
+![插件中的记忆空间页面：Mnemon Native 与各第三方 Provider](../../assets/webui-v0.5.19/zh-CN/plugin-spaces.jpg)
 
 每个适配器都是独立发布的 `dsh-mnemon-provider-*` 包，由 Memory Spaces Source 作为子插件安装。Starter 随附九个包，外部服务仍需显式配置后启用；不捆绑外部后端服务或 CLI。参见[官方包列表](../../../README.zh-CN.md#官方插件)和 [Provider 作者契约](../development/extensions.md)。
 
@@ -26,7 +30,7 @@ Host 只暴露适配器能够兑现的能力；UI 与 Agent 工具不会伪造�
 
 ## 服务与记忆空间字段
 
-| Provider | 工作区行为 | 插件页中的服务配置 | 记忆空间中的实例配置 |
+| Provider | 工作区行为 | 记忆空间页面中的服务配置 | 记忆空间中的实例配置 |
 |---|---|---|---|
 | OpenViking | 保持 Provider 全局作用域 | `endpoint`、`apiKey`、`account`、可选 `discoveryUser` | `targetUri`、`user`、`actorPeerId` |
 | Honcho | 保持 Provider 全局作用域 | `endpoint`、`apiKey` | `workspace`、`userId`、`agentId` |
@@ -52,7 +56,7 @@ DSH 的“工作区”模式不会统一重写所有 Provider 命名空间。Mne
 3. 有多个合格候选时，独立任务 Agent 结合路由说明、软偏好和用户策略 Prompt 判断；
 4. Host 再验证结果属于合格集合，并保存选择来源、理由、置信度与候选 ID。
 
-连接凭据永远不会进入 selector Prompt。`local-only` 会在模型选择前排除全部远程 Provider。Mnemon Native 始终保留为官方本地候选。
+连接凭据永远不会进入 selector Prompt。`local-only` 会在模型选择前排除全部远程 Provider。Mnemon CLI 可用时，Mnemon Native 始终是本地候选。
 
 ## 运维边界
 

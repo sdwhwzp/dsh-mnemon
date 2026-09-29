@@ -24,6 +24,7 @@ import { message } from './page-kit.tsx'
 import { ProviderIcon } from './ProviderIcon.tsx'
 import { ProviderSettingsSection } from './ProviderSettingsSection.tsx'
 import { SelectRow, ToggleRow, type SettingOption } from './settings-controls.tsx'
+import { SelectField } from './page-controls.tsx'
 import { PanelActions, useLive, useScope, useStaged, WriteFailure } from './settings-panel.tsx'
 
 /** The packages whose own settings dsh-mnemon supplies, through the same region an installed component uses. */
@@ -278,14 +279,11 @@ function EmbeddingEditor(props: {
       <div className={css.fieldGrid}>
         {text('endpoint', 'url', t('config.embeddingEndpoint'), validEmbeddingEndpoint(draft.endpoint), DEFAULT_EMBEDDING_ENDPOINT)}
         {text('model', 'text', t('config.embeddingModel'), validEmbeddingModel(draft.model), DEFAULT_EMBEDDING_MODEL)}
-        <label>
-          {t('config.embeddingProtocol')}
-          <select aria-label={t('config.embeddingProtocol')} value={draft.protocol} disabled={props.disabled} onChange={event => props.onEdit({ protocol: event.target.value })}>
-            <option value="auto">{t('config.embeddingProtocolAuto')}</option>
-            <option value="ollama">{t('config.embeddingProtocolOllama')}</option>
-            <option value="openai">{t('config.embeddingProtocolOpenai')}</option>
-          </select>
-        </label>
+        <SelectField label={t('config.embeddingProtocol')} value={draft.protocol} disabled={props.disabled} options={[
+          { value: 'auto', label: t('config.embeddingProtocolAuto') },
+          { value: 'ollama', label: t('config.embeddingProtocolOllama') },
+          { value: 'openai', label: t('config.embeddingProtocolOpenai') },
+        ]} onChange={protocol => props.onEdit({ protocol })} />
         {text('apiKey', 'password', t('config.embeddingApiKey'), validEmbeddingApiKey(draft.apiKey), 'sk-…')}
       </div>
       <p className={css.editorNote}>{t('config.embeddingSecurity')}</p>

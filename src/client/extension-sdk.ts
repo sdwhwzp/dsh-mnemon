@@ -13,6 +13,7 @@ export {
   type MemoryComponentUIContext, type MemoryComponentUIContribution,
 } from './component-ui.tsx'
 export * from './page-kit.tsx'
+export * from './page-controls.tsx'
 export * from './page-client.tsx'
 export { MnemonDialog, type MnemonDialogProps } from './MnemonDialog.tsx'
 export { MnemonLogo } from './MnemonLogo.tsx'

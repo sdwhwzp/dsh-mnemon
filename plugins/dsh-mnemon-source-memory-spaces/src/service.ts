@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -292,6 +292,18 @@ export class MemorySpacesService {
   private readonly recallQualityPolicy: RecallQualityPolicy
   private spacesInFlight: Promise<MemorySpaceCatalog> | undefined
   private providersDisposed = false
+  /** The CLI version a full status last read, and the binary it read it from. */
+  private cliVersion: { binary: string; version: string } | undefined
+
+  /** The CLI binary as the file system has it; another value after an update replaces it. */
+  private cliBinary(): string | undefined {
+    try {
+      const stat = statSync(this.runner.command)
+      return `${this.runner.command}\0${stat.mtimeMs}\0${stat.size}`
+    } catch {
+      return undefined
+    }
+  }
 
   private providerTypeId(providerId: string): string {
     const catalog = this.providerCatalog
@@ -433,6 +445,8 @@ export class MemorySpacesService {
   /** Return a usable system snapshot without waiting for any Provider I/O. */
   statusSummary(): StatusView {
     const catalog = this.spaceDirectory()
+    // Reuse the version a full status read while the same binary is installed.
+    const version = this.cliVersion !== undefined && this.cliBinary() === this.cliVersion.binary ? this.cliVersion.version : undefined
     const active = catalog.items.filter(body => body.active && body.providerEnabled !== false)
     const dshActiveStores = active.map(body => body.id)
     const providerServices = this.memorySpaces.providerServices().items.map(service => {
@@ -467,6 +481,7 @@ export class MemorySpacesService {
       memoryBodyDirectory: catalog.directory,
       memoryBodies: catalog.items,
       providerServices,
+      ...(version === undefined ? {} : { version }),
     }
   }
 
@@ -552,6 +567,9 @@ export class MemorySpacesService {
       memoryBodies: catalog.items,
       providerServices,
     }
+    const version = rawVersion === undefined ? undefined : rawVersion.trim().replace(/^mnemon version\s+/i, '')
+    const binary = version === undefined ? undefined : this.cliBinary()
+    this.cliVersion = version === undefined || binary === undefined ? undefined : { binary, version }
     try {
       const healthySpaces = active.filter(body => body.healthy && body.stats !== undefined)
       const topEntities = new Map<string, number>()
@@ -578,7 +596,7 @@ export class MemorySpacesService {
       return {
         healthy: true,
         ...base,
-        ...(rawVersion === undefined ? {} : { version: rawVersion.trim().replace(/^mnemon version\s+/i, '') }),
+        ...(version === undefined ? {} : { version }),
         stats,
         ...(errors.length === 0 ? {} : { error: errors.join('; ') }),
       }

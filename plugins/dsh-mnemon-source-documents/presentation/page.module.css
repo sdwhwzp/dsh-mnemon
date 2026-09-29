@@ -7,14 +7,10 @@
 .documentCapacity > div i { display: block; height: 100%; border-radius: inherit; background: var(--dsw-alias-brand-primary); transition: width .3s ease; }
 
 .documentToolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 8px; border: .5px solid var(--mn-card-line); border-radius: var(--dsw-radius-lg); }
-.documentToolbar form { display: grid; min-width: 260px; flex: 1; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 6px; padding-left: 8px; }
-.documentToolbar form > span { color: var(--mn-faint); font-size: 15px; line-height: 1; }
-.documentToolbar input,
+.documentToolbar form { display: flex; min-width: 260px; flex: 1; align-items: center; gap: 8px; }
+.documentSearch { flex: 1; }
 .documentEditor input,
 .documentEditor textarea { width: 100%; border: .5px solid var(--mn-field-line); border-radius: var(--dsw-radius-md); outline: 0; padding: 6px 10px; color: var(--mn-text); background: var(--mn-input); font-size: 13px; line-height: 20px; }
-.documentToolbar input { height: 32px; border-color: transparent; background: transparent; }
-.documentToolbar input::placeholder { color: var(--dsw-alias-label-dimmed); }
-.documentToolbar input:focus,
 .documentEditor input:focus,
 .documentEditor textarea:focus { border-color: var(--mn-accent); }
 /* Filter, as the DSH SegmentedControl. */
@@ -36,7 +32,7 @@
 .documentList > button > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .documentList > button strong { overflow: hidden; font-size: 13px; font-weight: 500; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
 .documentList > button time { flex: 0 0 auto; color: var(--mn-faint); font-size: 11px; font-variant-numeric: tabular-nums; }
-.documentList > button p { display: -webkit-box; min-height: 36px; margin: 4px 0 6px; overflow: hidden; color: var(--mn-faint); font-size: 12px; line-height: 18px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.documentList > button p { display: -webkit-box; margin: 4px 0 6px; overflow: hidden; color: var(--mn-faint); font-size: 12px; line-height: 18px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .documentList > button footer { display: flex; align-items: center; gap: 8px; color: var(--mn-faint); font-size: 11px; line-height: 16px; }
 .documentList > button footer code { margin-left: auto; }
 .documentList > button footer em { color: var(--mn-danger); font-style: normal; }

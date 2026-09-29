@@ -103,6 +103,17 @@ describe('independent Memory Spaces Source client', () => {
     expect(screen.queryByRole('heading', { name: t('search.related') })).toBeNull()
   })
 
+  it('runs the query it opens with, as a conversation turn sends it', async () => {
+    const read = vi.fn(async (operation: string, input?: unknown) => ({ revision: 'r1', value: operation === 'status-summary'
+      ? { writeEnabled: false, memoryBodies: [], defaultRecallLimit: 12 }
+      : operation === 'search' ? { results: [{ id: 'first', content: `Recalled for ${(input as { query: string }).query}` }], sources: [] }
+      : [] }))
+    render(<MemorySpacesSourcePage page="explore" sourceTypeId="memory-spaces" sourceInstanceKey="source:turn" sourceInstances={[]} locale="en" navigationInput={{ seed: 'Consumers dedupe by event_id.', nonce: 1 }} management={{ sourceInstanceKey: 'source:turn', revision: 'r1', read, mutate: vi.fn() }} />)
+    expect(await screen.findByText('Recalled for Consumers dedupe by event_id.')).not.toBeNull()
+    expect((screen.getByRole('textbox', { name: t('search.queryAria') }) as HTMLInputElement).value).toBe('Consumers dedupe by event_id.')
+    expect(read).toHaveBeenCalledWith('search', expect.objectContaining({ query: 'Consumers dedupe by event_id.', limit: 12 }))
+  })
+
   it('owns five pages with one rollback/disposal boundary', () => {
     const entries = new Set<string>()
     const release = installMemorySpacesUI({ slots: {

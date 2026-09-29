@@ -6,6 +6,9 @@ For an existing installation, start with [Compatibility and upgrades](../referen
 
 ## v0.5
 
+- [v0.5.20: No Separate Starter Switch](./v0.5.20.md)
+- [v0.5.19: DSH 0.2, Desktop Memory and a Guided First Install](./v0.5.19.md)
+- [v0.5.18: Immediate Activation and Quiet Desktop CLI](./v0.5.18.md)
 - [v0.5.17: Composable Strategies and Component Settings](./v0.5.17.md)
 - [v0.5.16: Chinese Metadata, Native Sidebar and Source Scrolling](./v0.5.16.md)
 - [v0.5.15: USER Tool Writes, Runtime Metadata and Skin Hooks](./v0.5.15.md)

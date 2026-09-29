@@ -1,11 +1,13 @@
-import { memo, useCallback, useEffect, useRef, useState, useSyncExternalStore, type JSX } from 'react'
+import { memo, useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, type JSX } from 'react'
 import { Button, Modal, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
-import { IconDataOutline16 } from './ui-icons.ts'
 import type { ClientConnectionHandle, ClientSettingsScope, Config } from "../host/protocol.ts"
 import { MnemonClient } from './api.ts'
+import { dispatchMnemonAnchor } from './anchor.ts'
 import type { MnemonKey } from './locales.ts'
 import type { MnemonClientContext } from './dsh-context.ts'
+import { MemoryIcon } from './memory-icon.tsx'
 import { message } from './page-kit.tsx'
+import { TaskAgentTag, WriteReceipt } from './page-controls.tsx'
 import css from './MnemonSaveAction.module.css'
 
 interface MnemonSaveActionProps {
@@ -19,14 +21,22 @@ interface MnemonSaveActionProps {
   t: (key: MnemonKey, params?: Record<string, unknown>) => string
 }
 
-interface SuperviseOutcome {
-  summary: string
-  action: string
+/** What the task Agent did with the text it was given. */
+interface SaveOutcome {
+  /** The candidate the outcome answers; sending it again waits for an edit. */
+  content: string
+  action?: string
+  summary?: string
+  error?: string
 }
 
 const PREVIEW_LIMIT = 8000
 
-/** Save-to-memory action on finalized assistant messages, routed through the supervised writeback gate. */
+/**
+ * Save-to-memory action on finalized assistant messages. A task Agent decides
+ * whether the (editable) reply is worth keeping and writes it; the dialog
+ * shows the same receipt as Save to memory on the Memory Spaces page.
+ */
 export const MnemonSaveAction = memo(function MnemonSaveAction({ messageId, sessionId, connection, settingsScope, localeRuntime, t }: MnemonSaveActionProps): JSX.Element {
   const subscribeLocale = useCallback((listener: () => void) => localeRuntime.subscribe(listener), [localeRuntime])
   const getLocale = useCallback(() => localeRuntime.getSnapshot(), [localeRuntime])
@@ -37,13 +47,13 @@ export const MnemonSaveAction = memo(function MnemonSaveAction({ messageId, sess
   const managementWritable = settingsSnapshot.status === 'ready' && settingsSnapshot.writable
   const [open, setOpen] = useState(false)
   const [writeEnabled, setWriteEnabled] = useState<boolean | undefined>(undefined)
+  const [taskAgent, setTaskAgent] = useState<boolean | undefined>(undefined)
   const [candidate, setCandidate] = useState<string | undefined>(undefined)
   const [truncated, setTruncated] = useState(false)
   const [missing, setMissing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [outcome, setOutcome] = useState<SuperviseOutcome | null>(null)
-  const [failure, setFailure] = useState<string | null>(null)
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const [outcome, setOutcome] = useState<SaveOutcome | null>(null)
+  const candidateId = useId()
   const openRef = useRef(false)
   const requestVersionRef = useRef(0)
   const submitActiveRef = useRef(false)
@@ -57,12 +67,12 @@ export const MnemonSaveAction = memo(function MnemonSaveAction({ messageId, sess
   useEffect(() => {
     if (!open) {
       setWriteEnabled(undefined)
+      setTaskAgent(undefined)
       setCandidate(undefined)
       setTruncated(false)
       setMissing(false)
       setSubmitting(submitActiveRef.current)
       setOutcome(null)
-      setFailure(null)
       return
     }
     const requestVersion = ++requestVersionRef.current
@@ -70,7 +80,11 @@ export const MnemonSaveAction = memo(function MnemonSaveAction({ messageId, sess
     setSubmitting(submitActiveRef.current)
     const client = new MnemonClient(connection, sessionId)
     client.status()
-      .then(status => { if (alive && requestVersionRef.current === requestVersion) setWriteEnabled(status.writeEnabled && managementWritable) })
+      .then(status => {
+        if (!alive || requestVersionRef.current !== requestVersion) return
+        setWriteEnabled(status.writeEnabled && managementWritable)
+        setTaskAgent(status.lifecycle?.taskAgentAvailable)
+      })
       .catch(() => { if (alive && requestVersionRef.current === requestVersion) setWriteEnabled(false) })
     client.assistantMessageText(messageId)
       .then(result => {
@@ -85,28 +99,34 @@ export const MnemonSaveAction = memo(function MnemonSaveAction({ messageId, sess
     return () => { alive = false }
   }, [open, connection, sessionId, messageId, managementWritable])
 
+  const content = candidate?.trim() ?? ''
+  // A result answers one text: sending the same text again waits for an edit.
+  const answered = outcome !== null && outcome.content === content
+  const canSubmit = content !== '' && !submitting && writeEnabled === true && taskAgent !== false && !answered
+
   const submit = (): void => {
-    const content = textareaRef.current?.value.trim() ?? ''
-    if (content === '' || writeEnabled !== true || submitActiveRef.current) return
+    if (!canSubmit || submitActiveRef.current) return
     const requestVersion = requestVersionRef.current
     submitActiveRef.current = true
     setSubmitting(true)
-    setFailure(null)
     setOutcome(null)
     const client = new MnemonClient(connection, sessionId)
     client.supervise(content, messageId)
       .then(result => {
-        if (!openRef.current || requestVersionRef.current !== requestVersion) return
-        setOutcome({ summary: result.summary, action: result.action })
-        setCandidate(content)
+        if (openRef.current && requestVersionRef.current === requestVersion) setOutcome({ content, action: result.action, summary: result.summary })
       })
       .catch(reason => {
-        if (openRef.current && requestVersionRef.current === requestVersion) setFailure(message(reason))
+        if (openRef.current && requestVersionRef.current === requestVersion) setOutcome({ content, error: message(reason) })
       })
       .finally(() => {
         submitActiveRef.current = false
         if (openRef.current) setSubmitting(false)
       })
+  }
+
+  const viewMemory = (): void => {
+    setPanelOpen(false)
+    dispatchMnemonAnchor({ page: 'memory-spaces/content', ...(sessionId === undefined ? {} : { sessionId }) })
   }
 
   return (
@@ -120,7 +140,7 @@ export const MnemonSaveAction = memo(function MnemonSaveAction({ messageId, sess
           aria-expanded={open}
           onClick={() => setPanelOpen(!openRef.current)}
         >
-          <IconDataOutline16 size={16} className={css.icon} />
+          <span className={css.icon}><MemoryIcon size={16} /></span>
         </button>
       </Tooltip>
       <Modal
@@ -134,14 +154,9 @@ export const MnemonSaveAction = memo(function MnemonSaveAction({ messageId, sess
         footer={(
           <>
             <Button variant="outline" className={css.modalAction} disabled={submitting} onClick={() => setPanelOpen(false)}>
-              {t('common.cancel')}
+              {outcome === null ? t('common.cancel') : t('saveAction.close')}
             </Button>
-            <Button
-              variant="primary"
-              className={css.modalAction}
-              disabled={candidate === undefined || submitting || writeEnabled !== true}
-              onClick={submit}
-            >
+            <Button variant="primary" className={css.modalAction} disabled={!canSubmit} onClick={submit}>
               {submitting ? t('saveAction.submitting') : t('saveAction.submit')}
             </Button>
           </>
@@ -151,14 +166,16 @@ export const MnemonSaveAction = memo(function MnemonSaveAction({ messageId, sess
         {candidate === undefined && !missing && <div className={css.status}>{t('saveAction.fetching')}</div>}
         {missing && <div className={css.status} role="status">{t('saveAction.missing')}</div>}
         {candidate !== undefined && (
-          <label className={css.candidate}>
-            <span>{t('saveAction.candidate')}</span>
-            <textarea ref={textareaRef} rows={12} defaultValue={candidate} autoFocus />
+          <div className={css.candidate}>
+            <div className={css.candidateHeading}>
+              <label htmlFor={candidateId}>{t('saveAction.candidate')}</label>
+              {writeEnabled === true && taskAgent !== undefined && <TaskAgentTag available={taskAgent} t={t} />}
+            </div>
+            <textarea id={candidateId} rows={12} value={candidate} onChange={event => setCandidate(event.target.value)} autoFocus />
             {truncated && <small className={css.truncated}>{t('saveAction.truncated', { limit: PREVIEW_LIMIT })}</small>}
-          </label>
+          </div>
         )}
-        {outcome !== null && <div className={css.outcome} role="status">{t('saveAction.result', { summary: outcome.summary })}</div>}
-        {failure !== null && <div className={css.failure} role="alert">{t('saveAction.failed', { error: failure })}</div>}
+        {outcome !== null && <WriteReceipt t={t} action={outcome.action} summary={outcome.summary} error={outcome.error} onView={viewMemory} />}
       </Modal>
     </div>
   )

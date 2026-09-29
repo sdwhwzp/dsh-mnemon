@@ -2,7 +2,11 @@
 
 **English** | [简体中文](../../zh-CN/guides/memory-providers.md) | [Documentation](../README.md)
 
-Memory Spaces are the replaceable third tier in dsh-mnemon. The Memory Space contract stays stable while its provider supplies the data plane. **Mnemon Native is the official, prioritized default**; external providers are opt-in integrations for teams that already use another memory engine or need a different sharing, extraction, or retrieval model.
+Memory Spaces hold dsh-mnemon's long-term memory, and their backend is a Provider you can swap. The Memory Space contract stays stable while the Provider supplies the data plane. **Mnemon Native is the official, prioritized default**; external Providers are opt-in integrations for teams that already use another memory engine or need a different sharing, extraction or retrieval model.
+
+Only Mnemon Native needs the Mnemon CLI. When the CLI is missing, another ready Provider can serve Memory Spaces, and a saved Provider choice is still honored.
+
+![Memory Spaces' page under Plugins with Mnemon Native and the third-party Providers](../../assets/webui-v0.5.19/en/plugin-spaces.jpg)
 
 Each adapter is an independently published `dsh-mnemon-provider-*` package, installed as a child of the Memory Spaces Source. The Starter includes all nine packages, but external services remain disabled until configured. No external backend server or CLI is bundled. See the [official package list](../../../README.md#official-plugins) and [Provider author contract](../development/extensions.md).
 
@@ -24,7 +28,7 @@ The Host exposes only capabilities an adapter can honor. UI actions and Agent to
 
 ## Service and Memory Space fields
 
-| Provider | Workspace behavior | Service configuration on the plugin page | Instance configuration in Memory Spaces |
+| Provider | Workspace behavior | Service configuration on Memory Spaces' page | Instance configuration in Memory Spaces |
 |---|---|---|---|
 | OpenViking | Keeps the provider-global scope | `endpoint`, `apiKey`, `account`, optional `discoveryUser` | `targetUri`, `user`, `actorPeerId` |
 | Honcho | Keeps the provider-global scope | `endpoint`, `apiKey` | `workspace`, `userId`, `agentId` |
@@ -50,7 +54,7 @@ Smart placement builds an allowlist from the candidates selected by the user:
 3. If several remain, an independent task Agent considers the routing description, soft preference, and user-authored strategy prompt.
 4. The Host validates the returned provider against the eligible set and persists the decision, reason, confidence, and candidate IDs.
 
-Connection secrets never enter the selector prompt. `local-only` excludes every remote provider before model selection. Mnemon Native remains present as the official local candidate.
+Connection secrets never enter the selector prompt. `local-only` excludes every remote provider before model selection. Mnemon Native stays a local candidate while its CLI is available.
 
 ## Operational boundaries
 

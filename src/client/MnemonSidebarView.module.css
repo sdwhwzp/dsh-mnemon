@@ -79,7 +79,7 @@
 @media (max-width: 760px) {
   .shell .headerActions { max-width: none; }
   .shell .statusCluster > span:not([class*='statusDot']) { display: inline; }
-  .shell .workspacePicker > span, .shell .workspaceMismatch > span { display: none; }
+  .shell .workspacePicker > [data-part='label'], .shell .workspaceMismatch > span { display: none; }
   .shell .canvas[data-lock-page-header] [class*='pageHeader'] { margin: -16px -16px 16px; padding: 16px 16px 12px; }
   .shell .modalBackdrop { align-items: flex-end; padding: max(10px, env(safe-area-inset-top, 0px)) 0 0; }
   .shell .modal, .shell .modal.modalWide { width: 100vw; max-height: calc(100vh - max(10px, env(safe-area-inset-top, 0px))); border-radius: var(--dsw-radius-xl) var(--dsw-radius-xl) 0 0; }
@@ -105,7 +105,7 @@
 @media (max-width: 520px) {
   .shell .headerActions { max-width: none; flex: 0 0 auto; }
   .shell [class*='backButton'] > span { display: none; }
-  .shell .workspacePicker select { width: min(118px, 30vw); }
+  .shell .workspacePicker button { width: min(118px, 30vw); }
   .shell .statusCluster [class*='iconButton'] { display: none; }
   .shell [class*='compositionStrategy'] { display: none; }
 }

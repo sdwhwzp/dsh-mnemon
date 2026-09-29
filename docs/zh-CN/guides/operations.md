@@ -4,7 +4,7 @@
 
 ## 健康检查
 
-查看工作台“状态”。使用 Mnemon Native 时再检查它的二进制，其他 Provider 不需要：
+打开记忆系统的“状态”页。使用 Mnemon Native 时再检查它的二进制，其他 Provider 不需要：
 
 ```sh
 command -v mnemon
@@ -22,17 +22,15 @@ Test-Path "$env:LOCALAPPDATA\Programs\mnemon\mnemon.exe"
 /mnemon status
 ```
 
-[![状态页：组件版本、三层数据与实际存储目录](../../assets/webui-v0.5.4/zh-CN/status.jpg)](../../assets/webui-v0.5.4/zh-CN/status.jpg)
+![状态页：每个记忆组件、Provider 与存储区域](../../assets/webui-v0.5.19/zh-CN/memory-status.jpg)
 
-状态页显示 Mnemon / dsh-mnemon 版本、Runtime、Memory Spaces、Documents 和当前实际目录。`mnemon status` 会打开有效 Store，上游 CLI 可能初始化数据或执行迁移，因此不是完全无副作用的只读探测。
+状态页显示 dsh-mnemon 与 Mnemon 的版本、每个记忆组件一张卡片、各个 Provider，以及当前实际目录。`mnemon status` 会打开有效 Store，上游 CLI 可能初始化数据或执行迁移，因此不是完全无副作用的只读探测。
 
-如果 OpenViking 提示 `/api/v1/admin/*` access restrictions，在**插件 → 可组合记忆**页面填写 **User Key 所属用户（跳过 Admin）**（`discoveryUser`）、账号标识、服务地址与 user API key。这会用数据 API 验证所选记忆根；根目录被拒绝或不存在时保留原配置。此校验不证明写入权限，也不改变 key 绑定的身份。留空仍使用 admin 发现。参见 [Provider 边界与降级步骤](./memory-providers.md#运维边界)。
+如果 OpenViking 提示 `/api/v1/admin/*` access restrictions，在**插件 → 可组合记忆**的记忆空间页面填写 **User Key 所属用户（跳过 Admin）**（`discoveryUser`）、账号标识、服务地址与 user API key。这会用数据 API 验证所选记忆根；根目录被拒绝或不存在时保留原配置。此校验不证明写入权限，也不改变 key 绑定的身份。留空仍使用 admin 发现。参见 [Provider 边界与降级步骤](./memory-providers.md#运维边界)。
 
 ## 版本检查与更新
 
 状态页的“检查版本”打开“检查与更新版本”面板：
-
-[![检查与更新 Mnemon CLI 和 dsh-mnemon](../../assets/webui-v0.5.4/zh-CN/versions.jpg)](../../assets/webui-v0.5.4/zh-CN/versions.jpg)
 
 - **dsh-mnemon**：运行版本来自当前插件包，更新查询 npm `latest`；已安装的 beta/alpha/rc 同时查询自身通道，也可升级到更高的正式版。稳定版用户不会自动进入预发布通道。
 - **Mnemon CLI**：本地版本来自 `mnemon --version`，最新版本来自官方 `@mnemon-dev/mnemon` npm 包。只有 Mnemon Native 需要它，未安装时显示为可选并给出安装命令。
@@ -41,19 +39,19 @@ Test-Path "$env:LOCALAPPDATA\Programs\mnemon\mnemon.exe"
 
 npm 更新要求当前启动器属于现有 npm 所报告的全局安装目录；不同 Node/npm 环境或启动器故障会显示修复指引。首次安装或迁移使用 `npm install --global @mnemon-dev/mnemon@latest`，后续使用 `mnemon update`。命令在 DSH 宿主运行，需要 Node.js 22+。修改 PATH 或 CLI 配置后，重新检查并核对面板中的可执行文件路径。
 
-展开 dsh-mnemon 子包列表，可按 Source、Strategy、Provider 查看版本。主包固定的依赖随主包更新，仅当前所属 Profile 中独立安装的包支持单独更新；源码链接保持原维护方式。包更新串行执行，重新检查或重开面板仍保留待重启提示。只读连接可检查版本与复制命令；页面更新需要管理权限且开启 `writeEnabled`。
+在 Windows 桌面宿主中，记忆操作和版本检查会直接调用已识别的官方 Mnemon npm 安装所锁定的原生程序，避免 npm 启动器额外弹出控制台窗口，并保留隐藏子进程、超时、取消和已保存的嵌入设置。界面显示的安装路径和 npm 更新归属仍指向原启动器。对于未知包布局或缺失的原生依赖，继续使用启动器回退路径及其修复诊断。
 
-![展开子包，查看当前版本、主包固定版本与本地源码维护方式](../../assets/webui-v0.5.4/zh-CN/versions-expanded.jpg)
+展开 dsh-mnemon 子包列表，可按 Source、Strategy、Provider 查看版本。主包固定的依赖随主包更新，仅当前所属 Profile 中独立安装的包支持单独更新；源码链接保持原维护方式。包更新串行执行，重新检查或重开面板仍保留待重启提示。只读连接可检查版本与复制命令；页面更新需要管理权限且开启 `writeEnabled`。
 
 Go 更新还要求当前执行文件确实位于本机 Go 的安装输出位置（`GOBIN`，或 `GOPATH` 第一项的 `bin` 目录），且未配置交叉编译目标。不能仅因下载的二进制包含 Go 构建信息就认定它由 Go 管理。CLI 更新后还会核验当前执行文件已达到所检查的版本，才报告成功。
 
 更新命令由 Host 固定选择：浏览器不能传入命令或参数，执行禁用 shell，并限制时间与输出。插件更新在所属 profile 中安装已检查的精确版本，确认实际安装版本后才报告成功，避免固定 beta 版本未变却提示已更新。更新完成后界面自动重新检查两个组件并刷新状态。Mnemon CLI 从下一次调用起生效；dsh-mnemon 仍需重启 `dsh web` 才能加载新插件代码。
 
-DSH rc.8 首次说明的可选 SQLite 不兼容性在 DSH 0.1.1-rc.2 中仍然存在。它只针对 `@deepseek-ai/dsh-session-persistence-sqlite`，内置 profile 默认不启用。rc.2 后端使用 schema 17，会拒绝旧 schema，且不提供迁移路径；手工挂载过它的部署应先备份，再重建 DSH 会话数据库。dsh-mnemon 的 Runtime、Documents、Memory Spaces 与 Provider 数据位于独立存储根，不受影响。
+<a id="dsh-015-兼容与旧会话恢复"></a>
 
-## DSH 0.1.5 兼容与旧会话恢复
+## 旧会话恢复
 
-支持的宿主为 DSH `0.1.7-rc.2`，参见[兼容性矩阵](../reference/compatibility.md)。升级 Mnemon 后重启 Web Profile：Starter 补丁为拥有路由的 `connection` Entry 同时声明 `webRuntime` 和 `webServer`，恢复此前在“记忆系统”或其配置页返回 HTTP 405 的全部七个 RPC 通道。绕过 Starter 独立安装 Host 的自定义 Profile，也应在自己的 connection Entry 声明这两个依赖，并保留自定义组合原有的其他依赖。不修改 DSH 包源码；浏览器认证和 Mnemon grant 仍然生效。
+支持的宿主为 DSH `0.1.7-rc.2` 与 `0.2.0-rc.1`，参见[兼容性矩阵](../reference/compatibility.md)。升级 Mnemon 后重启 Web Profile：Starter 补丁为拥有路由的 `connection` Entry 同时声明 `webRuntime` 和 `webServer`，恢复此前在“记忆系统”或其配置页返回 HTTP 405 的全部七个 RPC 通道。绕过 Starter 独立安装 Host 的自定义 Profile，也应在自己的 connection Entry 声明这两个依赖，并保留自定义组合原有的其他依赖。不修改 DSH 包源码；浏览器认证和 Mnemon grant 仍然生效。
 
 另一项 `source summary requires notice form; source v0 artifact remains unchanged` 错误来自旧版 Mnemon 写入的 DSH 会话消息。新消息已移除 recall/instructions 中不合法的 summary；更新插件不会改写现有会话。修复单个受影响日志时：
 
@@ -107,7 +105,7 @@ DSH 以写权限打开旧会话时，会迁移为不可变的 v3 generation。Mn
 
 导入受 `writeEnabled` 控制，只读部署会拒绝。ZIP 包含私有记忆，应加密、限制访问并验证恢复。Provider 凭据保存在 `state/memory-providers.json`（`0600`），不会进入 ZIP。已保存的凭据值也不会经管理通道返回；若要备份连接，需要按下述离线快照保护整个 `state/`。
 
-![安全导入临时目录前的 Mnemon Pack 预览](../../assets/webui-v0.5.4/zh-CN/backup-preview.jpg)
+![安全导入前经过校验的备份预览](../../assets/webui-v0.5.19/zh-CN/plugin-backup-preview.jpg)
 
 ### 恢复演练
 
@@ -156,7 +154,7 @@ DSH 以写权限打开旧会话时，会迁移为不可变的 v3 generation。Mn
 
 ## 云端 WebUI
 
-DSH 0.1.7-rc.2 是支持的 registry 安装目标。页面、每个 RPC 与每条 stream 都通过 Host 输出的启动 token URL 建立同一份、与 authority 绑定的浏览器会话。`--trusted-host` 仍只是 Host/Origin 防线，不能替代 HTTPS 或部署层访问控制。
+DSH 0.1.7-rc.2 与 0.2.0-rc.1 是支持的 registry 安装目标。页面、每个 RPC 与每条 stream 都通过 Host 输出的启动 token URL 建立同一份、与 authority 绑定的浏览器会话。`--trusted-host` 仍只是 Host/Origin 防线，不能替代 HTTPS 或部署层访问控制。
 
 1. 在反向代理或访问网关终止 HTTPS，并只向预期用户开放公网入口。把同源的 `/` 与 `/api` 流量（包括 stream）代理到 `http://127.0.0.1:3080`，同时保留外部 `Host` authority。
 2. 使用外部 authority 启动回环服务。参数应为裸 `host[:port]`，不是 URL：
@@ -169,7 +167,7 @@ DSH 0.1.7-rc.2 是支持的 registry 安装目标。页面、每个 RPC 与每�
 3. 如果浏览器还没有该公网 authority 的有效 Cookie，请使用终端里以 `dsh web: ...` 输出的启动 token URL。经过反向代理时，只把其中的回环 origin 替换成公网 HTTPS origin，保留 `/` 路径与 `?token=...` query。例如把 `http://127.0.0.1:3080/?token=...` 转为 `https://memory.example.com/?token=...`。该 URL 等同凭据，不要放入日志、Issue 或聊天。DSH 会把它交换为 HttpOnly、SameSite Cookie，再重定向到干净的 `/`；尚未过期且 authority 相同的 Cookie 可以跨 Host 重启继续使用。
 4. 打开干净的公网 URL，确认“状态”和**插件 → 可组合记忆**页面都能加载，并且整页刷新后仍保持认证。远程设置默认只读；需要管理时，先应用[显式远程管理授权](#remote-management)、重启 DSH，再验证一次有意的小范围保存。
 
-HTTP 403 可能来自 Host/Origin 不匹配，或旧远程 Client 仍调用独立通道。请检查 `--trusted-host`、公网 authority 与代理路由，再升级至 dsh-mnemon v0.5.5 或更高版本、重启 DSH 并刷新浏览器；远程 Mnemon 调用使用已认证 API Gateway。HTTP 401 需要恢复 Host 浏览器认证或配对。若返回远程管理需要 `remoteAccess: trusted-host`，则是另一个 Mnemon 授权检查；浏览器认证成功本身不授予管理权限。
+HTTP 403 可能来自 Host/Origin 不匹配，或旧远程 Client 仍调用独立通道。请检查 `--trusted-host`、公网 authority 与代理路由，再升级 dsh-mnemon、重启 DSH 并刷新浏览器；远程 Mnemon 调用使用已认证 API Gateway。HTTP 401 需要恢复 Host 浏览器认证或配对。若返回远程管理需要 `remoteAccess: trusted-host`，则是另一个 Mnemon 授权检查；浏览器认证成功本身不授予管理权限。
 
 ### 停用完整 Starter
 
@@ -183,13 +181,10 @@ HTTP 403 可能来自 Host/Origin 不匹配，或旧远程 Client 仍调用独�
 该开关会同时停用 Core/Host、三个随附 Source、两个主策略和三个可选 Strategy 增强，不会卸载包或删除记忆数据。删除该覆盖项，或把它改为 `false`，再重启 DSH，即可重新启用完整 Starter。
 
 <a id="remote-management"></a>
-<a id="回滚到-dsh-011-rc2"></a>
 
-### 远程管理与 DSH 0.1.1-rc.2 回滚
+### 远程管理
 
-下列 DSH `0.1.1-rc.2` 流程属于历史记录。当前 Mnemon 需要 DSH `0.1.7-rc.2`，参见[兼容性矩阵](../reference/compatibility.md)。回滚时，将旧版 DSH 与之前针对它验证过的 Mnemon 版本配套使用，并恢复对应的升级前会话备份。
-
-对于 v0.5.5 已认证网关客户端，`remoteAccess: trusted-host` 授予管理操作；默认远程读取与小范围激活不需要该授权。旧 DSH rc.2 通过逐方法 authority 层执行同一份本地配置，设置、备份与宽泛 mutation 默认仅限 loopback。仅为预期的已认证用户配置远程管理权限。
+对于已认证的远程客户端，`remoteAccess: trusted-host` 授予管理操作；远程读取与小范围激活不需要该授权。没有该授权时，远程页面的记忆系统与插件设置会写明只读的原因。本机浏览器与 DSH 桌面版窗口不是远程客户端，不需要该授权。仅为预期的已认证用户配置远程管理权限。需要运行更早的 DSH 时，请配套使用针对它验证过的 Mnemon 版本及其升级前的会话备份，参见[兼容性矩阵](../reference/compatibility.md)。
 
 1. 打开 `~/.dsh/profiles/web/cordis.patch.yml`；如果设置了 `DSH_HOME`，则路径为 `$DSH_HOME/profiles/web/cordis.patch.yml`。如果已经有顶层 `- id: mnemon`，请直接修改该项，不要添加重复项。如果初始化文件仍以 `[]` 结尾，请用下面的完整配置行替换它；否则把该行追加到现有顶层 YAML 列表：
 
@@ -242,8 +237,7 @@ HTTP 403 可能来自 Host/Origin 不匹配，或旧远程 Client 仍调用独�
 
 ### Web 与模型
 
-- DSH 负责远程 RPC 与 stream 的认证或配对；v0.5.5 Mnemon 网关映射对管理操作另行要求 `remoteAccess: trusted-host`，本地回环客户端保留旧通道。
-- DSH 0.1.1-rc.2 中，读与激活使用 `trusted-host`；写、设置和备份默认保持 `loopback`，只有 Host 本地 `remoteAccess: trusted-host` 才会将三者整体提升。
+- DSH 负责远程 RPC 与 stream 的认证或配对；Mnemon 的 API Gateway 映射对管理操作另行要求 `remoteAccess: trusted-host`，本地回环客户端与 DSH 桌面版窗口（`dsh-app://app/`）使用各自的通道。
 - Provider 目录和管理响应始终脱敏；界面只显示已配置字段名，不返回已保存凭据值。
 - WebUI 依据 Host 返回的可写 settings snapshot 判断产品能力，不再根据传输位置猜测权限；设置通道不可用时会显示明确诊断，而不是空白页。
 - WebUI 不直接读取 SQLite、启动进程、调用远程 Provider 或指定任意更新命令；Provider 网络访问只发生在 Host。
@@ -259,20 +253,20 @@ HTTP 403 可能来自 Host/Origin 不匹配，或旧远程 Client 仍调用独�
 
 ## 故障排查
 
-`mnemon.cliPath` 接受显式路径，也接受按 Host 的 PATH 查找的命令名。DSH 运行时，若二进制安装或恢复到既有搜索目录，点击“重新检查”即可刷新可用状态，无需重启；Host 进程环境变量的变化仍需重启。状态与版本检查解析同一个配置命令。
+`mnemon.cliPath` 接受显式路径，也接受按 Host 的 PATH 查找的命令名。DSH 运行时，若二进制安装或恢复到既有搜索目录，点击记忆系统顶栏的**刷新**即可更新可用状态，无需重启；Host 进程环境变量的变化仍需重启。状态与版本检查解析同一个配置命令。
 
 | 现象 | 检查与处理 |
 |---|---|
-| 插件详情中 `cordis:group` / `mnemon-bundle` 显示“已关闭”，点击提示“找不到该插件” | DSH `0.1.7-rc.2` 的已知容器展示问题。先检查“记忆系统 → 状态”和实际组件；正常时可继续使用。整套组合用顶层 bundle 或 `mnemon` 核心组件开关，不要重置数据或删除分组。参见[原因、处理步骤与修复边界](../reference/compatibility.md#dsh-017-bundle-组件列表)和[上游 #649](https://github.com/dsh-external/issues/issues/649)。 |
+| 插件详情中 `mnemon-bundle` 容器行（0.5.20 起名为 `dsh-mnemon/bundle`，此前为 `cordis:group`）显示“已关闭”，点击提示“找不到该插件” | DSH `0.1.7-rc.2` 的已知容器展示问题（`0.2.0-rc.1` 同样显示为已关闭）。先检查“记忆系统 → 状态”和实际组件；正常时可继续使用。整套组合用顶层 bundle 或 `mnemon` 核心组件开关，不要重置数据或删除分组。参见[原因、处理步骤与修复边界](../reference/compatibility.md#dsh-017-bundle-组件列表)和[上游 #649](https://github.com/dsh-external/issues/issues/649)。 |
 | Windows 切换会话时终端窗口闪现 | 更新 Starter，或独立安装的 Runtime Source，然后重启 DSH Host。Runtime 的 Git 分支检测会隐藏控制台窗口；Git 失败、超时或 HEAD 分离时仍回退到不按分支筛选的 Runtime 视图。 |
 | Mnemon 不可用 | macOS/Linux 运行 `command -v mnemon`、`mnemon --version`；Windows PowerShell 运行 `Get-Command mnemon`、`Test-Path "$env:LOCALAPPDATA\Programs\mnemon\mnemon.exe"`。设置 `MNEMON_CLI_PATH` 或 `mnemon.cliPath` 后重启 |
 | Electron 桌面 Host 无法运行 npm CLI 脚本 | 经过验证的 npm 启动器仅在子进程中设置 `ELECTRON_RUN_AS_NODE=1`。如果桌面壳关闭了 [Electron `runAsNode` fuse](https://www.electronjs.org/docs/latest/tutorial/fuses#runasnode)，该变量会被忽略；请将 `mnemon.cliPath` 指向官方原生二进制（Windows 为 `mnemon.exe`）。npm 自动更新仍需要 Host 能够运行 JavaScript 启动器 |
 | Headless Agent 没有 Mnemon 工具 | 插件按 profile 独立安装；运行 `dsh plugin --profile headless add dsh-mnemon`，Web profile 的安装不会自动带入 |
 | 找不到“记忆系统”入口 | 检查 `tabEnabled=true`；`displayMode=sidebar` 使用侧边栏，`displayMode=builtin` 使用已打开会话的标签页。本地 link 先 `pnpm run build` 再重启 profile |
-| 保留的 `buildin` 偏好在升级后打开了会话标签页 | v0.4.2 恢复该偏好并保存为 `builtin`；如果希望继续使用独立入口，请选择 Sidebar。记忆范围与已存数据不变 |
+| 旧的 `buildin` 偏好打开了会话标签页 | 它会保存为 `builtin`；如需独立入口，请在**界面**中选择**侧边栏**。记忆范围与已存数据不变 |
 | 状态正常但召回为空 | 检查 active 记忆空间、存储范围、查看目录、会话实际目录和查询是否足够聚焦 |
 | 顶部提示目录未对齐 | 工作台正在查看另一个工作区；确认是否为预期范围。工作台任务在查看工作区执行，对话工具仍使用所属会话范围 |
-| 设置保存后无变化 | 查看保存错误；成功保存应实时切换并自动重新读取，不需要刷新 |
+| 设置看起来没有变化 | 开关与选择器立即生效，需要输入的值要点击**应用**；写入失败时控件旁会显示原因并恢复为已保存的值 |
 | 自定义目录被拒绝 | 使用绝对路径、`~` 或 `~/...` |
 | `memoryBodyId is required...` | active 数量不是恰好 1；显式选择目标 |
 | `memory space is not active for reading` | 在概览激活目标；写入 inactive 可以，读取不行 |
@@ -281,13 +275,16 @@ HTTP 403 可能来自 Host/Origin 不匹配，或旧远程 Client 仍调用独�
 | Document source path 被拒绝 | 路径必须在会话工作区内，且不能引用受管 Documents 目录 |
 | CLI timeout | 增大 `timeoutMs`；大 Store 的状态与图谱可能超过 10 秒 |
 | lock timeout | 检查其他写进程，不要删除仍属于活跃进程的 lock |
-| 记忆系统白屏并提示 `refreshSnapshot` 或 settings store 错误 | 将 dsh-mnemon 升级到 v0.4.1 并重启所属 DSH profile；设置回调会保留宿主 store 的 `this` 绑定 |
-| ZIP 导出提示 `date not in range 1980-2099` | 将 dsh-mnemon 升级到 v0.4.1；固定本地 ZIP 日期字段后，UTC 以西时区可以正常导出，相同导出的归档字节也不再因时区变化 |
 | ZIP 导出提示 WAL busy | 等待 Memory Space 写入完成并重试；不要绕过未 checkpoint WAL 检查 |
 | ZIP 导入 checksum / schema 失败 | 备份损坏或格式不兼容；保留当前根，不要手工解压覆盖 |
 | 更新按钮不出现 | 当前已是最新、远程检查失败，或安装来源是 link / 手工模式；按面板提示沿原方式更新 |
 | 已认证远程页面能读取或激活记忆空间，但不能保存设置或执行其他写入 | 默认管理限制；确需远程管理时，保留当前配置、在本地设置 `remoteAccess: trusted-host` 并重启 DSH |
-| alpha 中 DSH 重启或 authority 改变后 Mnemon RPC 返回 401 | 打开 `dsh web` 输出的启动 URL，让一次性 token 建立新的、与 authority 绑定的浏览器 Cookie |
+| DSH 桌面版中运行时记忆、记忆空间与插件设置均为只读，而 Agent 工具仍能写入 | dsh-mnemon 0.5.18 及更早版本把桌面窗口当成远程页面（[#310](https://github.com/omdsh-dev/dsh-mnemon/issues/310)）；在桌面版插件页更新到 0.5.19 或更新版本，无需修改 `remoteAccess` |
+| DSH 0.2 安装或启动时提示 dsh-mnemon 不兼容 | 安装到的是 0.5.19 之前的版本；更新 dsh-mnemon，新版本发布 24 小时内按[安装与启动](./installation.md#常见问题)安装带版本号的包 |
+| DSH 运行期间更新 dsh-mnemon 后，启用组件提示 `ERR_PACKAGE_PATH_NOT_EXPORTED`（`Package subpath './starter'` 或 `'./bundle'`） | 正在运行的进程仍按旧版本的包信息加载；完全退出并重新启动 DSH（桌面版按 `Cmd+Q`）。使用 0.5.18 或 0.5.19 时不要关闭 `dsh-mnemon/starter`，见[安装与启动](./installation.md#更新后启用时提示-err_package_path_not_exported) |
+| `mnemon-bundle (cordis:group): pending (waiting for service: mnemonStarterReady)`，或桌面版启动失败并显示插件恢复页 | 0.5.18 或 0.5.19 的 `dsh-mnemon/starter` 被关闭；在**插件 → 可组合记忆**中打开它，或更新到 0.5.20（没有单独的就绪开关）。桌面版在恢复页卸载后重新添加 dsh-mnemon，见[安装与启动](./installation.md#dsh-提示waiting-for-service-mnemonstarterready) |
+| 更新后提示 `mnemon-bundle (dsh-mnemon/bundle): pending (waiting for service: mnemonStarterReady)` | 更新到 0.5.20 后没有重启，正在运行的 DSH 仍保留旧的组件组；完全退出并重新启动 DSH，见[安装与启动](./installation.md#更新后启用时提示-err_package_path_not_exported) |
+| DSH 重启或 authority 改变后 Mnemon RPC 返回 401 | 打开 `dsh web` 输出的启动 URL，让一次性 token 建立新的、与 authority 绑定的浏览器 Cookie |
 
 ## 已知限制
 
@@ -309,7 +306,7 @@ HTTP 403 可能来自 Host/Origin 不匹配，或旧远程 Client 仍调用独�
 
 ### 版本与国际化
 
-尚无正式固定的 DSH / Mnemon 支持矩阵。主要 Web 界面为中英文双语，但命令、工具卡、兼容元数据和部分错误仍未完全国际化。
+支持 DSH 0.1.7-rc.2 与 0.2.0-rc.1，参见[兼容性矩阵](../reference/compatibility.md)。Web 界面为中英文双语，但命令、工具卡、兼容元数据和部分错误仍未完全国际化。
 
 ## 文档归档恢复
 

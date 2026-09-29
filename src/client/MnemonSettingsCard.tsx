@@ -9,6 +9,7 @@ import {
 } from "../host/protocol.ts"
 import type { MemoryPluginEntryView } from '../host/view-protocol.ts'
 import { MnemonClient } from './api.ts'
+import { isRemoteConnection } from './remote-rpc.ts'
 import { CompositionBoard, usePageTrail, type ComponentSettingsRenderer, type LayerSettings } from './CompositionBoard.tsx'
 import { componentCopy } from './component-copy.ts'
 import { useViewFeedback } from './view-feedback.tsx'
@@ -139,11 +140,12 @@ export function MnemonSettingsCard({ scope, interactionScope: suppliedInteractio
 
   const accountIsolated = Boolean(coreSnapshot.value?.accountDataDir)
   const coreDisabled = loading || !coreSnapshot.writable
+  const readOnlyNotice = connection !== undefined && isRemoteConnection(connection) ? t('config.remoteReadOnly') : t('config.readOnly')
   const interactionDisabled = loading || !interactionSnapshot.writable
   // DSH's row page for one component shows that component's page alone.
   if (component !== undefined) {
     return <section ref={root} className={css.page} aria-label={t('config.aria')} aria-busy={loading}>
-      {!writable && !loading && <p className={css.readOnlyNotice}>{t('config.readOnly')}</p>}
+      {!writable && !loading && <p className={css.readOnlyNotice}>{readOnlyNotice}</p>}
       <CompositionBoard view={view} system={memorySystem} systemPending={memorySystemState === 'loading'} layers={layerSettings} readOnly={!coreSnapshot.writable} language={language} t={t}
         pages={pages} page={component} {...(settingsRenderer === undefined ? {} : { componentSettings: settingsRenderer })} />
       {feedbackToast}
@@ -156,7 +158,7 @@ export function MnemonSettingsCard({ scope, interactionScope: suppliedInteractio
     <section ref={root} className={css.page} aria-label={t('config.aria')} aria-busy={loading}>
       {loading ? <p className={css.loading} role="status">{t('common.loading')}</p> : <>
         {/* Like DSH's own settings forms, a read-only document says so above its controls. */}
-        {!writable && <p className={css.readOnlyNotice}>{t('config.readOnly')}</p>}
+        {!writable && <p className={css.readOnlyNotice}>{readOnlyNotice}</p>}
         <CompositionBoard view={view} system={memorySystem} systemPending={memorySystemState === 'loading'} layers={layerSettings} readOnly={!coreSnapshot.writable} language={language} t={t}
           pages={pages} {...(settingsRenderer === undefined ? {} : { componentSettings: settingsRenderer })} />
 

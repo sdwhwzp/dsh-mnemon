@@ -1,105 +1,108 @@
-# Capability Map: Three Tiers, Nine Providers, and Independent Task Agents
+# Capability map
 
 [简体中文](../../zh-CN/guides/capabilities.md) | **English** | [Documentation hub](../README.md)
 
-`dsh-mnemon` is the memory-system control plane for DeepSeek Harness (DSH). It does not force every kind of knowledge into one database. It organizes frequent context, complete project narratives, and retrievable long-term memory into three tiers, then brings nine long-term-memory providers into one workflow for creation, activation, recall, distillation, and observation.
+dsh-mnemon is the memory system for DeepSeek Harness (DSH). It does not force every kind of knowledge into one database. It keeps frequent context, complete project narratives and long-term evidence apart, lets a main strategy decide how they reach each turn, and brings nine long-term memory Providers into one workflow.
 
-Runtime, Documents and Memory Spaces are independent Source plugins. A Strategy selects their instance-specific projections, retrieval routes and actions into an immutable per-turn View. Core provides only `ctx.mnemonMemory`; Sources own their data and optional pages, while Memory Spaces owns its private Provider children. The `dsh-mnemon` Starter starts with the Layered strategy. See [Architecture](../development/architecture.md) and [Plugin development](../development/extensions.md).
+The short rule: **keep every-turn context in runtime memory, complete narratives in Project Documents, and evidence you need across tasks in Memory Spaces.**
 
-The short decision rule is: **keep every-turn context in Runtime, complete narratives in Documents, and cross-task evidence in Memory Spaces.**
+## What you can do
 
-## The 30-second scope
-
-| User goal | Where to click | Execution path | Changes data? |
+| Goal | Where | How it runs | Changes data? |
 |---|---|---|---|
-| Keep preferences, conventions, and environment facts in every turn | **Runtime** | The Host deterministically maintains `USER.md` / `MEMORY.md` projections | Yes, immediately after confirmation |
-| Preserve complete designs, investigations, procedures, and handoffs | **Documents** | The Host manages Markdown, indexing, capacity, and revisions | Create/edit does; read/search does not |
-| Create a durable space on one of nine engines | **Memory Spaces → Overview → Create Memory Space** | A human explicitly chooses an enabled Provider | Yes |
-| Let policy choose an eligible engine | **Memory Spaces → Distillation strategy → Smart selection** | Host hard rules run first; ambiguity starts an independent task Agent | Saving policy does; selection only returns a receipt |
-| Retrieve raw durable evidence | **Memory Spaces → Recall → Search** | Active spaces use their fastest native recall paths concurrently | No |
-| Turn evidence into an answer | **Memory Spaces → Recall → Agent query** | A clean top-level task Agent receives only bounded evidence | No |
-| Qualify, deduplicate, distill, and write a candidate | **Remember** or **Save to memory** beside a response | A clean top-level task Agent works behind Host-enforced tools, paths, locks, capacity, and receipts | Only when the Agent decides to write |
-| Generate titles and descriptions for several spaces | **Memory Spaces → Overview → AI metadata** | Each space gets an isolated asynchronous task: fast sample first, generation second | Yes, local catalog metadata only |
-| Move a Document out of hot capacity without losing provenance | **Documents → Archive** | A task Agent creates a searchable cold reference before the Host moves the original | Yes |
-| See what memory a completed turn used | **Turn memory** below the response | Summarizes recalls, writes, and Document searches with exact navigation | No |
+| Keep preferences, conventions and environment facts in every turn | **Runtime memory** | The Host maintains `USER.md` and `MEMORY.md` projections | Yes, after you confirm |
+| Keep complete designs, investigations, procedures and handoffs | **Project Documents** | The Host manages Markdown, search, capacity and revisions | Creating and editing do; reading and searching do not |
+| Create a durable space on one of nine backends | **Memory Spaces → Overview → Create Memory Space** | You choose an enabled Provider | Yes |
+| Decide the Provider for spaces a task Agent creates | **Memory Spaces → Provider for new spaces** | One fixed Provider, or Host rules first and then the task Agent among the eligible ones | Saving the setting does |
+| Find raw durable evidence | **Memory Spaces → Recall → Direct search** | Active spaces answer concurrently with their native recall | No |
+| Turn evidence into an answer | **Memory Spaces → Recall → Ask Agent** | A clean task Agent receives only the bounded evidence | No |
+| Qualify, deduplicate, distil and write a candidate | **Save to memory** under a reply or on Memory Spaces | A clean task Agent behind Host-enforced tools, paths, locks and receipts, with a receipt for you | Only if the Agent decides to write |
+| Title and describe several spaces | **Memory Spaces → Overview → Tidy names and descriptions** | One isolated task per space | Local catalog metadata only |
+| Move a document out of hot capacity | **Project Documents → Archive** | A task Agent indexes a cold reference before the Host moves the original | Yes |
+| See what memory a turn used | **Turn memory** under the reply | The documents and memories each tool read or wrote, each opening where it lives | No |
+| Change how memory is composed | **Plugins → dsh-mnemon → Memory composition** | Switches apply to future turns | Configuration only |
 
-## The tiers are not copies
+## Three kinds of memory
 
-| Tier | Best for | How it reaches context | Source of truth |
+| Memory | Best for | How it reaches context | Source of truth |
 |---|---|---|---|
-| **Runtime Memory** | Frequent preferences, collaboration rules, and project facts | Compact injection on every turn | `runtime/memories.json`; Markdown files are projections |
-| **Project Documents** | Long-form knowledge that must keep structure and provenance | Deterministic search, then full text on demand | `documents/index.json` plus managed Markdown |
-| **Memory Spaces** | Cross-session facts, decisions, entities, and relations | Bounded evidence recalled from active spaces | A Mnemon Native Store or the selected external Provider |
+| **Runtime memory** | Frequent preferences, collaboration rules and project facts | Compact injection on every turn | `runtime/memories.json`; the Markdown files are projections |
+| **Project Documents** | Long-form knowledge that must keep structure and provenance | Search first, then full text on demand | `documents/index.json` plus managed Markdown |
+| **Memory Spaces** | Facts, decisions, entities and relationships across sessions | Bounded evidence recalled from active spaces | A Mnemon Native store or the selected external Provider |
 
-In the default Starter, Runtime and Documents use their own local Source storage; Memory Spaces swaps backend engines through Providers. A Provider change does not alter the other two Sources. External Source and Strategy plugins can define different compositions through the public contracts.
+Each is its own Source plugin. Runtime memory and Project Documents keep local storage; Memory Spaces swaps backends through Providers without touching the other two. External Sources can join through the same public contracts. See [Architecture](../development/architecture.md).
 
-## Nine long-term-memory providers
+## Strategies and enhancements
 
-| Provider | Form | Best fit | Scope behavior |
+One **main strategy** composes each turn. **Enhancements** add to whichever main strategy runs, through standard slots, and can be combined. All are chosen under **Plugins → dsh-mnemon**.
+
+| Component | What it does | Options |
+|---|---|---|
+| **Layered strategy** (default) | Keeps runtime memory resident; searches Documents and recalls Memory Spaces on demand; runs idle review and capacity maintenance | Task Agent model and idle review on its page |
+| **General strategy** | Offers every available source in one budget; the model decides how to use each; no automatic review or capacity maintenance | Resident Sources; Additional guidance |
+| **Active capture** | In-turn guidance to keep useful facts. It is guidance, not an autonomous recorder | Recording targets, instruction and operations |
+| **Light context** | A shared ceiling on resident context. It is not token accounting | Resident character ceiling |
+| **Scoped composition** | Orders the sources that take part and limits which may be written. It creates no storage | Sources in priority order; writable Sources |
+
+Switching strategies never moves data. A turn keeps the composition it started with. See [Configuration](../reference/configuration.md) for how these choices are saved.
+
+## Nine long-term memory Providers
+
+| Provider | Form | Best fit | Scope |
 |---|---|---|---|
-| **Mnemon** | Official native local CLI + SQLite | Full graph, exact writes, local-first default | Global, workspace, or custom root |
-| **OpenViking** | HTTP + `viking://` | Existing resource trees, verified exact writes and semantic retrieval | Target URI and user identity |
-| **Honcho** | HTTP workspace / peers | Team and Agent-peer conclusions | Provider workspace |
-| **Mem0** | Platform or self-hosted HTTP | Existing Mem0 user/Agent memories | User / agent identity |
-| **Hindsight** | HTTP memory bank | Banks, entities, and provider-native graph | Bank ID |
-| **Holographic** | Local structured fact files | Auditable local entity and semantic facts | Follows workspace by default; path override allowed |
-| **RetainDB** | HTTP project / user | Project and user scoped memory | Project / user identity |
-| **ByteRover** | Local `brv` CLI | Code knowledge and curate workflows | Follows workspace by default; directory override allowed |
+| **Mnemon Native** | Official local CLI and SQLite | Full graph, exact writes, local-first default | Global, workspace or custom root |
+| **OpenViking** | HTTP and `viking://` | Existing resource trees, verified exact writes and semantic retrieval | Target URI and user identity |
+| **Honcho** | HTTP workspace and peers | Team and Agent-peer conclusions | Provider workspace |
+| **Mem0** | Platform or self-hosted HTTP | Existing Mem0 user and Agent memories | User and agent identity |
+| **Hindsight** | HTTP memory bank | Banks, entities and a native graph | Bank id |
+| **Holographic** | Local structured fact files | Auditable local entity and semantic facts | Follows the workspace; path override allowed |
+| **RetainDB** | HTTP project and user | Project- and user-scoped memory | Project and user identity |
+| **ByteRover** | Local `brv` CLI | Code knowledge and curation workflows | Follows the workspace; directory override allowed |
 | **Supermemory** | HTTP container | Document ingestion and container sharing | Container tag |
 
-Memory Spaces' component page, opened from its name on the `dsh-mnemon` page under **Plugins**, owns reusable **service configuration** and enable switches. The Memory System's Memory Spaces page owns **instance configuration**, activation, and local metadata. Providers are off by default and participate in discovery and routing only after being enabled and saved. See [Long-term memory providers](./memory-providers.md) for the complete capability and field matrix.
+Memory Spaces' page under **Plugins → dsh-mnemon** holds each Provider's reusable service settings and switch; the Memory System's Memory Spaces page holds the spaces themselves. Providers are off until enabled. Only Mnemon Native needs the Mnemon CLI; when it is missing, another ready Provider can serve Memory Spaces. See [Providers](./memory-providers.md).
 
-## Who works after a click
+## Who does the work
 
-### Deterministic Host operations
+**The Host, deterministically.** Status, direct search, content and entity browsing, activation, ordinary runtime edits and document reading or editing need no model. They pass through the Host's schema, path, permission, lock, revision, capacity, timeout and cancellation checks.
 
-Status checks, raw search, content/entity browsing, activation, ordinary Runtime edits, Document reading, and ordinary Document edits require no model. They pass directly through Host-enforced schema, path, permission, lock, revision, capacity, timeout, and cancellation boundaries.
+**Independent task Agents.** These never reuse the main conversation's history or context window:
 
-### Independent top-level task Agents
+- **Save to memory** qualifies, routes, deduplicates, distils, writes and reports a receipt;
+- **Ask Agent** answers from bounded recalled evidence;
+- **Tidy names and descriptions** runs one title and description task per selected space;
+- **Document archive** indexes a cold reference before the Host moves the original;
+- **Provider for new spaces**, with smart selection, calls a model only when rules leave several candidates.
 
-These user-visible capabilities do not reuse the main conversation history or consume its context window:
+Task Agents follow DSH's default route for new sessions. **Task Agent model**, under Background tasks on the Layered strategy's page, can choose a separate Provider and model. Tasks are isolated: a failure shows on its own space or operation and never blocks the page.
 
-- **Remember** qualifies, routes, deduplicates, distills, and writes;
-- **Agent query** answers from bounded recalled evidence;
-- **AI metadata** gives every selected Memory Space its own asynchronous title/description task;
-- **Document archive** creates a cold reference before the Host may move the original;
-- **Smart Provider selection** calls a model only when hard rules leave multiple candidates.
+## Where it shows up
 
-Tasks follow the DSH new-session model route by default. **Task Agent model** under Background tasks, on the Layered strategy's page (**Plugins → dsh-mnemon**, then the component's name), can select a separate Provider and model. On DSH 0.1.1-rc.2, image-capable catalog entries are labeled **Image input**, including `deepseek-official/deepseek-v4-flash-vision-exp`; current Mnemon task prompts remain text-only. Tasks are isolated: one failure is reported on its own Memory Space or operation surface instead of blocking the page.
-
-Bounded workers may still perform structured judgment internally, but that is an implementation detail. The UI and product documentation consistently call the user-visible unit an **independent task Agent**.
+| Surface | What it offers |
+|---|---|
+| **Memory System** | Status, Runtime memory, Project Documents and Memory Spaces, with every confirmation step |
+| **Plugins page** | Memory composition, component pages with their settings (including Providers), storage and interface |
+| **Conversation** | The turn memory bar, Save to memory and links into the Memory System |
+| **Headless** | The same runtime injection, document search, memory space tools, workspace routing and supervised writes, without a WebUI |
+| **Commands and tools** | `/mnemon` commands and the least-privilege tools Agents use |
 
 ## Storage scope
 
-- **Global** uses `~/.mnemon`, suitable for a control plane shared by local workspaces and Agents.
-- **Workspace** uses `<workspace>/.mnemon`; local data planes such as Mnemon, Holographic, and ByteRover can follow it automatically.
-- **Custom** is effectively a global scope at an explicit path, useful for team conventions and isolated demo roots.
-- **Centralized workspaces** (`workspaces`) is built into the Host: one fixed root, independent workspace subdirectories, and optional global USER.md. Scope switches preserve every old root.
+**Global** uses `MNEMON_DATA_DIR` or `~/.mnemon`, shared by local workspaces. **Workspace** uses `<workspace>/.mnemon`; local backends such as Mnemon Native, Holographic and ByteRover can follow it. **Custom** is a global scope at a path you choose. **Centralized** keeps each workspace in its own subdirectory of one root, with an optional global `USER.md`. Switching never moves, merges or deletes a previous root. Remote Provider namespaces (workspaces, users, banks, projects, containers, URIs) never change with the DSH workspace. See the [storage model](../reference/storage-model.md).
 
-Remote Provider workspaces, users, banks, projects, containers, and URIs are their own namespaces. Switching the DSH workspace never silently rewrites them. The workbench may inspect a chosen directory; an independent task Agent always writes according to its effective workspace and saved scope rules.
+## What it does not do
 
-## Web, conversation, and Headless share one system
+- Remembered history never outranks current instructions, live tool results or repository facts.
+- Provider differences stay visible; missing graph, delete or exact-write support is never faked.
+- Provider credentials never reach the browser, a task Agent or a backup.
+- Turning a Provider off never deletes remote data; it clears the local catalog, which reconnecting rebuilds.
+- Changing storage scope never migrates, merges or deletes an old root.
+- There are no distributed transactions across local files and remote Providers.
 
-| Surface | Capabilities |
-|---|---|
-| **Sidebar WebUI** | Status, Runtime, Documents, Memory Spaces, Provider configuration, visualization, and every user-confirmation surface |
-| **In-conversation UI** | Turn memory, Save to memory, and exact navigation into Recall, Content, or Entities |
-| **Headless** | The same Runtime injection, Document search, Memory Space tools, workspace routing, and supervised writes without a WebUI |
-| **Commands and tools** | `/mnemon` commands and the least-privilege tool surface used by Agents |
+## Continue
 
-## Explicit non-goals
-
-- Historical memory never outranks current instructions, live tool results, or repository facts.
-- Provider capabilities are not flattened into fiction. Missing graph, delete, or exact-write semantics remain explicit.
-- External credentials never reach the browser, smart-selection Agent, or Mnemon Pack.
-- Disabling a Provider does not delete remote data. It clears the local catalog metadata; reconnecting rebuilds it from the Provider.
-- Changing storage scope never migrates, merges, or deletes an old root automatically.
-- The project does not claim a distributed transaction across local files and remote Providers.
-
-## Continue exploring
-
-1. [Complete first-run verification in five minutes](./getting-started.md)
-2. [Follow real click paths through the WebUI and Agent behavior](./ui-guide.md)
-3. [Compare all nine Providers](./memory-providers.md)
-4. [Understand lifecycle, concurrency, and failure boundaries](../reference/workflows.md)
-5. [Check compatibility and upgrade](../reference/compatibility.md)
+1. [Get started](./getting-started.md)
+2. [Walk through the UI](./ui-guide.md)
+3. [Compare the Providers](./memory-providers.md)
+4. [Lifecycle, concurrency and failure boundaries](../reference/workflows.md)
+5. [Compatibility and upgrades](../reference/compatibility.md)

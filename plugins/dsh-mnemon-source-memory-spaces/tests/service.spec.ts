@@ -311,6 +311,16 @@ describe('MemorySpacesService', () => {
     expect(process).toHaveBeenCalledWith(FAKE_CLI, ['--version'], expect.anything())
   })
 
+  it('keeps the CLI version in summaries until the installed binary changes', async () => {
+    const { service } = fixture()
+    expect(service.statusSummary().version).toBeUndefined()
+    await service.status()
+    expect(service.statusSummary().version).toBe('0.1.2')
+    // An update replaces the binary, so the summary waits for the next full status.
+    writeFileSync(FAKE_CLI, '#!/bin/sh\n# updated\nexit 0\n', { mode: 0o755 })
+    expect(service.statusSummary().version).toBeUndefined()
+  })
+
   it('reports the effective Mnemon embedding connection and coverage with strict response validation', async () => {
     const process = vi.fn<ProcessRunner>()
       .mockResolvedValueOnce({
@@ -435,7 +445,7 @@ describe('MemorySpacesService', () => {
       })]),
     })
     expect(service.memorySpaces.list()).toEqual([expect.objectContaining({ provider: expect.objectContaining({
-      id: 'mnemon-native', label: 'mnemon', kind: 'local', origin: 'native',
+      id: 'mnemon-native', label: 'Mnemon Native', kind: 'local', origin: 'native',
       location: expect.any(String), apiKeyConfigured: false, settings: {}, configuredSecrets: [], capabilities: expect.any(Object),
     }) })])
     await expect(service.search({ query: 'anything', memoryBodyIds: [body.id] })).rejects.toThrow('unknown memory space')

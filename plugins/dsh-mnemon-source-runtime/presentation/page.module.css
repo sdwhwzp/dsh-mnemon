@@ -10,8 +10,7 @@
 .runtimeEntry textarea:focus { border-color: var(--mn-accent); }
 .runtimeComposerActions { display: flex; align-items: flex-end; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 .runtimeComposerActions label { display: grid; gap: 6px; color: var(--mn-muted); font-size: 12px; font-weight: 500; line-height: 18px; }
-.runtimeComposerActions select,
-.runtimeEntry select { min-width: 136px; height: 32px; border: .5px solid var(--mn-field-line); border-radius: var(--dsw-radius-md); outline: 0; padding: 0 10px; color: var(--mn-text); background: var(--mn-input); font-size: 13px; }
+.runtimeChoice button { min-width: 136px; }
 .runtimeReadOnly { margin-bottom: 12px; padding: 8px 12px; border-radius: var(--dsw-radius-md); color: var(--mn-muted); background: var(--mn-fill); font-size: 12px; line-height: 18px; }
 .runtimeSummaryGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
 .runtimeSummaryCard { min-width: 0; border: .5px solid var(--mn-card-line); border-radius: var(--dsw-radius-lg); }
@@ -23,17 +22,13 @@
 .runtimeScopeFilter button:hover { color: var(--mn-text); }
 .runtimeScopeFilter button[data-active] { color: var(--mn-text); background: var(--mn-layer-1); box-shadow: var(--dsw-elevation-soft); }
 .runtimeScopeFilter b { margin-left: 6px; color: var(--mn-faint); font-size: 12px; font-weight: 400; font-variant-numeric: tabular-nums; }
-.runtimeFilterQuery { display: flex; width: min(320px, 42%); min-width: 210px; align-items: center; gap: 6px; border: .5px solid var(--mn-field-line); border-radius: var(--dsw-radius-md); padding: 0 10px; background: var(--mn-input); }
-.runtimeFilterQuery:focus-within { border-color: var(--mn-accent); }
-.runtimeFilterQuery > span { color: var(--mn-faint); }
-.runtimeFilterQuery input { width: 100%; min-width: 0; height: 32px; border: 0; outline: 0; color: var(--mn-text); background: transparent; font-size: 13px; }
-.runtimeFilterQuery input::placeholder { color: var(--dsw-alias-label-dimmed); }
+.runtimeFilterQuery { width: min(320px, 42%); min-width: 210px; }
 .runtimeUnifiedList { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 12px; }
 .runtimeEntryBadges { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .runtimeEntryMeta .runtimeEntryTarget { color: var(--mn-accent); background: color-mix(in srgb, var(--mn-accent) 10%, transparent); }
 .runtimeEntryMeta .runtimeEntryBranch { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mn-muted); background: var(--mn-fill); font-family: var(--mn-code); }
 .runtimeComposerBranch { display: grid; gap: 6px; color: var(--mn-muted); font-size: 12px; font-weight: 500; line-height: 18px; }
-.runtimeComposerBranch input { width: 100%; height: 32px; border: .5px solid var(--mn-field-line); border-radius: var(--dsw-radius-md); outline: 0; padding: 0 10px; color: var(--mn-text); background: var(--mn-input); font-size: 13px; font-weight: 400; }
+.runtimeComposerBranch input { width: 100%; height: 36px; border: .5px solid var(--mn-field-line); border-radius: var(--dsw-radius-md); outline: 0; padding: 0 10px; color: var(--mn-text); background: var(--mn-input); font-size: 13px; font-weight: 400; }
 .runtimeComposerBranch input:focus { border-color: var(--mn-accent); }
 .bodyEditBranch { display: grid; gap: 6px; color: var(--mn-muted); font-size: 12px; font-weight: 500; line-height: 18px; }
 .bodyEditBranch input { width: 100%; height: 32px; border: .5px solid var(--mn-field-line); border-radius: var(--dsw-radius-md); outline: 0; padding: 0 10px; color: var(--mn-text); background: var(--mn-input); font-size: 13px; font-weight: 400; }
@@ -52,13 +47,15 @@
 .runtimeEntry { --mn-provider-color: var(--mn-accent); position: relative; padding: 12px 14px 10px; border: .5px solid var(--mn-card-line); border-radius: var(--dsw-radius-md); }
 .runtimeEntry[data-importance="critical"] { --mn-provider-color: var(--mn-priority); }
 .runtimeEntry[data-importance="low"] { --mn-provider-color: var(--mn-faint); }
+/* The entry a conversation turn wrote, when the turn opened this page. */
+.runtimeEntry[data-focused] { border-color: color-mix(in srgb, var(--mn-accent) 60%, var(--mn-card-line)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--mn-accent) 14%, transparent); }
 .runtimeEntryMeta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .runtimeEntryMeta > span,
 .runtimeEntryBadges > span { padding: 1px 8px; border-radius: 999px; color: var(--mn-muted); background: var(--mn-fill); font-size: 11px; font-weight: 500; line-height: 17px; }
 .runtimeEntry[data-importance="critical"] .runtimeEntryMeta > span,
 .runtimeEntry[data-importance="critical"] .runtimeEntryBadges > span:not(.runtimeEntryTarget) { color: var(--mn-warn); background: color-mix(in srgb, var(--mn-warn) 12%, transparent); }
 .runtimeEntryMeta time { overflow: hidden; color: var(--mn-faint); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.runtimeEntry > p { min-height: 40px; margin: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 22px; }
+.runtimeEntry > p { margin: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 22px; }
 .runtimeEntry > select { margin-top: 8px; }
 .runtimeEntry footer { display: flex; min-height: 32px; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: .5px solid var(--mn-line); }
 .runtimeEntry footer > span { margin-right: auto; color: var(--mn-danger); font-size: 12px; }
@@ -73,7 +70,7 @@
 @media (max-width: 760px) {
   .runtimeComposerHeading,
 .runtimeComposerActions { align-items: stretch; flex-direction: column; }
-  .runtimeComposerActions select,
+  .runtimeComposerActions > *,
 .runtimeComposerActions button { width: 100%; }
   .runtimeBrowserToolbar { align-items: stretch; flex-direction: column; }
   .runtimeFilterQuery { width: 100%; min-width: 0; }

@@ -1,110 +1,35 @@
-# Getting Started
+# Getting started
 
 [简体中文](../../zh-CN/guides/getting-started.md) | **English** | [Documentation hub](../README.md)
 
-This guide goes from a blank environment to the first verified recall. It uses Sidebar, global storage, and the default `default-three-tier` composition. You do not need to configure View, Strategy, or generation concepts for normal use.
+This guide starts from a DSH with dsh-mnemon installed and ends with memory that a conversation actually uses. It keeps the defaults: the Memory System in the sidebar, global storage and the Layered strategy. You do not need to know about Views or Strategies for everyday use.
 
-If installation is complete, jump to [First verification](#6-complete-first-verification). Existing installations should follow [Compatibility and upgrades](../reference/compatibility.md); version-specific migration history remains in the linked release notes.
+First time? Start with [Install and start](./installation.md): from installing Node.js to installing and enabling dsh-mnemon on the Plugins page and your first memory, with a screenshot for every step. Already installed? Jump to [Open the Memory System](#2-open-the-memory-system). Upgrading? Follow [compatibility and upgrades](../reference/compatibility.md).
 
-## 1. Prerequisites
+## 1. Install and upgrade from the command line
 
-You need:
+This section is for command-line users and also covers development checkouts, cloud access and Headless. You need:
 
-- Node.js `^22.19.0 || >=24.0.0` for the DSH 0.1.7-rc.2 baseline;
-- a DSH Web or Headless profile that starts successfully;
-- for Mnemon Native only, a locally executable `mnemon` CLI (the other Providers use their own services);
-- a DSH model route capable of creating independent task Agents.
+- DSH `0.1.7-rc.2` (npm `latest`) or `0.2.0-rc.1` (npm `next`), Node.js `^22.19.0 || >=24.0.0`, and pnpm;
+- a DSH model route that can create independent task Agents;
+- for Mnemon Native only, a local `mnemon` CLI; [Install and start](./installation.md#other-ways-to-install-the-mnemon-cli) covers each platform. The other Providers connect to their own services.
 
-Regular semantic work prefers a provider named `spawn` with `toolFilter`, `persona`, and `depthLimit`. Mnemon keeps one stable `mnemon_subagent_result` tool registered and issues a revocable `requestId` for each child. The child returns `{ requestId, result }`; the Host validates `result` against that operation's schema and rejects stale or foreign submissions, without depending on the Provider's `outputSchema` path. Optional background review defaults to a guarded `spawn` child with a bounded checkpoint. Full-context `fork` is opt-in. Review has an independent switch, cooldown and attempt budget; see [review compatibility and limits](../reference/configuration.md#provider-requirements).
-
-The composable v0.5.6 distribution pins a verified combination of sixteen official plugins. Read the [patch notes](../releases/v0.5.6.md) and [compatibility matrix](../reference/compatibility.md). The DSH baseline is 0.1.7-rc.2; its complete profile requires Node `^22.19.0 || >=24.0.0`. Mnemon's Node 20 public-entry checks do not establish full Host compatibility. Current UI examples show v0.5.4 in Light appearance after a backup import into isolated storage; old release records retain their original versions.
-
-Install and verify the tested DSH release with:
+Install and check DSH:
 
 ```sh
-npm install -g @deepseek-ai/dsh@0.1.7-rc.2
+npm install -g @deepseek-ai/dsh
 dsh --version
 npm view @deepseek-ai/dsh dist-tags
 ```
 
-## 2. Install Mnemon
+The Starter pins a tested combination of the official plugins; the [compatibility matrix](../reference/compatibility.md) lists it. Mnemon's Node 20 entry checks do not establish full Host compatibility.
 
-Only Mnemon Native uses the Mnemon CLI. Skip this step if your Memory Spaces use another Provider; you can install it later. npm is recommended on macOS, Linux, and Windows (Node.js 22+). Run these commands on the machine running DSH:
+<details>
+<summary>How task Agents are started</summary>
 
-```sh
-npm install --global @mnemon-dev/mnemon@latest
-mnemon --version
-```
+Semantic work prefers a DSH provider named `spawn` with `toolFilter`, `persona` and `depthLimit`. Mnemon keeps one stable `mnemon_subagent_result` tool and issues a revocable `requestId` for each child. The child returns `{ requestId, result }`; the Host validates `result` against that operation's schema and rejects stale or foreign submissions. Optional background review defaults to a guarded `spawn` child with a bounded checkpoint; a full-context `fork` is opt-in. See [review compatibility and limits](../reference/configuration.md#provider-requirements).
 
-For later npm updates, run `mnemon update`, or use **Status → Check versions** when the page recognizes the owning npm installation. If migrating from Homebrew, Go, or a downloaded binary, put npm's global bin directory before the old command on PATH and update any `MNEMON_CLI_PATH` / `mnemon.cliPath` override. Restart DSH after changing its environment, then recheck the executable path on Status.
-
-Homebrew Cask remains an alternative on macOS:
-
-```sh
-brew install --cask mnemon-dev/tap/mnemon
-```
-
-Go works on macOS and Linux:
-
-```sh
-go install github.com/mnemon-dev/mnemon@latest
-```
-
-Verify the binary:
-
-```sh
-mnemon --version
-```
-
-For a manual installation on Windows, the official release provides ZIP archives for AMD64 and ARM64. The following PowerShell installs v0.2.3 under the auto-discovered per-user Programs directory and verifies it against the published checksum:
-
-```powershell
-$version = '0.2.3'
-$arch = if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq 'Arm64') { 'arm64' } else { 'amd64' }
-$archiveName = "mnemon_${version}_windows_${arch}.zip"
-$releaseBase = "https://github.com/mnemon-dev/mnemon/releases/download/v${version}"
-$archive = Join-Path $env:TEMP $archiveName
-$checksumFile = Join-Path $env:TEMP "mnemon_${version}_checksums.txt"
-Invoke-WebRequest "${releaseBase}/${archiveName}" -OutFile $archive
-Invoke-WebRequest "${releaseBase}/checksums.txt" -OutFile $checksumFile
-$line = Get-Content $checksumFile | Where-Object { $_.EndsWith("  $archiveName") } | Select-Object -First 1
-if (-not $line) { throw "Checksum entry not found for $archiveName" }
-$expected = (($line -split '\s+')[0]).ToLowerInvariant()
-$actual = (Get-FileHash -Path $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($actual -ne $expected) { throw "Checksum mismatch for $archiveName" }
-$installDir = Join-Path $env:LOCALAPPDATA 'Programs\mnemon'
-New-Item -ItemType Directory -Force -Path $installDir | Out-Null
-Expand-Archive -Path $archive -DestinationPath $installDir -Force
-$mnemon = Join-Path $installDir 'mnemon.exe'
-& $mnemon --version
-```
-
-Go remains an alternative when a Go toolchain is already available:
-
-```powershell
-go install github.com/mnemon-dev/mnemon@latest
-$mnemonBin = go env GOBIN
-if (-not $mnemonBin) {
-  $mnemonBin = Join-Path (((go env GOPATH) -split ';')[0]) 'bin'
-}
-$mnemon = Join-Path $mnemonBin 'mnemon.exe'
-& $mnemon --version
-```
-
-On Windows, dsh-mnemon discovers native `mnemon.exe` from `PATH`, an exported `GOBIN` or `GOPATH`, the default `%USERPROFILE%\go\bin`, `%LOCALAPPDATA%\Programs\mnemon`, and Program Files. The official npm `mnemon.cmd` launcher is also supported: dsh-mnemon validates its package and invokes its JavaScript entry with Node, without a shell. Other `.cmd` and `.bat` wrappers remain unsupported.
-
-When DSH runs inside an Electron desktop main process, verified npm launchers run with `ELECTRON_RUN_AS_NODE=1` in the child process. This covers memory commands, version checks, and npm updates, while preserving saved embedding settings. The desktop application's own environment is unchanged. If the shell disables Electron's `runAsNode` fuse, point `mnemon.cliPath` at the platform's native Mnemon binary instead; see [Troubleshooting](./operations.md#troubleshooting).
-
-If DSH still cannot find the binary, set `MNEMON_CLI_PATH` or add an absolute path to the user settings file instead of replacing the plugin's profile patch:
-
-```yaml
-mnemon:
-  cliPath: 'C:\Users\alice\AppData\Local\Programs\mnemon\mnemon.exe'
-```
-
-`mnemon status` opens the effective Store and may initialize data or run upstream migrations, so it is not a side-effect-free installation probe.
-
-## 3. Install dsh-mnemon
+</details>
 
 Install into the Web profile for the complete workbench:
 
@@ -124,7 +49,7 @@ Then start or restart the profile:
 dsh --profile web
 ```
 
-If the Web profile is reached through a cloud hostname, do not publish port 3080 directly. DSH authenticates every Mnemon RPC and stream through a browser session established from the one-time URL printed at Host startup. Configure the HTTPS reverse proxy or access gateway and trusted authority together, then open that launch URL, by following [Cloud-hosted WebUI](./operations.md#cloud-hosted-webui). The same section preserves the historical `remoteAccess` procedure for DSH 0.1.1-rc.2; that rollback requires the Mnemon release previously verified with that host.
+If the Web profile is reached through a cloud hostname, do not publish port 3080 directly. DSH authenticates every Mnemon RPC and stream through a browser session established from the one-time URL printed at Host startup. Configure the HTTPS reverse proxy or access gateway and trusted authority together, then open that launch URL, by following [Cloud-hosted WebUI](./operations.md#cloud-hosted-webui).
 
 Upgrade and uninstall:
 
@@ -133,7 +58,7 @@ dsh plugin --profile web update dsh-mnemon
 dsh plugin --profile web remove dsh-mnemon
 ```
 
-Uninstall removes the plugin registration, not memory data in global, workspace, or custom roots.
+Restart DSH after an update. For 24 hours after a release, pnpm 11 keeps `update` on the installed version; add the new version by name instead (`dsh plugin --profile web add dsh-mnemon@<version>`). Uninstall removes the plugin registration, not memory data in global, workspace, or custom roots.
 
 Profiles have independent plugin rosters. Install the package separately into Headless when one-shot tasks also need memory:
 
@@ -146,81 +71,38 @@ For a development checkout, replace the package name with `"link:/absolute/path/
 
 With `storageScope=workspace`, Headless resolves `<invocation cwd>/.mnemon`; no Web workspace registry is required. The one-shot runner exits when its Agent becomes idle, so shutdown cancels any delayed score-based background review that has not started. Explicit or model-guided writes that finish during the task are durable.
 
-## 4. Configure storage and the interface
+## 2. Open the Memory System
 
-Open **Plugins** in the DSH sidebar and select **dsh-mnemon**; its page holds the whole configuration. From the Memory System workbench, **Configure** (the gear) in its header opens the same page.
+Click **Memory System** in the sidebar. It opens on **Status**.
 
-The [UI guide](./ui-guide.md) shows the current configuration and optional enhancements.
+![Status with each memory component and the Providers](../../assets/webui-v0.5.19/en/memory-status.jpg)
 
-### Workbench entry
+Check that:
 
-By default, open the dedicated workbench from Memory System in the DSH sidebar. Choose **Conversation tab** under **Interface → Memory System opens in** on that page, or set `displayMode: builtin`, to show the same Source pages as a conversation tab instead. The choice applies at once and switches the entry live without changing stored data.
+- the header says **Connected** and names the main strategy, *Layered strategy* by default;
+- the engine card shows the dsh-mnemon version, and the Mnemon CLI appears under **Memory providers** if you installed it;
+- Runtime memory, Project Documents and Memory Spaces each have a card without errors;
+- the storage root matches your storage scope.
 
-### Storage scope
+Project Documents needs a DSH workspace even with global storage. Select a workspace for the conversation; "Waiting for workspace" means the project context is missing, not the CLI. If the Mnemon CLI is missing, run `command -v mnemon` and `mnemon --version` on macOS or Linux, or `Get-Command mnemon` on Windows. See [troubleshooting](./operations.md#troubleshooting) for other symptoms.
 
-| Scope | Root | Best suited for |
-|---|---|---|
-| **Global** (default) | `MNEMON_DATA_DIR` or `~/.mnemon` | Sharing one memory set across workspaces |
-| **Workspace** | `<workspace>/.mnemon` | Project isolation with cross-workspace inspection in the workbench |
-| **Custom** | `dataDir` | A dedicated disk, mounted volume, or explicit directory |
-| **Centralized workspaces** | `<central-root>/workspaces/<workspace-path-hash>/` | Central management with project isolation |
+## 3. Store your first memories
 
-In the **Storage** group, **Storage scope** selects Global, Workspace or Centralized, and **Data directory** completes it with **Default** or **Custom**: under Global a custom path is the `custom` directory; under Centralized it is the central root, and data is stored in `<central-root>/workspaces/<workspace-path-hash>/`. Existing roots are retained when switching modes.
+**Runtime memory.** Open **Runtime memory**, choose **Add memory** and save a preference in the user profile or a project fact in working memory. It is injected into every later turn.
 
-The **Apply** beside the storage change initializes a candidate runtime graph before atomically switching the Host. The page clears stale state and reloads automatically—no browser refresh is needed. Changing scope never migrates, merges, or deletes old data.
+**A document.** Open **Project Documents**, choose **New document** and save a short design note or checklist. The Agent searches documents when a question needs them.
 
-### Default memory layers
+**A memory space.** Open **Memory Spaces → Overview** and choose **Create Memory Space**:
 
-A first installation should show Runtime, Documents, and Memory Spaces enabled. Each Source has one master switch. Enabling only permits on-demand use; it does not force recall on every turn. Disabling stops that Source's context, tools, background work, and data-plane Web/RPC together without deleting data. Its Sidebar tab is marked Off, and re-enabling restores the existing data. Keep all three defaults on for the first workflow.
+1. Pick a Provider. Mnemon Native, the local default, is offered once its CLI is installed; enable third-party Providers on [Memory Spaces' page](./ui-guide.md#on-the-plugins-page) first.
+2. Give it a narrow name, such as *Project decisions*, and describe what belongs there.
+3. Keep it active so conversations can read it.
 
-In Workspace mode, conversation Agents, tools, and lifecycle hooks use the current conversation's effective root. Independent task Agents launched by Sidebar use the inspected workspace explicitly, including when no main session is selected. Its header reports a mismatch and offers one-click alignment. Builtin uses its owning conversation's scope for reads, writes and tasks, with no storage-mode badge, workspace picker or alignment control.
+In an empty storage root, the first Mnemon Native space uses Mnemon's `default` store id while keeping your name and description; spaces on other Providers get their own ids. Then choose **Save to memory**, enter something stable and secret-free, and choose **Send to task Agent**. An independent task Agent picks the space, removes duplicates and writes, and its receipt says where it went.
 
-## 5. Open the Sidebar workbench
+**Check it.** Open **Memory Spaces → Recall**, ask a concrete question and choose **Direct search**. Each result keeps its memory space, category, importance and score; copy its id when you need it.
 
-Click **Memory System** in the sidebar, then start on **Status**:
-
-![Current status with Native readiness and memory counts](../../assets/webui-v0.5.4/en/status.jpg)
-
-Confirm that:
-
-- the top right says Connected;
-- Mnemon and dsh-mnemon show installed versions;
-- the storage root matches your chosen scope;
-- Runtime, Documents and Memory Spaces match the enabled memory layers;
-- Runtime, Documents, and Memory Spaces report no errors.
-
-Documents also needs a DSH workspace identity in Global or Custom storage. Select a workspace for the current conversation, or select the inspected workspace in Workspace storage. “Waiting for workspace” is a missing project context, not a missing CLI.
-
-If Mnemon is unavailable, run `command -v mnemon` and `mnemon --version` on macOS/Linux, or `Get-Command mnemon` and `Test-Path "$env:LOCALAPPDATA\Programs\mnemon\mnemon.exe"` on Windows PowerShell. See [Troubleshooting](./operations.md#troubleshooting) for other symptoms.
-
-## 6. Complete first verification
-
-### Create a Memory Space
-
-1. Open **Memory Spaces → Overview**.
-2. Select **Create Memory Space**.
-3. Choose a ready Provider. The dialog starts with the first one: **Mnemon Native**, the official local-first default, once its CLI is installed. Enable third-party services on the `dsh-mnemon` page under **Plugins** first.
-4. Use a narrow name such as “Project Decisions.”
-5. Describe what belongs there and which tasks should recall it, then enable read activation.
-
-In an empty storage root, the first Memory Space uses Mnemon's native `default` Store ID while keeping the name and description you supplied. Its activation toggle affects DSH only.
-
-**Smart selection belongs to Memory Spaces → Distillation strategy, not the creation dialog.** The Host first enforces the provider allowlist, data boundary, and required capabilities. One remaining candidate is selected deterministically; only an ambiguous eligible set reaches an independent task Agent, which considers the soft preference and strategy prompt. Provider credentials never enter model context, and the resulting card retains the source, reason, and confidence.
-
-See [Long-term memory providers](./memory-providers.md) before connecting an external service or CLI.
-
-### Remember one test item
-
-Open **Remember** and enter something stable, self-contained, future-useful, and secret-free. Leave advanced options collapsed so the independent task Agent can select a target, deduplicate, and distill.
-
-Writing starts only after confirmation. Canceling the dialog changes no state.
-
-### Verify recall
-
-1. Open **Memory Spaces → Recall**.
-2. Ask a concrete question that should match the item.
-3. Use **Direct recall** first to inspect raw evidence.
-4. Confirm the result retains its Memory Space, category, importance, score, and ID.
+![Direct search across the active memory spaces](../../assets/webui-v0.5.19/en/memory-recall.jpg)
 
 You can also use conversation commands:
 
@@ -229,19 +111,34 @@ You can also use conversation commands:
 /mnemon recall <focused query>
 ```
 
-## 7. Verify memory inside a conversation
+## 4. Use memory in a conversation
 
-Ask a question that genuinely depends on history and allow the Agent to decide whether recall helps. After completion:
+Ask a question that depends on what you stored, and let the Agent decide whether it needs memory. After the reply:
 
-- Turn memory appears below the reply if the turn used memory tools.
-- Expanding shows exact tools and links to their pages.
-- Save to memory opens an editable confirmation; canceling performs no write.
+- a **Turn memory** line appears if the turn used memory; expand it to see the documents and memories each tool read or wrote, and select one to open it where it lives;
+- the brain mark under the reply is **Save to memory**: it opens an editable dialog, **Cancel** writes nothing, and sending it to the task Agent returns a receipt.
 
-Ordinary conversation should not force recall. Current requests, repository files, and live tool results outrank historical content.
+![An answer that uses working memory, Project Documents and Memory Spaces, with the items the turn read](../../assets/webui-v0.5.19/en/chat-recall.jpg)
 
-## 8. Next steps
+Ordinary conversation does not force recall. Current requests, repository files and live tool results outrank remembered history.
 
-- Use the [Sidebar and conversation UI guide](./ui-guide.md) to learn every page.
-- Use the [storage model](../reference/storage-model.md) to choose Runtime, Documents, or Memory Spaces.
-- Use the [configuration reference](../reference/configuration.md) for Workspace scope, read-only behavior, and lifecycle switches.
-- Use the [operations guide](./operations.md) to export your first ZIP backup and establish a pre-upgrade checklist.
+## 5. Choose how memory is composed
+
+Open **Plugins → dsh-mnemon**, or the gear in the Memory System header.
+
+![The Memory composition board](../../assets/webui-v0.5.19/en/plugin-composition.jpg)
+
+- **Main strategy**: keep the **Layered strategy**, or choose the **General strategy** to offer every available source in one budget and let the model decide.
+- **Memory sources**: Runtime memory, Project Documents and Memory Spaces, one switch each. Turning one off stops its context, tools and background work without deleting data.
+- **Enhancements**: Active capture, Light context and Scoped composition are off by default; each works with either main strategy.
+- **Storage**: Global (default) shares one directory; Workspace keeps each workspace's own `.mnemon`; Centralized keeps each workspace under one root. **Data directory** is Default or Custom. Changing either never moves existing data.
+- **Interface**: open the Memory System in the sidebar or as a conversation tab, and turn the conversation controls on or off.
+
+Switches and selectors apply at once; storage changes wait for **Apply**. The [UI guide](./ui-guide.md#on-the-plugins-page) covers every page, and [Configuration](../reference/configuration.md) lists the settings behind them.
+
+## 6. Next steps
+
+- Learn every page in the [UI guide](./ui-guide.md).
+- Decide what belongs in runtime memory, documents or memory spaces with the [storage model](../reference/storage-model.md).
+- Export your first ZIP backup and prepare for upgrades with the [operations guide](./operations.md).
+- Connect a long-term backend with the [Provider guide](./memory-providers.md).

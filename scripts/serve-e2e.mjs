@@ -2,6 +2,8 @@
 // Real DSH WebUI with disposable state and a loopback-only model stub.
 // Run after pnpm build && pnpm --workspace-concurrency=4 -r build; stop with Ctrl-C to remove the fixture.
 // Set MNEMON_E2E_PORT to keep one WebUI address across SIGUSR2 restarts.
+// --live-model answers with the real DeepSeek API instead: it reads DEEPSEEK_API_KEY
+// (and DEEPSEEK_BASE_URL when set) from the caller's environment and never stores them.
 import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
@@ -18,12 +20,15 @@ import { reviewEvidenceModel, scopedOverviewPlugin } from './fixtures/review-evi
 import { openVikingWriteModel } from './fixtures/openviking-write-model.mjs'
 import { idleReviewModel } from './fixtures/idle-review-model.mjs'
 import { generalStrategyModel } from './fixtures/general-strategy-model.mjs'
+import { DOCS_DEMO_LANGUAGES, docsDemoAssistant, docsDemoModel, seedDocsDemo } from './fixtures/docs-demo.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const flags = new Set(process.argv.slice(2))
 let betterSidebarRoot
 let electronExecutable
 let trustedHost
+// Documentation media: a seeded fictional project and a model that reads it through the real tools.
+let docsDemo
 for (const flag of flags) {
   if (flag === '--strategy-extensions') continue
   if (flag === '--document-protection') continue
@@ -40,6 +45,12 @@ for (const flag of flags) {
   if (flag === '--general-strategy') continue
   if (flag === '--without-mnemon-cli') continue
   if (flag === '--remote-management') continue
+  if (flag === '--live-model') continue
+  if (flag === '--docs-demo' || flag.startsWith('--docs-demo=')) {
+    docsDemo = flag === '--docs-demo' ? 'zh-CN' : flag.slice('--docs-demo='.length)
+    if (!DOCS_DEMO_LANGUAGES.includes(docsDemo)) throw new Error('--docs-demo accepts ' + DOCS_DEMO_LANGUAGES.join(' or '))
+    continue
+  }
   if (flag.startsWith('--electron=')) {
     const value = flag.slice('--electron='.length)
     if (value === '') throw new Error('--electron requires an Electron executable')
@@ -64,6 +75,8 @@ const extensionNames = ['dsh-mnemon-strategy-scoped', 'dsh-mnemon-strategy-light
 // Strategy packages that also register themselves as bundles; the Starter row owns them.
 const selfRegistering = new Set([...extensionNames, 'dsh-mnemon-strategy-general'])
 const extensionsEnabled = flags.has('--strategy-extensions')
+const liveModel = flags.has('--live-model')
+if (liveModel && !process.env.DEEPSEEK_API_KEY?.trim()) throw new Error('--live-model reads the model key from DEEPSEEK_API_KEY')
 const runtimeArchive = flags.has('--runtime-archive')
 const fixture = await mkdtemp(join(tmpdir(), 'mnemon-web-e2e-'))
 const dshHome = join(fixture, 'dsh-home')
@@ -91,14 +104,15 @@ const archiveProvider = runtimeArchive ? createServer(async (request, response) 
 if (archiveProvider) await new Promise(resolveListen => archiveProvider.listen(0, '127.0.0.1', resolveListen))
 const protectionModel = flags.has('--document-protection') ? documentProtectionModel(event => console.log('Document protection: ' + JSON.stringify(event))) : undefined
 const reviewModel = flags.has('--review-evidence') ? reviewEvidenceModel(event => console.log('Review evidence: ' + JSON.stringify(event))) : undefined
-const scriptedModel = flags.has('--runtime-routing') ? runtimeRoutingModel(event => console.log('Runtime routing: ' + JSON.stringify(event)))
+const scriptedModel = liveModel ? undefined : flags.has('--runtime-routing') ? runtimeRoutingModel(event => console.log('Runtime routing: ' + JSON.stringify(event)))
   : flags.has('--openviking-write') ? openVikingWriteModel(event => console.log('OpenViking write: ' + JSON.stringify(event)))
   : flags.has('--idle-review') ? idleReviewModel(event => console.log('Idle review: ' + JSON.stringify(event)))
   : flags.has('--general-strategy') ? generalStrategyModel(event => console.log('General strategy: ' + JSON.stringify(event)))
   : flags.has('--runtime-write-scope') ? runtimeWriteScopeModel(event => console.log('Runtime write scope: ' + JSON.stringify(event)))
   : flags.has('--result-tool-cache') ? resultToolCacheModel(event => console.log('Result tool cache: ' + JSON.stringify(event)))
   : flags.has('--legacy-session-replay') ? legacySessionReplayModel(event => console.log('Legacy replay: ' + JSON.stringify(event)))
-  : flags.has('--document-archive') ? documentArchiveModel(event => console.log('Document archive: ' + JSON.stringify(event))) : reviewModel ?? protectionModel
+  : flags.has('--document-archive') ? documentArchiveModel(event => console.log('Document archive: ' + JSON.stringify(event)))
+  : docsDemo !== undefined ? docsDemoModel(docsDemo, event => console.log('Docs demo: ' + JSON.stringify(event))) : reviewModel ?? protectionModel
 const reviewFailure = flags.has('--review-failure')
 /**
  * DSH's DeepSeek adapter speaks the Messages protocol. Scripted fixtures read
@@ -167,8 +181,8 @@ const env = {
   ...process.env,
   DSH_HOME: dshHome,
   DSH_TELEMETRY_DISABLED: '1',
-  DEEPSEEK_API_KEY: 'isolated-test-key',
-  DEEPSEEK_BASE_URL: `http://127.0.0.1:${model.address().port}`,
+  // A live run keeps the caller's key and endpoint; otherwise the loopback stub answers.
+  ...(liveModel ? {} : { DEEPSEEK_API_KEY: 'isolated-test-key', DEEPSEEK_BASE_URL: `http://127.0.0.1:${model.address().port}` }),
   MNEMON_DATA_DIR: dataDir,
 }
 const dshBin = join(root, 'node_modules/@deepseek-ai/dsh/lib/bin.js')
@@ -232,7 +246,11 @@ try {
   // PTY/search tools are disabled so a test cannot launch workspace commands.
   const disabled = ['subprocess', 'open-in-app', 'bash-sandbox', 'pwsh-sandbox', 'tool-bash', 'tool-pwsh', 'permission', 'tool-fs-search', 'directory-picker']
   // A test-owned preset uses all Host memory tools without the shipped
-  // presets' shell requirements. Never modify a shipped DSH preset.
+  // presets' shell requirements. Never modify a shipped DSH preset. The docs
+  // demo names it after its fictional project.
+  const assistant = docsDemo === undefined
+    ? { name: 'Mnemon E2E', description: 'Isolated memory UI test (no Shell).', persona: 'You are testing the Mnemon memory UI.' }
+    : docsDemoAssistant(docsDemo)
   const browsePicker = `- id: agent-preset-registry
   config:
     default: mnemon-e2e
@@ -241,14 +259,14 @@ try {
       name: '@deepseek-ai/dsh-agent-preset'
       config:
         id: mnemon-e2e
-        name: Mnemon E2E
-        description: Isolated memory UI test (no Shell).
+        name: ${JSON.stringify(assistant.name)}
+        description: ${JSON.stringify(assistant.description)}
         order: 0
         plugins:
           - id: persona
             name: '@deepseek-ai/dsh-persona'
             config:
-              prefix: You are testing the Mnemon memory UI.
+              prefix: ${JSON.stringify(assistant.persona)}
     - id: e2e-directory-picker
       name: '@deepseek-ai/dsh-host-directory-picker-browse'
     - id: e2e-directory-picker-ui
@@ -269,10 +287,15 @@ try {
     + (reviewModel === undefined ? '' : '- insert:\n    - id: review-evidence-fixture\n      name: ' + JSON.stringify(reviewFixture) + '\n')
     + (extensionsEnabled ? extensionNames.map(name => `- id: ${name.slice(4)}\n  disabled: false\n`).join('') : ''))
   await writeFile(join(workspace, 'README.md'), '# Mnemon isolated browser test\n\nNo production memory or credentials are used.\n')
+  if (docsDemo !== undefined) {
+    await seedDocsDemo({ dataDir, workspace, language: docsDemo })
+    console.log('Docs demo seeded (' + docsDemo + ')' + (liveModel ? '.' : '; ask about checkout, then ask to remember a new target.'))
+  }
   console.log('Fixture: ' + fixture)
   console.log('Workspace: ' + workspace)
   console.log('Fixture PID: ' + process.pid + ' (SIGUSR2 restarts WebUI, retaining test data)')
-  console.log('For a conversation, choose the Mnemon E2E preset in the WebUI.')
+  console.log('For a conversation, choose the ' + assistant.name + ' preset in the WebUI.')
+  if (liveModel) console.log('Live model: the DeepSeek API answers; scripted replies are off.')
   if (archiveProvider) console.log('Runtime archive Hindsight endpoint: http://127.0.0.1:' + archiveProvider.address().port)
   launch()
 } catch (error) {

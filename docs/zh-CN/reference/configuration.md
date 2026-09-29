@@ -14,7 +14,18 @@ Web profile 的 patch 通常是 `~/.dsh/profiles/web/cordis.patch.yml`。旧宿�
 
 执行中的回合保留已固定的运行图。已经派发的子 Agent 保留委托运行图直到本次 activation 销毁，即使父回合已结束；后续父回合和新委托的 activation 使用新 generation。保存设置不会静默扩大既有任务的 Recall 权限。
 
-与 DSH 0.1.7 对所有自带配置的插件一样，Web 界面在“插件”中该插件自己的页面编辑配置，而不在“设置”中。**插件 → 可组合记忆**页面编辑 `storageScope`、独立的 `runtimeUserScope`、`dataDir`、Mnemon Native 的 Ollama 嵌入覆盖、记忆组合（主策略、每个记忆来源与增强的开关，以及各组件声明的选项）、后台任务 Agent 的模型路由，以及 `mnemon-ui` 下的回合记忆栏和存入记忆按钮。页面只保留记忆组合、存储与界面；各组件自己的设置在它的组件页中（点击组件名称打开）：USER.md 用户画像范围在“运行时记忆”页面，记忆 Provider 与嵌入在“记忆空间”页面，后台任务 Agent 路由与空闲审查在“分层策略”页面。记忆层与为它服务的 Source 组件共用一个开关。“存储”中的“全局 / 工作区 / 集中存储 · 按工作区隔离”是整个记忆系统的范围；同组的“数据目录”选择“默认”或“自定义”：全局范围下的自定义目录即为 `custom`，集中存储下它是集中根目录；USER.md 用户画像也可以显式保持全局，而项目记忆继续跟随该范围；ZIP 备份与迁移也在“存储”中。Mnemon Native 是第一张 Provider 卡片，只包含嵌入运行配置。每个第三方 Provider 有独立的服务配置折叠栏，保存 endpoint、凭据或可执行文件等可复用服务信息。启用或保存时发现 Provider 已有的命名空间，并同步到“记忆空间 → 概览”；禁用只移除本地映射，不删除 Provider 数据。其他高级项需要直接修改 YAML。
+与 DSH 0.1.7 对所有自带配置的插件一样，Web 界面在“插件”中该插件自己的页面编辑 Mnemon 的设置，而不在“设置”中。[界面指南](../guides/ui-guide.md#在插件页中)展示了每个部分。
+
+| 界面位置 | 设置 | 保存为 |
+|---|---|---|
+| 记忆组合 | 主策略；每个记忆来源与增强各一个开关；各组件声明的选项 | `memoryView.strategyTypeId` 与 `memoryView.entries.<entry>.config`；组件的开关状态由 DSH 插件管理器写为对应 Entry 的 `disabled` 行 |
+| 存储 | 存储范围、数据目录、备份与迁移 | `storageScope`、`dataDir` |
+| 界面 | 记忆系统入口、回合记忆栏、存入记忆按钮 | `displayMode`、`conversationInteraction.turnBar`、`conversationInteraction.saveAction` |
+| 运行时记忆页面 | 用户画像范围 | `runtimeUserScope` |
+| 记忆空间页面 | 记忆 Provider；Mnemon Native 嵌入（自动、Ollama 或 OpenAI 兼容） | `state/memory-providers.json` 中的 Provider 注册表；`embedding` |
+| 分层策略页面 | 任务 Agent 模型；空闲审查 | `taskAgentModel`；`idleReview` |
+
+开关与选择器立即生效；存储目录、嵌入连接、审查参数与组件选项等需要输入的值要点击**应用**。Provider 可复用的服务字段（服务地址、凭据、可执行文件）保存在 Provider 注册表中，而不是 Mnemon 的 YAML；启用或保存 Provider 时，会把它已有的命名空间发现到**记忆空间 → 概览**，关闭时只移除这些本地映射。其他高级项需要直接修改 YAML。
 
 OpenViking user key 没有 admin 权限时，可组合服务字段 `discoveryUser`、`endpoint`、`apiKey`、`account`，显式发现单个用户的记忆空间；`discoveryUser` 留空仍枚举 admin。服务字段保存在 Memory Spaces 的 Provider 注册表，不是新的 Mnemon 顶层 YAML 设置。参见 [OpenViking 配置与兼容性](../guides/memory-providers.md#运维边界)。
 
@@ -87,7 +98,11 @@ mnemon:
 | `runtimeMemory.userLimitBytes` | `4096` | 1–1048576 字节 | 完整 `USER.md` 投影的 UTF-8 字节上限 |
 | `runtimeMemory.maintenanceMaxTokens` | `8192` | 1–1000000 tokens | Runtime 迁移与压缩 worker 的完成 token 预算；不改变项目档案归档与元信息维护预算 |
 | `embedding` | `{ enabled: false, endpoint: http://localhost:11434, model: nomic-embed-text, apiKey: '', protocol: auto }` | enabled + HTTP(S) endpoint + model + 可选 apiKey + protocol（auto/ollama/openai） | 开启后，Host 为每个 Mnemon CLI 子进程注入保存的 endpoint、模型、API Key 与协议覆盖；endpoint 以 `/v1` 结尾时 Mnemon 自动使用 OpenAI 兼容协议并以 Bearer 头携带 apiKey，`protocol: openai` 可对非 `/v1` 端点显式指定；关闭后不干预既有 Host 环境和 Mnemon 默认值 |
-| `memoryTopology.layers.<id>.enabled` | 三个默认层为 `true` | boolean | 是否让该 Source 参与；关闭不会删除或迁移已有数据 |
+| `memoryTopology.layers.<id>.enabled` | 三个默认层为 `true` | boolean | 旧版记忆层标记。记忆组合中 Source 的开关会打开或关闭它的 DSH Entry，并同时恢复这个标记；读不到组件时才使用它。关闭 Source 不会删除或迁移数据 |
+| `memoryTopology.layers.<id>.participation` | 每层各自的默认值 | `recall`、`write`、`projection`、`maintenance` 分别取 `off` / `manual` / `automatic` | 分层策略下每一层如何参与各类工作 |
+| `memoryView.strategyTypeId` | 未设置 | Strategy type id，例如 `default-three-tier` 或 `general` | 当前选择的主策略，由**主策略**选择器写入，优先于 `memoryTopology.strategyId` |
+| `memoryView.entries.<entry>.config` | `{}` | 组件声明的选项 | 在组件页保存的选项。开关状态不在这里：DSH 插件管理器把它写为 profile patch 中对应 Entry 的 `disabled` 行，早先保存的选择会一次性迁移过去 |
+| `persistenceStrategy` | `{ mode: manual }` | `manual` / `automatic`、`providerId`、`prompt`、`rules` | 新空间的 Provider：任务 Agent 新建记忆空间时固定使用一个 Provider，或按允许的 Provider、数据边界、必需能力与偏好智能选择；已有空间仍按名称与说明路由 |
 | `recallQuality.policy` | `strict-v1` | 已注册策略 ID | 在召回正文序列化给 Agent 或客户端前执行的确定性策略 |
 | `recallQuality.lowScoreThreshold` | `0.25` | 0–1，低于高分阈值 | `strict-v1` 会移除低于此边界的标准化分数结果 |
 | `recallQuality.highScoreThreshold` | `0.6` | 0–1，高于低分阈值 | 保留结果达到此边界时标记为高相关度 |
@@ -110,12 +125,12 @@ mnemon:
 | `displayMode` | `sidebar` | `sidebar` / `builtin`；兼容旧值 `buildin` | 记忆系统入口：独立 Sidebar 或会话内标签页，共用同一工作台；旧拼写自动迁移为 `builtin` |
 | `tabEnabled` | `true` | boolean | 是否挂载所选入口和工作台；关闭后 Host RPC、命令和 Agent 工具保持注册 |
 | `writeEnabled` | `true` | boolean | 是否暴露语义写工具、写 RPC 和写命令 |
-| `taskAgentModel` | `{ mode: inherit }` | `inherit` / `fixed` | AI 元信息、Agent 查询、记忆沉淀和档案归档使用的独立任务 Agent，以及空闲复盘 worker 的模型路由；`fixed` 必须同时保存 `provider` 与 `model`，并会钉住对应的写入、证据问答、Provider 选择、迁移、压缩、归档和元信息维护 worker。对话中的 Recall 与 Related 是 Host 直接读取，不使用该路由 |
-| `remoteAccess` | `read-only` | `read-only` / `trusted-host` | 非 loopback Mnemon 管理授权，仅启动时读取；由 API Gateway 映射执行，并保留旧 DSH 0.1.1-rc.2 通道策略 |
-| `mnemon-ui.turnBar` | `true` | boolean | 回合尾记忆活动条；默认开启，**保存后实时生效** |
-| `mnemon-ui.saveAction` | `true` | boolean | 已定稿助手回复旁的「存入记忆」图标与确认弹窗；默认开启，**保存后实时生效** |
+| `taskAgentModel` | `{ mode: inherit }` | `inherit` / `fixed` | 整理名称与说明、Agent 查询、存入记忆和档案归档使用的独立任务 Agent，以及空闲复盘 worker 的模型路由；`fixed` 必须同时保存 `provider` 与 `model`，并会钉住对应的写入、证据问答、Provider 选择、迁移、压缩、归档和元信息维护 worker。对话中的 Recall 与 Related 是 Host 直接读取，不使用该路由 |
+| `remoteAccess` | `read-only` | `read-only` / `trusted-host` | 非 loopback Mnemon 管理授权，仅启动时读取，由 API Gateway 映射执行 |
+| `conversationInteraction.turnBar` | `true` | boolean | 回复下方的回合记忆栏，立即生效 |
+| `conversationInteraction.saveAction` | `true` | boolean | 已完成回复上的**存入记忆**操作及其确认框，立即生效 |
 
-`mnemon` Host/存储命名空间和 `mnemon-ui` 浏览器呈现命名空间都实时生效。存储根只会在新运行图初始化成功后原子切换；旧版 `mnemon.conversationInteraction` 仍会作为迁移默认值读取，但新保存只写入 `mnemon-ui`。
+所有值都保存在 `mnemon` 条目下并实时生效：界面的 `mnemon-ui` 设置范围保存为 `conversationInteraction`，`mnemon-view` 设置范围保存为 `memoryView`。存储根只会在新运行图初始化成功后原子切换。
 
 ### Runtime Memory 容量与维护预算
 
@@ -133,11 +148,9 @@ mnemon:
 
 存储字节上限计算条目正文和分隔符。模型快照中的重要性与时间跨度注释不占用存储容量，但会占用 Strategy 已有的投影字符预算；它们不增加排序、相关性过滤或独立配置。
 
-下方两张独立浅色截图来自 v0.5.4，保留同一批 20 条导入的运行时记忆。第一张使用默认 USER 4 KB / MEMORY 10 KB，第二张展示已保存的 USER 10 KB / MEMORY 20 KB 配置；列表均筛选为两条用户画像。采集后已将临时环境恢复为默认容量。
+运行时记忆页面显示每个文件的已用大小与上限。
 
-![默认 USER 4 KB 与 MEMORY 10 KB 容量](../../assets/webui-v0.5.4/zh-CN/runtime.jpg)
-
-![配置为 USER 10 KB 与 MEMORY 20 KB，导入数据不变](../../assets/webui-v0.5.4/zh-CN/runtime-configured.jpg)
+![运行时记忆：USER.md 与 MEMORY.md 及其默认上限](../../assets/webui-v0.5.19/zh-CN/memory-runtime.jpg)
 
 ### Mnemon Native 嵌入
 
@@ -167,17 +180,15 @@ Host 会复制正常进程环境，然后只在子进程中覆盖 `MNEMON_EMBED_
 
 Endpoint 必须是不含凭据、查询参数或片段的 HTTP(S) 绝对 URL。Mnemon 会把记忆与查询正文发给该服务；apiKey 与其他设置一样保存在 DSH 设置文件中，远程明文 HTTP 会暴露传输内容，请使用受信任的回环地址或 HTTPS。“测试状态”会针对当前默认 Store 执行实际生效的 `mnemon embed --status`，只报告嵌入服务可达性、模型、Mnemon 报告的解析协议与嵌入覆盖率，不会回填或改写记忆。有未保存编辑时必须先保存，避免把草稿值误报成已生效。
 
-### 记忆层开关
+### 记忆来源开关
 
-每层只有一个总开关。`enabled=true` 表示允许默认策略在需要时使用该层，并不强制每回合召回或写入；`enabled=false` 会同时停止该层的上下文注入、模型调用、后台处理和数据面 Web/RPC 操作。
+每个记忆 Source 在**记忆组合**中有一个开关。它通过 DSH 插件管理器打开或关闭该 Source 的 DSH Entry，并在 profile patch 中保存为对应 Entry 的 `disabled` 行。打开表示允许主策略在需要时使用该 Source，并不强制每一轮召回或写入；关闭会同时停止它的上下文注入、工具、后台任务与数据面 Web/RPC 操作。
 
-[![v0.5.4 浅色中文设置页：三个默认记忆层各有一个总开关](../../assets/webui-v0.5.4/zh-CN/settings-layers.jpg)](../../assets/webui-v0.5.4/zh-CN/settings-layers.jpg)
+![记忆组合：每个记忆来源与增强各有一个开关](../../assets/webui-v0.5.19/zh-CN/plugin-composition.jpg)
 
-关闭是可逆的路由状态，不是删除操作。Sidebar 中对应 Tab 会保留并标记“已关闭”，页面不会读取数据面；状态、Catalog 和管理目录仍可观察。重新开启后使用原目录和原数据。
+关闭是可逆的路由状态，不是删除。它在记忆系统中的页面会保留并标记为**未运行**，不读取数据面；状态页与管理目录仍可查看。重新打开后使用原来的目录与数据。最后一个运行中的 Source 不能关闭。旧版的 `memoryTopology.layers.<id>.enabled` 标记会随 Source 一起恢复，只在读不到组件时使用。
 
-[![关闭项目档案后的实际中文 Sidebar：Tab 保留，数据不被读取或删除](../../assets/webui-v0.5.4/zh-CN/documents-disabled.jpg)](../../assets/webui-v0.5.4/zh-CN/documents-disabled.jpg)
-
-WebUI 从实时管理目录读取 Source 实例，新增 Source 无须修改前端枚举。沿用的 `memoryTopology.layers` 是配置输入，不代表另有 Source 运行时。Source type id 匹配配置，Strategy 选择精确实例 key。设置更新有修订栅栏，候选组合验证成功后才替换；Core/Source 再检查能力、范围与当前权限。
+WebUI 从实时管理目录读取 Source 实例，新增 Source 无须修改前端。Source type id 匹配配置，Strategy 选择精确的实例 key。设置更新有修订栅栏，候选组合验证成功后才会替换。Core 与 Source 边界会再次检查能力、范围与当前授权。
 
 ### 召回质量策略
 
@@ -187,13 +198,9 @@ WebUI 从实时管理目录读取 Source 实例，新增 Source 无须修改前�
 
 ### 浏览器认证
 
-旧通道的注册方式支持稳定的 DSH 0.1.2-rc.1 基线、它的 alpha.5 前序版本和上一条 0.1.1-rc.2 版本线。Mnemon 传入 rc.2 所需的末尾 authority 对象，0.1.2 的双参数 JavaScript 实现会自然忽略该参数；远程 Gateway 映射单独执行管理授权。
+DSH 负责浏览器认证或配对，以及 Host/Origin 校验。远程页面使用命名空间 API Gateway，本地回环客户端与 DSH 桌面版窗口（`dsh-app://app/`）使用各自的通道；只有 DSH 为页面声明了不持有 Host 的传输方式时，应用页面才按远程页面处理。Mnemon 网关映射单独执行 `remoteAccess`：`read-only` 允许普通读取、小范围激活和设置查看，但拒绝写入、ZIP 操作、View 变更与设置修改；没有 `trusted-host` 授权时，设置快照报告 `writable: false`。修改这项仅在启动时读取的策略后请重启 DSH。DSH `trustedHosts` 不能代替 HTTPS 或部署层访问控制。`writeEnabled=false` 是产品级只读模式，不能代替传输层认证。
 
-DSH 负责浏览器认证或配对，以及 Host/Origin 校验。从 dsh-mnemon v0.5.5 起，远程页面使用命名空间 API Gateway，本地回环客户端保留旧通道。Mnemon 网关映射单独执行 `remoteAccess`：`read-only` 允许普通读取、小范围激活和设置查看，但拒绝写入、ZIP 操作、View mutation 和设置修改；未授予 `trusted-host` 时，设置快照返回 `writable: false`。此策略仅启动时读取，修改后需重启 DSH。DSH `trustedHosts` 不能替代 HTTPS 或部署层访问控制。
-
-在 DSH 0.1.1-rc.2 上，`remoteAccess` 仍是真实的启动时安全边界，不能通过 Web settings 修改。默认 `read-only` 会把设置、ZIP 备份、Provider 连接和宽泛 mutation 限制在 loopback；只有部署层已经提供可靠认证时，才可使用 `trusted-host` 将三个管理通道整体提升。所有受支持版本中的 `writeEnabled=false` 都只是产品级只读模式，不能替代 transport 身份认证。
-
-完整的代理、启动 token、可信 authority、rc.2 回滚 patch、重启与验证流程见[云端 WebUI](../guides/operations.md#cloud-hosted-webui)。
+完整的代理、启动 token、可信 authority、重启与验证流程见[云端 WebUI](../guides/operations.md#cloud-hosted-webui)。
 
 ## 存储范围
 
@@ -213,7 +220,7 @@ Agent / 工具 / 生命周期：resolve(currentSession.header.cwd, ".mnemon")
 Web 工作台查看：resolve(workspaceRegistry.get(selectedWorkspaceId).path, ".mnemon")
 ```
 
-每个 DSH 工作区拥有独立的三层记忆根。对话 Agent、模型工具、命令和生命周期按当前会话的 cwd 路由；Web 发起的独立任务 Agent 则显式使用工作台选择的 Host 已登记工作区，不能提交任意路径。因此，没有选中主会话时，AI 元信息、Agent 查询、记忆沉淀和档案归档仍会写入左上角选定的工作区。
+每个 DSH 工作区拥有独立的记忆根，包含运行时记忆、项目档案与记忆空间。对话 Agent、模型工具、命令和生命周期按当前会话的 cwd 路由；Web 发起的独立任务 Agent 则显式使用工作台选择的 Host 已登记工作区，不能提交任意路径。因此，没有选中主会话时，整理名称与说明、Agent 查询、存入记忆和档案归档仍会写入记忆系统顶栏选定的工作区。
 
 Headless 没有 `workspaceRegistry`；其新 session 的 cwd 就是启动 `dsh --profile headless ...` 的目录，因此 `workspace` 直接解析为 `<启动命令 cwd>/.mnemon`。
 
@@ -242,7 +249,7 @@ mnemon:
   runtimeUserScope: global # 可选；只共享 USER.md
 ```
 
-四个 area（`runtime`、`data`、`documents`、`state`）都保存在 `<集中根>/workspaces/<规范工作区路径的 SHA-256>/`。现存符号链接别名解析到同一 ID，不同工作区路径相互隔离。移动或重命名会选择新 ID，不会自动迁移。Sidebar 跟随所选的已登记工作区，Builtin 和 Headless 跟随所属会话 cwd。即使集中根为自定义目录，全局 USER.md 仍使用 `MNEMON_DATA_DIR` 或 `~/.mnemon`。
+四个 area（`runtime`、`data`、`documents`、`state`）都保存在 `<集中根>/workspaces/<规范工作区路径的 SHA-256>/`。现存符号链接别名解析到同一 ID，不同工作区路径相互隔离。移动或重命名会选择新 ID，不会自动迁移。侧栏跟随所选的已登记工作区，会话标签页和 Headless 跟随所属会话 cwd。即使集中根为自定义目录，全局 USER.md 仍使用 `MNEMON_DATA_DIR` 或 `~/.mnemon`。
 
 工作区身份解析允许尚未创建的目录后代，包括 Unicode 名称和符号链接别名下的后代。若路径位于现存文件之下，所有平台（包括 Windows）都会在计算存储 ID 之前以 `ENOTDIR` 拒绝。有效 ID 保持不变，既有存储不会被移动、改写或删除。
 
@@ -268,7 +275,7 @@ mnemon:
 
 Mnemon Native 通过 `data/<store>/mnemon.db` 与其他 Mnemon-enabled Agent 原生互操作；三方引擎通过配置的 Provider 作用域互操作。Runtime、Documents、DSH 激活状态和 UI 元数据仍属于 dsh-mnemon 管理范围。见[长期记忆 Provider](../guides/memory-providers.md)。
 
-第三方服务配置、记忆空间范围配置与 Secret 保存在当前范围根目录的 `state/memory-providers.json`，不会写入 `settings.yaml`。服务配置由同一 Provider 的多个记忆空间复用；运行时才与单个记忆空间配置合并。Mnemon Native 的 ZIP 只包含 Runtime、Documents 与原生记忆空间；第三方服务数据、连接凭据和本地三方 Store 不进入该 ZIP。
+第三方服务配置、记忆空间范围配置与 Secret 保存在当前范围根目录的 `state/memory-providers.json`，不会写入 profile patch。服务配置由同一 Provider 的多个记忆空间复用；运行时才与单个记忆空间配置合并。Mnemon Native 的 ZIP 只包含 Runtime、Documents 与原生记忆空间；第三方服务数据、连接凭据和本地三方 Store 不进入该 ZIP。
 
 ## CLI 发现优先级
 
@@ -301,7 +308,7 @@ Memory Space 目录建立后，长期语义操作使用明确的记忆空间 ID�
 
 ## 后台任务 Agent 的模型路由
 
-AI 元信息、Agent 查询、工作台/对话区的记忆沉淀和档案归档会创建一个无会话历史的独立顶层任务 Agent。它使用当前查看工作区作为 cwd；即使没有选中主 Agent session，也能落到左上角选定工作区。任务完成后 Agent 会被释放。
+整理名称与说明、Agent 查询、记忆系统与对话中的存入记忆和档案归档会创建一个无会话历史的独立顶层任务 Agent。它使用当前查看工作区作为 cwd；即使没有选中主 Agent session，也能落到左上角选定工作区。任务完成后 Agent 会被释放。
 
 默认的 `inherit` 先使用 DSH“创建新会话”时的默认 Provider / Model；该路由不可用时才沿用当前可用主 Agent 的完整模型路由。在“分层策略”页面的“后台任务 → 任务 Agent 模型”中选择“指定模型”后，会保存完整的 Provider + Model，并只覆盖 Mnemon 后台任务，不改变对话主 Agent。独立任务 Agent 内部如需语义判断，仍可调度受限 worker；该 worker 继承任务 Agent 的模型路由。
 
@@ -313,7 +320,7 @@ mnemon:
     model: deepseek-chat
 ```
 
-DSH 0.1.1-rc.2 会在实时模型目录中提供各模型声明的输入模态。dsh-mnemon 保留这些元数据，并为支持图片的选项标记**图片输入**；0.1.1 预发布版本线提供的第一方图片输入项是 `deepseek-official/deepseek-v4-flash-vision-exp`。选中它不代表当前 Mnemon 后台任务会摄取图片：AI 元信息、Agent 查询、记忆沉淀、智能选择与档案归档仍只提交文本和有界证据。在主对话中，dsh-mnemon 追加生命周期指引时会保留 DSH 管理的图片块及其持久 attachment 引用，活动阈值只计算文本块。原始图片字节不会复制进 Runtime、Documents 或 Memory Spaces。
+DSH 的实时模型目录会报告各模型的输入模态，选择器为支持图片的模型标记**图片输入**。选中它不代表 Mnemon 后台任务会摄取图片：整理名称与说明、Agent 查询、存入记忆、智能选择与档案归档仍只提交文本与有界证据。在主对话中，dsh-mnemon 追加生命周期指引时会保留 DSH 管理的图片块及其附件引用，活动阈值只计算文本块。原始图片字节不会复制进运行时记忆、项目档案或记忆空间。
 
 ## Provider 要求
 
@@ -333,11 +340,11 @@ depthLimit   = true
 
 **Agent Teams 兼容：**现有配置默认保留 `idleReview.agentTeams: pause`。同时检测到公开 `agentTeams` 服务与父 Agent 作用域的 `spawn_teammate` 工具时，在创建子代理前暂停。仅加载 TeamService 不会暂停审查。
 
-DSH 与全部官方 Agent Teams 组件均为 **0.1.7-rc.2** 时，可在**插件 → 可组合记忆**页面的空闲审查中选择**受限子代理审查**，或设置 `idleReview.agentTeams: scoped`。该已发布 Team 策略兼容有界 spawn 与显式 fork。此模式仍检查父子归属、本地子代理发布、`maxDepth: 1` 和单调的审查工具白名单（包括 Code Mode 子调用）。审查子代理仍不能使用 Team 工具或再次委派；父 Agent 保留 Teams。不会猜测包版本或移除其他插件的策略。缺少 guard/归属能力或策略报错时，运行失败且不通过 fallback 重放。保留 `pause` 可在安装 Team 工具时不运行审查；也可设置 `idleReview.enabled: false`，只关闭审查，保留 Teams、召回与主动写入。
+DSH 与全部官方 Agent Teams 组件均为 **0.1.7-rc.2** 时，可在分层策略页面（**插件 → 可组合记忆**）的空闲审查中选择**受限子代理审查**，或设置 `idleReview.agentTeams: scoped`。该已发布 Team 策略兼容有界 spawn 与显式 fork。此模式仍检查父子归属、本地子代理发布、`maxDepth: 1` 和单调的审查工具白名单（包括 Code Mode 子调用）。审查子代理仍不能使用 Team 工具或再次委派；父 Agent 保留 Teams。不会猜测包版本或移除其他插件的策略。缺少 guard/归属能力或策略报错时，运行失败且不通过 fallback 重放。保留 `pause` 可在安装 Team 工具时不运行审查；也可设置 `idleReview.enabled: false`，只关闭审查，保留 Teams、召回与主动写入。
 
 有界 spawn 按公开的扁平 `user/message` 事件读取真实用户证据，仅保留已完成检查点之前、当前可见的完整消息；注入的召回、摘要和没有真实用户来源的消息不会被提升为用户断言。配置的字符预算内，明确决策与禁止写入指令都以整条消息保留。
 
-失败的审查仍计为失败。如果失败前已有写入提交，工作区显示子运行 id 和已提交变更回执元数据，包括 Code Mode 外层失败前已提交的内部工具。不自动回滚或重放。手动重试前请核对该运行、档案 id 或 Runtime revision。后续审查仍遵守冷却和会话预算。只需停用此维护流程时，可在**插件 → 可组合记忆**页面或配置中使用 `idleReview.enabled: false`。
+失败的审查仍计为失败。如果失败前已有写入提交，工作区显示子运行 id 和已提交变更回执元数据，包括 Code Mode 外层失败前已提交的内部工具。不自动回滚或重放。手动重试前请核对该运行、档案 id 或 Runtime revision。后续审查仍遵守冷却和会话预算。只需停用此维护流程时，可在分层策略页面关闭**空闲审查**，或设置 `idleReview.enabled: false`。
 
 
 ## 只读配置
@@ -381,34 +388,34 @@ routingGuidance=false
 
 ## 入口位置：`displayMode` 与 `tabEnabled`
 
-记忆系统默认使用 Sidebar：从 DSH 左侧栏打开独立主内容区工作台，使用无 Mnemon Logo 的 DSH 官方风格极简皮肤。设置 `displayMode: builtin`，或在**插件 → 可组合记忆**页面选择 Builtin，即可把同一个工作台放进当前会话的 `conversation.view` 标签页。页面、导航、弹窗和样式全部共用，不维护另一套 builtin 界面。主题作者可在两种位置使用[受支持的表面选择器与自定义属性](../guides/ui-guide.md#theme-skin-overrides)。
+记忆系统默认使用 Sidebar：从 DSH 左侧栏打开独立主内容区工作台，使用无 Mnemon Logo 的 DSH 官方风格极简皮肤。设置 `displayMode: builtin`，或在**界面 → 记忆系统入口**中选择**会话标签页**，即可把同一个工作台放进当前会话的 `conversation.view` 标签页。页面、导航、弹窗和样式全部共用，不维护另一套 builtin 界面。主题作者可在两种位置使用[受支持的表面选择器与自定义属性](../guides/ui-guide.md#theme-skin-overrides)。
 
-侧栏“记忆系统”的样式、折叠图标和选中状态与 DSH 原生“插件”入口一致。重复点击仍保持打开；“返回会话”或 Escape 会回到当前会话。选择“插件”、其他原生面板或“新建会话”会切换主面板。与任务看板、SSH 切换时，同时同步面板可见性和入口状态，即使其他插件的激活通知遗漏，点击也能重新打开记忆系统。
+侧栏“记忆系统”的样式、折叠图标和选中状态与 DSH 原生“插件”入口一致。重复点击仍保持打开；**返回会话**或 Esc 会回到当前会话。选择“插件”、其他原生面板或“新建会话”会切换主面板。与任务看板、SSH 切换时，同时同步面板可见性和入口状态，即使其他插件的激活通知遗漏，点击也能重新打开记忆系统。
 
-Builtin 隐藏页眉中的存储模式标记、工作区选择和对齐控件。所有读取、写入和独立任务请求都通过现有 Host 路由跟随所属会话：
+会话标签页隐藏页眉中的存储模式标记、工作区选择和对齐控件。所有读取、写入和独立任务请求都通过现有 Host 路由跟随所属会话：
 
-| `storageScope` | Builtin 实际读写根 |
+| `storageScope` | 会话标签页的实际读写根 |
 |---|---|
 | `global` | 共享 `MNEMON_DATA_DIR` 或 `~/.mnemon`，不受会话工作区影响 |
 | `workspace` | 当前会话的 `<cwd>/.mnemon`；切换会话时自动跟随各自工作区 |
 | `custom` | 配置的 `dataDir`，不受会话工作区影响 |
 | `workspaces` | 所属会话在 `<集中根>/workspaces/<工作区路径哈希>/` 下的子目录 |
 
-既有 `runtimeUserScope: global` 例外仍让 USER.md 保持全局。切换入口不会改变范围、迁移记忆数据或恢复旧 builtin 导航。保存后实时切换入口。
+既有 `runtimeUserScope: global` 例外仍让 USER.md 保持全局。切换入口不会改变范围、迁移记忆数据或恢复旧 builtin 导航。选择后立即切换入口。
 
-规范拼写统一为 **`builtin`**。v0.4.0–v0.4.1 忽略的历史 `displayMode: buildin` 偏好会重新识别，但运行时与界面统一使用 `builtin`。Host 启动及配置外部热更新时，通过 DSH 带修订号保护的设置接口自动写回这一个字段；旧客户端 RPC 提交 `buildin` 也直接保存为 `builtin`。其他字段和配置注释保持不变，并发期间用户明确选择的 Sidebar 优先，不会被迁移覆盖。
+规范拼写统一为 **`builtin`**。历史上的 `displayMode: buildin` 偏好仍会被识别，运行时与界面统一使用 `builtin`。Host 启动及配置外部热更新时，通过 DSH 带修订号保护的设置接口自动写回这一个字段；旧客户端 RPC 提交 `buildin` 也直接保存为 `builtin`。其他字段和配置注释保持不变，并发期间用户明确选择的 Sidebar 优先，不会被迁移覆盖。
 
 在**插件 → 可组合记忆**页面保存后，当前界面会立即更新。回环页面上，Client 还会跟随 DSH 的设置文档：在其他窗口保存，或 Host 重新加载了对 profile 的修改，都无需刷新浏览器即可看到。远程页面不接收 DSH 的设置镜像，需要刷新才能看到别处的修改。
 
 如果旧值只来自组合 profile，迁移保存一条规范的用户设置覆盖，不直接改写 profile 文件。只读设置仍识别旧拼写，但不会绕过只读限制写盘；落盘失败会记录在 Host 日志中，不会关闭已归一化的入口。
 
-`tabEnabled=false` 会实时移除所选入口和工作台；重新开启后恢复配置的入口位置，两种入口不会同时出现。Host RPC、命令和工具保持注册，运行中的 Agent 或命令不会因界面开关而失效。对话内的本回合记忆与存入记忆仍由 `mnemon-ui` 独立控制，并跳转到所选入口。
+`tabEnabled=false` 会实时移除所选入口和工作台；重新开启后恢复配置的入口位置，两种入口不会同时出现。Host RPC、命令和工具保持注册，运行中的 Agent 或命令不会因界面开关而失效。对话中的回合记忆栏与存入记忆仍由各自的界面开关控制，并跳转到所选入口。
 
 ## Profile patch 覆盖
 
 包内 `cordis.patch.yml` 提供默认 config 行。DSH profile 的同 ID 配置可能整体覆盖这行。不要在 profile 的最终 patch 中只增加 `cliPath`；请改用 `MNEMON_CLI_PATH` 或用户设置 `mnemon.cliPath`。确因其他原因需要自定义 profile patch 时，应保留仍需启用的全部键，而不是假设深合并。
 
-已认证网关管理或云端 rc.2 回滚所需的 `remoteAccess` 覆盖属于这种整行自定义。请使用[远程管理操作步骤](../guides/operations.md#remote-management)中的完整、可随升级核对的示例，保留当前配置的其他字段；单独的 `config: { remoteAccess: trusted-host }` 片段会替换这些字段。
+已认证网关管理所需的 `remoteAccess` 覆盖属于这种整行自定义。请使用[远程管理操作步骤](../guides/operations.md#remote-management)中的完整、可随升级核对的示例，保留当前配置的其他字段；单独的 `config: { remoteAccess: trusted-host }` 片段会替换这些字段。
 
 ## 常见配置
 

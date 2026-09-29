@@ -7,7 +7,7 @@ This page separates shipped foundations from remaining work. Future items are di
 ## Shipped foundations
 
 - Independent Source, Strategy and Provider packages, a small public contribution service, Source-owned pages and one immutable View per executing turn.
-- A Starter with the Layered strategy as its default and three optional, composable enhancements.
+- A Starter with the Layered strategy as its default, the General strategy as an alternative main strategy, and three optional enhancements that work with either.
 - Source-local Provider descriptors, connection schemas, redaction and child-Fiber registration.
 - Public-contract tests, independently installed artifacts, isolated Headless/WebUI fixtures and selective package releases.
 

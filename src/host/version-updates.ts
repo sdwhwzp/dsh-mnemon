@@ -2,7 +2,7 @@ import { accessSync, constants, existsSync, readFileSync, readdirSync, realpathS
 import { homedir } from 'node:os'
 import { delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { findMnemonCommand, mnemonNpmLauncher, nodeLauncherEnvironment } from 'dsh-mnemon-source-memory-spaces/native-cli'
+import { findMnemonCommand, mnemonNpmLauncher, nodeLauncherEnvironment, resolveMnemonInvocation } from 'dsh-mnemon-source-memory-spaces/native-cli'
 import { runProcess, type ProcessOptions, type ProcessResult, type ProcessRunner } from './process.ts'
 import type { VersionComponentId, VersionComponentStatus, VersionInstallMode, VersionPackageId, VersionPackageStatus, VersionStatus, VersionUpdateResult } from "./protocol.ts"
 
@@ -335,8 +335,9 @@ export class VersionUpdateManager {
     const launcher = mnemonNpmLauncher(command)
     let current: string | undefined
     try {
-      current = versionFrom((await resultOrThrow(this.processRunner, launcher === undefined ? command : process.execPath, launcher === undefined ? ['--version'] : [launcher, '--version'], CHECK_TIMEOUT_MS,
-        launcher === undefined ? {} : { env: nodeLauncherEnvironment() })).stdout)
+      const invocation = resolveMnemonInvocation(command, ['--version'])
+      current = versionFrom((await resultOrThrow(this.processRunner, invocation.command, invocation.args, CHECK_TIMEOUT_MS,
+        { env: invocation.env })).stdout)
     } catch {
       return { install: { mode: launcher === undefined ? 'manual' : 'npm', command, hint: 'cli-unreadable' } }
     }

@@ -60,6 +60,28 @@ describe('independent Runtime Source client', () => {
     expect(client.mutateRuntimeMemory).not.toHaveBeenCalled()
   })
 
+  it('marks and reveals the entry a conversation turn wrote, beyond the first page too', async () => {
+    const entries = Array.from({ length: 12 }, (_, index) => ({
+      target: 'memory' as const, importance: 'normal' as const, content: index === 0 ? 'Checkout p75   LCP is 2.4 s after deferring the payment SDK.' : `Entry ${index}`,
+      created_at: `2026-08-${String(index + 1).padStart(2, '0')}T08:00:00.000Z`, updated_at: '2026-09-01T08:00:00.000Z',
+    }))
+    const snapshot = {
+      directory: '/runtime', sourcePath: '/runtime/memories.json', revision: 'fixture', generatedAt: '2026-09-01T08:00:00Z',
+      targets: {
+        user: { target: 'user', entryCount: 0, used: 0, limit: 4096, markdownPath: '/runtime/USER.md' },
+        memory: { target: 'memory', entryCount: 12, used: 100, limit: 10240, markdownPath: '/runtime/MEMORY.md' },
+      },
+      entries,
+    } as RuntimeMemorySnapshot
+    const reveal = vi.fn()
+    render(<MemorySourcePageFrame locale="en"><RuntimePage client={{ runtimeMemory: async () => snapshot, mutateRuntimeMemory: vi.fn() }} revision={0} writeEnabled={false} focusText="Checkout p75 LCP is 2.4 s after…" onRevealElement={reveal} onMutate={() => {}} /></MemorySourcePageFrame>)
+    await waitFor(() => expect(reveal).toHaveBeenCalledTimes(1))
+    const focused = document.querySelectorAll('article[data-focused]')
+    expect(focused).toHaveLength(1)
+    expect(focused[0]!.querySelector('p')?.textContent).toContain('deferring the payment SDK')
+    expect(reveal).toHaveBeenCalledWith(focused[0])
+  })
+
   it('clicks through an actual Source write and keeps a second instance isolated', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'mnemon-runtime-client-'))
     const runner = new MemoryCompositionRunner()

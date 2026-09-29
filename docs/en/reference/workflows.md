@@ -2,9 +2,11 @@
 
 [简体中文](../../zh-CN/reference/workflows.md) | **English** | [Documentation Center](../README.md)
 
+This page describes the **Layered strategy**, the default. The **General strategy** offers every available Source in one shared budget and leaves routing to the model: named tools serve their own Sources, and every other route is read with `mnemon_view_route` and changed with `mnemon_view_action`. It has no recall envelope beyond each route's own limits, no Runtime capacity maintenance or archival, and no idle review. See [Strategies and enhancements](../guides/capabilities.md#strategies-and-enhancements).
+
 ## Per-Turn Context
 
-The default composition provides stable routing guidance, a static Runtime Memory protocol, and a Wake snapshot message updated when needed:
+The Layered strategy provides stable routing guidance, a static Runtime Memory protocol, and a Wake snapshot message updated when needed:
 
 - `mnemon:routing`: a system prompt section that, when `routingGuidance=true`, provides concise boundaries for tiered queries;
 - `mnemon:runtime-memory-protocol`: a system prompt section containing the invariant Runtime Memory semantics and write rules. It is present only while the eager Runtime source participates in automatic projection and remains byte-identical across memory writes;
@@ -73,6 +75,8 @@ both attempts share at most 6 results, 1,200 characters each,
 and 4,800 total content characters for this executing Agent turn
 ```
 
+This admission envelope is the Layered strategy's per-turn policy; the General strategy applies only each route's own limits and call budget.
+
 The model-facing tool deliberately exposes no `category`, `source`, or `intent` filter: a guessed filter must not hide exact evidence. Recall is not forced: a root turn normally issues zero Provider queries. If the LLM calls it, the Host permits one initial query and at most one LLM-chosen, materially different refinement after evidence inspection. Same-query and concurrent repeats join or replay; a third distinct query replays the latest evidence without reaching a Provider. One Related traversal may follow, but only from a `memoryBodyId + id` admitted by either Recall attempt; its repeated result is replayed in the same way.
 
 Recall, Related and the single Documents search slot are budgeted per executing Agent turn. Parallel calls share that turn's state; sibling tasks, later turns and cold-resumed activations do not share cached evidence or consume each other's budget. Replays are restricted to the requested Memory Space subset. Document search is separately bounded to four records, 2,600 query-local characters per record, and 6,000 content characters total. The model-facing Memory Space catalog is capped at 16 entries, and `mnemon_status` returns only a compact health aggregate. Full records, provider settings, paths, and per-Space statistics remain available to Web/RPC control-plane surfaces, not conversation history.
@@ -139,6 +143,8 @@ request
 
 ## USER.md Capacity Maintenance
 
+Capacity maintenance and the MEMORY.md archival below are part of the Layered strategy. With the General strategy, a write that would exceed a Runtime limit is rejected instead.
+
 ```text
 USER add exceeds 4 KiB
           |
@@ -173,7 +179,7 @@ The user profile is never sent to Memory Spaces. The worker has no tool permissi
 ## MEMORY.md Archival and Compaction
 
 ```text
-Default Strategy: pending MEMORY mutation exceeds the configured limit (10 KiB by default)
+Layered strategy: pending MEMORY mutation exceeds the configured limit (10 KiB by default)
           |
           v
 snapshot revision + committed entries eligible for archival
@@ -288,28 +294,33 @@ Host dirty admission
     >=600 assistant characters, or completed non-Mnemon work -> continue
       |
       v
-wait idleReviewMs (default 30 s)
+wait idleReviewMs (default 30 s), and at least
+idleReview.minIntervalMs (default 5 min) after the last attempt
       |
       +-- new turn --> cancel timer/worker, retain activity
       |
       v
-confirm Agent is idle and turn/end exists
+confirm the Agent is idle, turn/end exists, the turn was composed
+by the Layered strategy, and idleReview.maxPerSession is not reached
       |
       v
-fork completed parent checkpoint
+start a task Agent on the completed turn
+  - spawn (default): a bounded checkpoint, idleReview.maxContextChars
+  - fork: inherits the parent context
       |
       v
 conservative maintenance decision
-  - at most one hot-memory mutation by persona
-  - at most one Document create/update by persona
-  - no direct long-term remember/forget tools
+  - hot memory: only new, explicit, durable user assertions
+  - Documents: search first; create at most one separate document,
+    never update or archive an existing one
+  - no Memory Spaces write tools
       |
       +-- completed, including skip -> clear activity
       |
       +-- failed/aborted ------------> retain activity
 ```
 
-The admission check is deliberately structural rather than an LLM classification, so an eligible but ordinary checkpoint starts no background model. “At most one” is currently enforced by the worker persona, not by a Host mutation counter. Background watermarks are not yet persisted, so a Host restart loses accumulated signals that have not been processed.
+The admission check is deliberately structural rather than an LLM classification, so an eligible but ordinary checkpoint starts no background model. The review Agent's tools are exactly `mnemon_document_search`, `mnemon_runtime_memory` and `mnemon_document_create`; “at most one” document is enforced by its persona, not by a Host mutation counter. While Agent Teams tools are installed, review pauses unless `idleReview.agentTeams: scoped`; the Status page says so while it is paused. Background watermarks are not yet persisted, so a Host restart loses accumulated signals that have not been processed.
 
 ## How Configuration Switches Interact
 

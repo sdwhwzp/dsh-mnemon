@@ -105,26 +105,8 @@
 .iconButton > svg { flex: 0 0 auto; }
 .headerActions { display: flex; min-width: 0; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: 8px; }
 .workspacePicker { display: inline-flex; min-width: 0; align-items: center; gap: 6px; color: var(--mn-faint); font-size: 12px; line-height: 18px; }
-.workspacePicker > span { white-space: nowrap; }
-.workspacePicker select {
-  width: min(200px, 22vw);
-  min-width: 112px;
-  height: 28px;
-  appearance: none;
-  border: 0;
-  border-radius: var(--dsw-radius-sm);
-  outline: 0;
-  padding: 0 26px 0 10px;
-  color: var(--mn-text);
-  background: var(--mn-fill) no-repeat;
-  background-image: linear-gradient(45deg, transparent 50%, var(--mn-faint) 50%), linear-gradient(135deg, var(--mn-faint) 50%, transparent 50%);
-  background-position: calc(100% - 14px) 50%, calc(100% - 10px) 50%;
-  background-size: 4px 4px, 4px 4px;
-  font-size: 12px;
-  cursor: pointer;
-}
-.workspacePicker select:hover { background-color: color-mix(in srgb, var(--mn-fill), var(--mn-text) 4%); }
-.workspacePicker select:focus-visible { outline: var(--dsw-focus-ring-width, 2px) solid var(--mn-focus); outline-offset: 2px; }
+.workspacePicker > [data-part='label'] { white-space: nowrap; }
+.workspacePicker button { width: min(200px, 22vw); min-width: 112px; }
 
 .alert, .inlineError { padding: 8px 12px; border-radius: var(--dsw-radius-md); color: var(--mn-danger); background: color-mix(in srgb, var(--mn-danger) 8%, transparent); font-size: 12px; line-height: 18px; }
 .alert { display: flex; flex: 0 0 auto; flex-direction: column; gap: 2px; margin: 8px 24px 0; }
@@ -312,8 +294,9 @@
 .compactListProgress { display: grid; justify-items: stretch; gap: 8px; margin-top: 8px; padding: 10px 2px 2px; border-top: .5px solid var(--mn-line); color: var(--mn-faint); font-size: 12px; line-height: 18px; text-align: center; }
 .compactListProgress button { width: 100%; }
 
-/* Dialogs follow the DSH Modal: panel radius, layer-2 fill, prominent elevation. */
-.modalPortal { position: fixed; z-index: 2147483647; inset: 0; isolation: isolate; pointer-events: none; }
+/* Dialogs follow the DSH Modal: panel radius, layer-2 fill, prominent elevation.
+   They sit on DSH's modal layer (z 1000), so DSH menus, tooltips and toasts (z 1100) open above them. */
+.modalPortal { position: fixed; z-index: 1000; inset: 0; isolation: isolate; pointer-events: none; }
 .modalTheme.modalTheme.modalTheme { position: absolute; inset: 0; display: block; width: auto; height: auto; min-width: 0; min-height: 0; overflow: visible; color: var(--mn-text); background: transparent; pointer-events: none; }
 .modalBackdrop { position: fixed; z-index: 0; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; overscroll-behavior: contain; padding: max(24px, var(--dsh-frame-top-clearance, 24px)) 24px; background: var(--dsw-alias-bg-mask-1); backdrop-filter: var(--dsw-mask-blur); touch-action: none; pointer-events: auto; animation: mnemon-dialog-backdrop-enter 180ms ease-out both; }
 /* Match the host Modal's layer-2 fill; the canvas backs translucent skins.
@@ -359,6 +342,7 @@
 .providerHealthList { margin-top: 8px; }
 .providerHealthList article { display: flex; min-width: 0; min-height: 56px; align-items: center; gap: 12px; padding: 8px 0; }
 .providerHealthList article + article { border-top: .5px solid var(--mn-line); }
+.providerHealthOff { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; padding-top: 10px; border-top: .5px solid var(--mn-line); color: var(--mn-faint); font-size: 12px; line-height: 18px; }
 .providerHealthMark { display: grid; width: 36px; height: 36px; box-sizing: border-box; flex: 0 0 auto; place-items: center; overflow: hidden; border: .5px solid var(--mn-line-strong); border-radius: var(--dsw-radius-md); padding: 6px; }
 .providerHealthMark > img, .providerHealthMark > svg { display: block; width: 100%; height: 100%; border-radius: 4px; object-fit: contain; }
 .providerHealthCopy { display: grid; min-width: 0; flex: 1; gap: 0; }
@@ -477,8 +461,8 @@
   .masthead { padding: 8px 16px 2px; }
   .alert, .notice { margin-inline: 16px; }
   .topNavigation { padding: 0 16px; }
-  .workspacePicker > span { display: none; }
-  .workspacePicker select { width: min(170px, 32vw); }
+  .workspacePicker > [data-part='label'] { display: none; }
+  .workspacePicker button { width: min(170px, 32vw); }
   .modalBackdrop { align-items: flex-end; padding: max(10px, env(safe-area-inset-top, 0px)) 0 0; }
   .modal, .modalWide { width: 100vw; max-height: calc(100vh - max(10px, env(safe-area-inset-top, 0px))); border-radius: var(--dsw-radius-xl) var(--dsw-radius-xl) 0 0; transform: translate3d(0, var(--mn-modal-drag-y, 0px), 0); animation-name: mnemon-sheet-enter; animation-duration: 340ms; animation-timing-function: cubic-bezier(.2, .82, .2, 1); }
   .modalDragHandle { display: grid; width: 100%; height: 28px; flex: none; place-items: center; cursor: grab; touch-action: none; user-select: none; }

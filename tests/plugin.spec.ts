@@ -138,7 +138,7 @@ async function installStarter(target: ReturnType<typeof context>) {
 }
 
 describe('dsh-mnemon plugin composition', () => {
-  it('registers and disposes Web RPC routes with the Starter connection scope', async () => {
+  it('registers and disposes Web RPC routes after the official Connection is already running', async () => {
     const root = new Context()
     releases.push(() => root.fiber.dispose())
     const stub = context()
@@ -150,10 +150,10 @@ describe('dsh-mnemon plugin composition', () => {
       } })
     } })
     for (const name of ['tools', 'commands', 'settings', 'agents', 'subagents'] as const) root.provide(name, stub.ctx[name])
-    const transportDependencies = bundlePatch.match(/- id: connection\n\s+inject: \[([^\]]+)\]/)?.[1]
-      ?.split(',').map(name => name.trim()) ?? []
     root.provide('webRuntime', {})
-    await root.plugin({ inject: transportDependencies, apply: ctx => { new HostConnectionService(ctx, [], { isAuthenticated: () => true } as never) } })
+    // Official Web profile scopes Connection to webRuntime; Mnemon must be
+    // installable after this fiber has already started, without restarting it.
+    await root.plugin({ inject: ['webRuntime'], apply: ctx => { new HostConnectionService(ctx, [], { isAuthenticated: () => true } as never) } })
     const host = await root.plugin({ inject, apply: ctx => apply(ctx, { dataDir: dataDir() }) })
     const connectionFiber = [...root.registry.values()].flatMap(runtime => [...runtime.fibers])
       .find(fiber => fiber.parent === host.ctx && Object.hasOwn(fiber.inject, 'connection'))
@@ -166,7 +166,8 @@ describe('dsh-mnemon plugin composition', () => {
   })
 
   it('keeps the installed DSH release family coherent', () => {
-    // Every direct DSH package, peer range and locked DSH package follows one release.
+    // Every direct DSH package and locked DSH package follows one release;
+    // peer ranges start there and also admit the DSH `next` release line.
     const baseline = manifest.devDependencies['@deepseek-ai/dsh']
     const directDshDependencies = Object.entries(manifest.devDependencies)
       .filter(([name]) => name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-'))
@@ -177,7 +178,7 @@ describe('dsh-mnemon plugin composition', () => {
     expect(new Set(directDshDependencies.map(([, version]) => version))).toEqual(new Set([baseline]))
     expect(manifest.engines.node).toBe('>=20')
     for (const name of ['@deepseek-ai/dsh-client-ui-primitives', '@deepseek-ai/dsh-typert-protocol']) {
-      expect(manifest.peerDependencies[name]).toBe(`^${baseline}`)
+      expect(manifest.peerDependencies[name]).toBe(`^${baseline} || ^0.2.0-rc.1`)
     }
     expect(lockedDshVersions.length).toBeGreaterThan(100)
     expect(new Set(lockedDshVersions)).toEqual(new Set([baseline]))

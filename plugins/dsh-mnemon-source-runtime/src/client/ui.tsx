@@ -1,4 +1,4 @@
-import { useMemo, useState, type JSX, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type JSX, type ReactNode } from 'react'
 import {
   createMemorySourcePageClient, installMemorySourceUI, MemorySourcePageFrame, translateEn,
   type MemorySourcePageProps, type MnemonSourceManagementClient, type MnemonTranslate,
@@ -17,8 +17,18 @@ export function runtimePageClient(management: MnemonSourceManagementClient): Run
 function RuntimeSourceView(props: MemorySourcePageProps): JSX.Element | null {
   const client = useMemo(() => props.management === undefined ? undefined : runtimePageClient(props.management), [props.management])
   const [revision, setRevision] = useState(0)
+  // The workspace's refresh reloads this page as well.
+  const refreshKey = useRef(props.refreshKey)
+  useEffect(() => {
+    if (refreshKey.current === props.refreshKey) return
+    refreshKey.current = props.refreshKey
+    setRevision(value => value + 1)
+  }, [props.refreshKey])
   if (client === undefined) return null
-  return <RuntimePage client={client} revision={revision} writeEnabled={props.writable === true} onMutate={() => { setRevision(value => value + 1); props.onRefresh?.() }} />
+  // A conversation turn opens the entry it wrote; each visit starts from that entry.
+  const navigation = props.navigationInput
+  const focus = typeof navigation === 'object' && navigation !== null && !Array.isArray(navigation) && typeof navigation.seed === 'string' && navigation.seed !== '' ? navigation : undefined
+  return <RuntimePage key={typeof focus?.nonce === 'number' ? focus.nonce : 0} {...(focus === undefined ? {} : { focusText: focus.seed as string })} {...(props.onRevealElement === undefined ? {} : { onRevealElement: props.onRevealElement })} client={client} revision={revision} writeEnabled={props.writable === true} onMutate={() => { setRevision(value => value + 1); props.onRefresh?.() }} />
 }
 
 export function RuntimeSourcePage(props: MemorySourcePageProps): ReactNode {

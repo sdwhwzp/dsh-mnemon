@@ -6,7 +6,7 @@ This guide is for authors who want the Mnemon workbench to match their host skin
 
 ## Public contract and scope
 
-Sidebar and Builtin share this root selector:
+The Sidebar and the conversation tab share this root selector:
 
 ```css
 [data-dsh-plugin="dsh-mnemon"][data-dsh-part="mnemon-view"]
@@ -47,7 +47,7 @@ Keep the rule in an unlayered stylesheet and retain both Mnemon attributes. Thos
 
 ## Migrate from generated class names
 
-For an existing `[class*="_shell"]` rule, keep the skin's background calculation and replace the target with the public root selector scoped to the active skin. Remove the broad old match so it cannot affect similarly named internal layouts in other plugins. Both placements use the same rule; Sidebar and Builtin need no separate skin implementations.
+For an existing `[class*="_shell"]` rule, keep the skin's background calculation and replace the target with the public root selector scoped to the active skin. Remove the broad old match so it cannot affect similarly named internal layouts in other plugins. Both placements use the same rule; the Sidebar and the conversation tab need no separate skin implementations.
 
 For example, `--pg-panel-rgb`, `--pg-bg-glass` and `--pg-glass-floor` in Issue #273 belong to that skin. Mnemon does not provide them. Keep their definitions in the skin when migrating; do not add them to Mnemon configuration.
 
@@ -58,7 +58,7 @@ Use an isolated environment from the [development and verification guide](./READ
 | Check | Expected result |
 |---|---|
 | Default theme and disabled skin | The default surface remains, without leftover skin overrides |
-| Sidebar and Builtin | The same root selector matches the current workbench; navigation works in both placements |
+| Sidebar and conversation tab | The same root selector matches the current workbench; navigation works in both placements |
 | Dark, light and narrow windows | Text, buttons and inputs remain readable; backgrounds and responsive behavior match the skin's design |
 | Runtime add, edit and reload | Operations succeed and the record survives reload |
 | Open and cancel dialogs | Dialogs stay readable; the workbench remains usable after closing them |

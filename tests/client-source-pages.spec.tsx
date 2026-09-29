@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { SlotCore } from '@deepseek-ai/dsh-client-ui-slots'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import type { Config } from "../src/host/config.ts"
@@ -9,6 +9,8 @@ import type { MnemonSourcePageOwnerProps } from "../src/client/dsh-context.ts"
 import { MnemonWorkbench } from '../src/client/MnemonWorkbench.tsx'
 import { MNEMON_COMPONENT_STATUS_SLOT } from '../src/client/component-ui.tsx'
 import { translateEn } from '../src/client/locales.ts'
+import { PageHeader } from '../src/client/page-kit.tsx'
+import { dispatchMnemonAnchor } from '../src/client/anchor.ts'
 import {
   createMemorySourcePageDirectory,
   installMemorySourceUI,
@@ -260,7 +262,8 @@ describe('Source Client presentation conformance', () => {
     })
     expect(lastProps).not.toHaveProperty('connection')
 
-    fireEvent.change(screen.getByRole('combobox', { name: 'Select Source instance' }), { target: { value: 'source:git-personal' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Select Source instance/ }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /source:git-personal/ }))
     await waitFor(() => expect(screen.getByTestId('selected-source').textContent).toBe('source:git-personal'))
     fireEvent.click(screen.getByRole('button', { name: 'Inspect source' }))
     fireEvent.click(screen.getByRole('button', { name: 'Refresh source' }))
@@ -356,6 +359,46 @@ describe('Source Client presentation conformance', () => {
     expect(canvas.scrollTop).toBe(250)
   })
 
+  it('reveals an element below the locked page header unless the Source measures its own', async () => {
+    const source = { sourceInstanceKey: 'source:git', sourceTypeId: 'git', packageName: 'dsh-mnemon-source-git', role: 'repository', availability: 'ready', revision: 'r1', capabilities: ['read'], management: { label: 'Repository' } }
+    const connection = { rpc: { call: vi.fn(async (_channel: string, endpoint: string) => ({ ok: true, value: endpoint === 'source-management-catalog' ? { generationId: 'g1', sources: [source] } : status })) }, isLoopback: true }
+    const pages = [{ id: 'git/repository', sourceTypeId: 'git', pageId: 'repository', label: 'Repository', order: 1 }]
+    let owner: MemorySourcePageProps | undefined
+    const renderSlot = ((_name: string, props: MemorySourcePageProps) => { owner = props; return <div><PageHeader title="Repository" description="Refs and history." /><div data-testid="source-target">Source content</div></div> }) as never
+    render(<MnemonWorkbench connection={connection as never} settingsScope={settings} t={translateEn} locale="en" sourcePageDirectory={{ getSnapshot: () => pages, subscribe: () => () => {} }} renderSlot={renderSlot} />)
+    fireEvent.click(await screen.findByRole('tab', { name: 'Repository' }))
+    const target = await screen.findByTestId('source-target'), canvas = screen.getByTestId('mnemon-canvas')
+    const header = screen.getByRole('heading', { name: 'Repository', level: 2 }).parentElement!.parentElement!
+    expect(canvas.hasAttribute('data-lock-page-header')).toBe(true)
+    vi.spyOn(canvas, 'getBoundingClientRect').mockImplementation(() => new DOMRect(0, 80, 800, 600))
+    vi.spyOn(header, 'getBoundingClientRect').mockImplementation(() => new DOMRect(0, 80, 800, 60))
+    vi.spyOn(target, 'getBoundingClientRect').mockImplementation(() => new DOMRect(0, 400, 400, 100))
+    canvas.scrollTop = 500
+    owner?.onRevealElement?.(target)
+    expect(canvas.scrollTop).toBe(500 + 400 - 80 - 72)
+    canvas.scrollTop = 500
+    owner?.onRevealElement?.(target, 20)
+    expect(canvas.scrollTop).toBe(500 + 400 - 80 - 20)
+  })
+
+  it('carries a conversation anchor into its page, while a tab opens the page fresh', async () => {
+    const source = { sourceInstanceKey: 'source:git', sourceTypeId: 'git', packageName: 'dsh-mnemon-source-git', role: 'repository', availability: 'ready', revision: 'r1', capabilities: ['read'], management: { label: 'Repository' } }
+    const connection = { rpc: { call: vi.fn(async (_channel: string, endpoint: string) => ({ ok: true, value: endpoint === 'source-management-catalog' ? { generationId: 'g1', sources: [source] } : status })) }, isLoopback: true }
+    const pages = [
+      { id: 'git/repository', sourceTypeId: 'git', pageId: 'repository', label: 'Repository', order: 1 },
+      { id: 'git/refs', sourceTypeId: 'git', pageId: 'refs', label: 'Refs', order: 2, navigation: { primary: false } },
+    ]
+    const received: Array<{ page: string; input: unknown }> = []
+    const renderSlot = ((_name: string, props: MemorySourcePageProps, options: { only: string }) => { received.push({ page: options.only, input: props.navigationInput }); return <div>Source content</div> }) as never
+    render(<MnemonWorkbench connection={connection as never} settingsScope={settings} t={translateEn} locale="en" sourcePageDirectory={{ getSnapshot: () => pages, subscribe: () => () => {} }} renderSlot={renderSlot} />)
+    await screen.findByRole('tab', { name: 'Repository' })
+    act(() => dispatchMnemonAnchor({ page: 'git/repository', seed: 'main' }))
+    await waitFor(() => expect(received.at(-1)).toMatchObject({ page: 'git/repository', input: { seed: 'main' } }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Status' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Repository' }))
+    await waitFor(() => expect(received.at(-1)).toEqual({ page: 'git/repository', input: undefined }))
+  })
+
   it('selects additional built-in Source instances without injecting a hidden default page', async () => {
     const sources = ['source:extra-runtime', 'source:mnemon-source-runtime'].map(sourceInstanceKey => ({
       sourceInstanceKey, sourceTypeId: 'runtime', packageName: 'dsh-mnemon-source-runtime', role: 'working-context',
@@ -373,7 +416,8 @@ describe('Source Client presentation conformance', () => {
     fireEvent.click(await screen.findByRole('tab', { name: translateEn('nav.runtime') }))
     await waitFor(() => expect(screen.getByTestId('runtime-selected-instance').textContent).toBe('source:mnemon-source-runtime'))
     expect(screen.getByTestId('runtime-hidden-child').textContent).toBe('no')
-    fireEvent.change(screen.getByRole('combobox', { name: 'Select Source instance' }), { target: { value: 'source:extra-runtime' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Select Source instance/ }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /source:extra-runtime/ }))
     expect(screen.getByTestId('runtime-selected-instance').textContent).toBe('source:extra-runtime')
     expect(screen.getByTestId('runtime-hidden-child').textContent).toBe('no')
   })

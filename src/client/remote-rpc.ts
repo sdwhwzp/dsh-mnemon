@@ -45,8 +45,27 @@ function isLoopbackHostname(hostname: string): boolean {
     && parts.every(part => /^\d{1,3}$/.test(part) && Number(part) <= 255)
 }
 
-function isRemoteConnection(connection: ClientConnectionHandle): boolean {
-  const hostname = globalThis.location?.hostname
+/**
+ * A window the application serves itself, such as DSH Desktop's
+ * `dsh-app://app/`, runs beside its Host rather than across a network.
+ */
+function isApplicationPage(page: Location | undefined): boolean {
+  const protocol = page?.protocol
+  return typeof protocol === 'string' && protocol !== '' && protocol !== 'http:' && protocol !== 'https:'
+}
+
+/**
+ * A network page is remote when its hostname or the DSH Connection is not
+ * loopback. An application page is local unless DSH declares a transport that
+ * does not own the Host, which only a page connected to another machine does.
+ */
+export function isRemoteConnection(connection: ClientConnectionHandle): boolean {
+  const page = globalThis.location
+  if (isApplicationPage(page)) {
+    const transport = (globalThis as { __DSH_TRANSPORT__?: { ownsHost?: unknown } }).__DSH_TRANSPORT__
+    return transport !== undefined && transport !== null && transport.ownsHost !== true
+  }
+  const hostname = page?.hostname
   const remotePage = typeof hostname === 'string' && hostname !== '' && !isLoopbackHostname(hostname)
   return remotePage || !connection.isLoopback
 }

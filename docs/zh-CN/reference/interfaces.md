@@ -14,14 +14,15 @@
 
 | 入口 | 默认 | 说明 |
 |---|---:|---|
-| Sidebar | 是 | 左侧栏独立“记忆系统”工作台；状态、运行时、档案、记忆空间四个一级标签 |
-| Builtin | 否 | 会话内标签页；复用相同工作台并自动跟随所属会话的存储范围 |
-| 本回合记忆 | 是 | 已完成回合的记忆工具摘要；展开后按工具名跳到对应页面 |
+| Sidebar | 是 | 左侧栏的“记忆系统”工作台：状态、运行时、档案、记忆空间 |
+| 会话标签页 | 否 | 在会话内打开同一工作台，自动跟随所属会话的范围 |
+| 本回合记忆 | 是 | 已完成回合下方的记忆工具摘要；展开后可跳到对应页面 |
 | 存入记忆 | 是 | 已定稿助手回复旁的操作；确认后调用监督写入 |
+| 插件页中的 dsh-mnemon 页面 | 是 | 记忆组合、组件页面、存储、界面与备份 |
 | `/mnemon` | — | 对话命令入口 |
 | 模型工具 | — | Root Agent 的结构化读写入口 |
 
-`displayMode` 选择 Sidebar（默认）或 Builtin；`tabEnabled` 控制所选入口显示。Builtin 在会话标签页中展示相同工作台，自动跟随所属会话范围，不展示 Sidebar 范围控件。对话内两个快捷入口可在 `mnemon-ui` 设置中分别关闭。
+`displayMode` 选择 `sidebar`（默认）或 `builtin`（会话标签页）；`tabEnabled` 控制所选入口是否显示。会话标签页不展示 Sidebar 的范围控件。对话内两个快捷入口在**界面**中分别开关，通过 `mnemon-ui` 设置范围保存。
 
 ## Profile 能力面
 
@@ -101,14 +102,22 @@ worker 内调用同名工具时直接进入服务层，不再递归委派。
 - `forget` 必须接收一个不含空格的精确 ID。
 - `forget` 仅在收到 `forgotten` 回执时报告删除成功；跳过、失败或未确认的结果返回错误并附 worker 摘要。
 
-## 对话内交互契约
+## 界面注册
 
-| DSH 槽位 | 注册 | 行为 |
+Mnemon 在 DSH 中展示的一切都注册到 DSH 自己的界面区域。对话内的注册都是增量的，不替换 DSH 官方渲染。
+
+| DSH 区域 | 注册 | 行为 |
 |---|---|---|
-| `conversation.chat.turnTail` | chain | 通过 `turn-activity` 汇总完成回合中的 `mnemon_*` 调用；无活动或未完成回合不渲染 |
+| `conversation.chat.turnTail` | list，`id=dsh-mnemon/turn-tail` | 通过 `turn-activity` 汇总完成回合中的 `mnemon_*` 调用，以及工具活动元数据中每次调用读到或写入的内容；无活动或未完成回合不渲染 |
 | `conversation.chat.assistant-actions` | list，`id=mnemon-save` | 通过 `assistant-message` 读取已定稿文本；只在用户确认后调用 `supervise` |
+| `conversation.session.header.lineage` | DSH 官方条目的低优先级副本 | 任务 Agent 会话页眉只统计该 Agent 自己的 token，不含其 fork 来源的日志 |
+| `plugins.bundle.config` | keyed，`dsh-mnemon` | 插件页中 dsh-mnemon 页面上的全部配置 |
+| `plugins.row.config` | keyed，`dsh-mnemon#<row>` | 每个随包组件的行打开的页面，含该组件注册的设置 |
+| `plugins.detail.actions` | list，`id=dsh-mnemon/open-workspace` | 从插件详情页打开记忆系统 |
 
-两者都是增量注册，不替换 DSH 官方渲染。`assistant-message` 读取的候选可编辑，长回复会按界面上限截取；确认后会启动独立任务 Agent，写入结果以它的落定回执为准。
+Mnemon 自己声明两个 keyed 区域，都以组件包名为键：`mnemon.component.settings` 渲染在该组件的页面上，`mnemon.component.status` 是它在状态页上的卡片。官方组件与第三方组件都通过这两个区域注册，见[插件开发](../development/extensions.md)。
+
+`assistant-message` 读取的候选可编辑，长回复会按界面上限截取；确认后会启动独立任务 Agent，写入结果以它的落定回执为准。
 
 ## 工作区路由
 
@@ -123,78 +132,67 @@ Headless 等没有 Web 工作区目录的 profile 不提供任意查看目标；
 
 ## RPC 通道
 
-RPC 是 DSH Host 与插件客户端之间的内部桥，不是稳定外部 HTTP API。
+RPC 是 DSH Host 与插件客户端之间的内部桥，不是稳定外部 HTTP API。页面与组件插件应使用 `dsh-mnemon/client` 提供的限定范围客户端，见[插件开发](../development/extensions.md)。
+
+| 通道 | 承载 | 远程页面 |
+|---|---|---|
+| `/dsh-mnemon-read` | 状态、目录、检索与对话读取 | 允许 |
+| `/dsh-mnemon-activation` | 开关单个记忆空间 | 允许 |
+| `/dsh-mnemon-write` | 其余所有 mutation | 需要 `remoteAccess: trusted-host` |
+| `/dsh-mnemon-pack` | 备份导出与导入 | 需要 `remoteAccess: trusted-host` |
+| `/dsh-mnemon-settings` | Host 与界面设置 | `get` 允许；`mutate` 需要 `remoteAccess: trusted-host` |
+| `/dsh-mnemon-view` | 记忆组合读取 | 允许 |
+| `/dsh-mnemon-view-settings` | 保存记忆组合、安装组件 | 需要 `remoteAccess: trusted-host` |
+
+回环页面直接调用这些通道，由 DSH 浏览器会话认证。远程页面经 DSH API Gateway 到达同一组处理器：通道 `/api`，endpoint 为 `dshMnemon/read`、`dshMnemon/activation`、`dshMnemon/write`、`dshMnemon/pack`、`dshMnemon/settings`、`dshMnemon/view` 与 `dshMnemon/viewWrite`。Gateway 负责 Host/Origin 校验、浏览器配对与响应封装；Mnemon 只额外施加上表中的 `remoteAccess` 授权，并在启动时确定。见[远程管理](../guides/operations.md#远程管理)。
 
 ### 读通道
 
-```text
-channel:   /dsh-mnemon-read
-rc.2 rollback authority: trusted-host
-0.1.2 authentication: DSH browser session
-```
-
 | Endpoint | 行为 |
 |---|---|
-| `status` | 服务、版本、生命周期、档案、存储上下文及当前 Memory System 描述符的聚合状态 |
+| `status` / `status-summary` | 服务、版本、生命周期、档案、存储与工作区上下文及当前 Memory System 描述符；`status-summary` 不等待任何 Provider I/O |
 | `memory-system` | Serving/候选评估、脱敏 Source 实例描述符与当前参与配置 |
-| `versions` | 检查 Mnemon 与 dsh-mnemon 当前 / 最新版本和安装来源 |
+| `versions` | Mnemon CLI 与 dsh-mnemon 的当前 / 最新版本和安装来源 |
+| `task-agent-models` | 独立任务 Agent 可用的模型 |
 | `runtime-memory` | 运行时快照 |
 | `documents` / `document` / `document-search` | 档案目录、正文与确定性搜索 |
 | `graph` / `bodies` / `body-directory` | active 多空间图谱投影、含 Provider 能力的记忆空间目录与快速目录投影 |
 | `body-reconnect` | 清除短期健康状态并刷新单个记忆空间，不修改持久数据 |
 | `provider-services` | 脱敏的 Provider 服务目录；可包含已配置的凭据字段名，绝不包含凭据值 |
+| `embedding-status` | Mnemon 嵌入模型、可用性与默认 Store 覆盖率 |
 | `list` / `entities` | 内容列表与实体聚合 |
 | `search` / `agent-search` / `related` | 直接检索、证据回答与关系遍历 |
 | `turn-activities` / `turn-activity` | 会话或单回合的记忆工具活动 |
 | `assistant-message` | 按 messageId 读取已定稿助手文本 |
+| `source-management-catalog` / `source-management-read` / `source-assistance` | 通用 Source 管理：实例目录、声明的读取操作与只读辅助检索 |
+
+### 激活通道
+
+`/dsh-mnemon-activation` 的请求 schema 比写通道更窄。`body` endpoint 只接受 `memoryBodyId`、布尔值 `active` 和常规 session / workspace 路由字段；`source-assistance` 以经确认的 `activation` 操作接受同样两个字段，仅作用于 Memory Spaces 实例。两者只控制记忆空间是否参与 DSH 读取与路由，不接受元信息、Provider 连接、凭据、删除或持久记忆 mutation。只读模式会在 Host 边界拒绝。
 
 ### 写通道
-
-记忆空间激活使用独立控制通道和更窄的请求 schema：
-
-```text
-channel:   /dsh-mnemon-activation
-rc.2 rollback authority: trusted-host
-0.1.2 authentication: DSH browser session
-endpoint:  body
-```
-
-`body` 只接受 `memoryBodyId`、布尔值 `active` 和常规 session / workspace 路由字段。它只控制记忆空间是否参与 DSH 读取与路由，不接受元信息、Provider 连接、凭据、删除或持久记忆 mutation。只读模式会在 Host 边界拒绝。
-
-其余更宽泛的 mutation 仍使用写通道：
-
-```text
-channel:   /dsh-mnemon-write
-rc.2 rollback authority: loopback（`remoteAccess=trusted-host` 时为 trusted-host）
-0.1.2 authentication: DSH browser session
-```
 
 | Endpoint | 行为 |
 |---|---|
 | `runtime-memory` | 热记忆 mutation |
-| `supervise` | 用独立任务 Agent 处理候选并返回落定回执 |
 | `document` | create / update / archive |
+| `supervise` | 用独立任务 Agent 处理候选并返回落定回执 |
 | `remember` / `link` / `forget` | 长期语义写入、关系与软删除 |
-| `body-create` / `body-update` / `body-delete` | 记忆空间创建/连接、编辑，以及确认后的 Native 删除或远程断开 |
-| `body-reconnect` | 为迁移到读通道前发布的旧客户端保留的兼容入口 |
+| `body-create` / `body-update` / `body-delete` / `body-merge` | 创建或连接、编辑、确认后的 Native 删除或远程断开，以及合并记忆空间 |
+| `body-metadata-maintain` | 由任务 Agent 刷新 1 到 20 个 active 记忆空间的名称与说明 |
 | `provider-service-update` | 更新单个 Provider 服务；凭据仅在 Host 保存，响应脱敏 |
+| `source-management-mutate` / `source-assistance` | 通用 Source 管理 mutation，以及按 Source 当前修订确认的 Host 辅助操作 |
 | `version-update` | 更新明确组件；Host 固定命令与参数 |
 
 `provider-services` 通过读通道返回脱敏目录。设置编辑器只知道哪些凭据字段已经配置；保存新的值或显式清除字段，不回读已保存的凭据值。
 
-`writeEnabled=false` 时激活控制与写通道仍稳定注册，但所有 mutation 都在 Host 边界拒绝。浏览器也会根据 Host settings snapshot 在传输前禁用 mutation 控件。
+`writeEnabled=false` 时激活通道与写通道仍保持注册，但所有 mutation 都在 Host 边界拒绝。浏览器也会根据 Host settings snapshot 在传输前禁用 mutation 控件。
 
 ### 备份通道
 
-```text
-channel:   /dsh-mnemon-pack
-rc.2 rollback authority: loopback（`remoteAccess=trusted-host` 时为 trusted-host）
-0.1.2 authentication: DSH browser session
-```
-
 | Endpoint | 行为 |
 |---|---|
-| `target` | 当前有效根与范围 |
+| `target` | 当前有效根、范围，以及“默认位置”对应的默认根 |
 | `export` | 导出完整、带 manifest 与 SHA-256 校验的 ZIP |
 | `inspect` | 解析并校验待导入 ZIP，返回组件与占用预览 |
 | `import` | 把 ZIP 安全合并到当前有效根；只读模式拒绝 |
@@ -203,17 +201,19 @@ rc.2 rollback authority: loopback（`remoteAccess=trusted-host` 时为 trusted-h
 
 ### 设置通道
 
-```text
-channel:   /dsh-mnemon-settings
-rc.2 rollback authority: loopback（`remoteAccess=trusted-host` 时为 trusted-host）
-0.1.2 authentication: DSH browser session
-namespaces: mnemon, mnemon-ui
-endpoints: get, mutate
-```
+`/dsh-mnemon-settings` 为两个命名空间提供 `get` 与 `mutate`：`mnemon` 管理 Host 与存储设置，`mnemon-ui` 管理 `turnBar` 与 `saveAction`，保存为 `conversationInteraction`。mutation 携带 settings revision，防止覆盖并发编辑。插件页中的 dsh-mnemon 页面（`plugins.bundle.config`）在回环页面和远程页面上都通过该通道读写。回环页面还会跟随 DSH `ctx.configForms` 中 `mnemon` 条目的 revision，在其他页面或 profile 重新加载改动它时重新读取该通道。
 
-mutation 使用 settings revision 防止覆盖并发编辑。`mnemon` 管理 Host / 存储设置；`mnemon-ui` 管理 `turnBar` 与 `saveAction`。“插件”中的 `dsh-mnemon` 页面（`plugins.bundle.config`）在回环页面和远程页面上都通过该通道读写。回环页面还会跟随 DSH `ctx.configForms` 中 `mnemon` 条目的 revision，在其他页面或 profile 重新加载改动它时重新读取该通道。
+### 记忆组合通道
 
-Mnemon 对两代 transport 使用同一种注册调用：始终传入 rc.2 authority 对象，DSH 0.1.2 将其作为额外 JavaScript 参数忽略。因此稳定版 DSH 0.1.2-rc.1 与它的 alpha.5 前序版本使用同一浏览器会话认证完整 Host API，rc.2 回滚则保留逐方法 trust 层；整个过程没有运行时版本或函数参数数量分支。
+| 通道 | Endpoint | 行为 |
+|---|---|---|
+| `/dsh-mnemon-view` | `dashboard` | 已安装组件、当前主策略、当前会话的 View 与回合活动，以及此处能否安装组件 |
+| `/dsh-mnemon-view` | `preview` | 按当前修订校验拟保存的组合，不写入 |
+| `/dsh-mnemon-view` | `inspect-plugin` | 读取组件包的 registry manifest：版本、`dsh-mnemon` peer 范围，以及当前 Profile 是否已安装 |
+| `/dsh-mnemon-view-settings` | `apply` | 保存经确认的组合：主策略、组件开关与选项 |
+| `/dsh-mnemon-view-settings` | `install-plugin` | 用 DSH CLI 把经确认的包版本安装到当前 Profile |
+
+`apply` 把主策略与各组件选项保存在 `mnemon-view` 设置范围（保存为 `memoryView`）；组件开关由 DSH 插件管理器写入 profile patch。见[配置参考](./configuration.md)。
 
 ## npm 导出与扩展服务
 
