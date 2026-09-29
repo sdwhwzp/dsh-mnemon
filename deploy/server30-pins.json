@@ -186,10 +186,10 @@
     },
     {
       "name": "@yejiming/dsh-data-agent",
-      "version": "0.2.1-dsh.20260929.1",
-      "file": "yejiming-dsh-data-agent-0.2.1-dsh.20260929.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260929-fork-audit-0728/artifacts/yejiming-dsh-data-agent-0.2.1-dsh.20260929.1.tgz",
-      "sha256": "a8b723071b7ee98da6a486fa4c980e735dfac842d057129e5046c8f5209d12d0"
+      "version": "0.2.2-dsh.20260929.1",
+      "file": "yejiming-dsh-data-agent-0.2.2-dsh.20260929.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260929-fork-audit-1937/artifacts/yejiming-dsh-data-agent-0.2.2-dsh.20260929.1.tgz",
+      "sha256": "fdbeefdb114b3ac82279a3ab7da0858f8c83a68d7be17e0c448c5faa4bfcbcdd"
     },
     {
       "name": "dsh-at-file",
@@ -207,10 +207,10 @@
     },
     {
       "name": "dsh-context",
-      "version": "0.59.2-dsh.20260929.2",
-      "file": "dsh-context-0.59.2-dsh.20260929.2.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260929-fork-audit-1220/artifacts/dsh-context-0.59.2-dsh.20260929.2.tgz",
-      "sha256": "267b8eebcdef0a99dca33f0a3bba82152292813fa25ef8797650deb4f8eeb7be"
+      "version": "0.60.0-dsh.20260929.2",
+      "file": "dsh-context-0.60.0-dsh.20260929.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260929-fork-audit-1937/artifacts/dsh-context-0.60.0-dsh.20260929.2.tgz",
+      "sha256": "ca6a2958d90b7f95844f1b3c991ce4bfe81b11bb6a44d5f4f8bd63f8517cf28d"
     },
     {
       "name": "dsh-mcp-panel",
@@ -354,10 +354,10 @@
     },
     {
       "name": "dsh-passwords",
-      "version": "2.7.5-dsh.20260929.6",
-      "file": "dsh-passwords-2.7.5-dsh.20260929.6.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260929-fork-audit-1220/artifacts/dsh-passwords-2.7.5-dsh.20260929.6.tgz",
-      "sha256": "a0eb6a48f66bc3248f59cb8a817959012dc0d18c6bb084a5a3007ee7f18e3031"
+      "version": "2.7.6-dsh.20260929.1",
+      "file": "dsh-passwords-2.7.6-dsh.20260929.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260929-fork-audit-1937/artifacts/dsh-passwords-2.7.6-dsh.20260929.1.tgz",
+      "sha256": "f697960700c0cbd9972d7aab0c2af9b96e55734bf20ef100844f004360fc45bc"
     },
     {
       "name": "dsh-plugin-mobile-gateway",
@@ -409,7 +409,7 @@
   },
   "preservePackages": [],
   "handoff": "20260910-plugin-pinning-handoff.md",
-  "release": "20260929-fork-audit-1220",
+  "release": "20260929-fork-audit-1937",
   "status": "deployed-verified",
   "requiredEntries": [
     {
