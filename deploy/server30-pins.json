@@ -410,7 +410,7 @@
   "preservePackages": [],
   "handoff": "20260910-plugin-pinning-handoff.md",
   "release": "20260929-fork-audit-0728",
-  "status": "candidate-verified",
+  "status": "deployed-verified",
   "requiredEntries": [
     {
       "id": "mnemon-strategy-scoped",
