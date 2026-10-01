@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { HostAgent, HostContextShape, HostSubagentsService, ToolDefinition } from "../src/host/dsh.ts"
+import type { HostAgent, HostContextShape, HostSubagentsService, ToolDefinition, ToolExecution } from "../src/host/dsh.ts"
 import type { RememberRequest, MemoryBodyCatalog as MemorySpaceCatalog, SearchRequest, Insight, MemoryPlacementCandidate, PreparedMemoryPlacement } from 'dsh-mnemon-source-memory-spaces/contracts'
 import type { DocumentMutationResult, DocumentView, DocumentMutation } from 'dsh-mnemon-source-documents/contracts'
 import type { RuntimeMemoryMaintenancePlan, RuntimeMemoryMutation, RuntimeMemoryMutationResult, RuntimeMemorySnapshot } from 'dsh-mnemon-source-runtime/contracts'
@@ -1765,6 +1765,53 @@ describe('Mnemon memory subagent coordinator', () => {
     expect(reviewCall.toolFilter.allow).not.toContain('mnemon_memory_bodies')
     expect(reviewCall.toolFilter.allow).not.toContain('mnemon_memory_zoom')
     expect(coordinator.snapshot()).toMatchObject({ reviews: 1, writes: 0, lastOperation: 'review' })
+  })
+
+  it('keeps project records out of hot memory and considers a Document first (#319)', async () => {
+    const host = subagents({ summary: 'No mutation needed.', action: 'skipped', memoryBodyIds: [] })
+    const coordinator = createCoordinator(host.value)
+    await coordinator.review(parent(), new AbortController().signal)
+    const { persona } = (host.start.mock.calls[0] as unknown as [string, { persona: string }])[1]
+    expect(persona).toContain('Record each piece of knowledge in one layer')
+    expect(persona).toContain('Project records never qualify')
+    expect(persona).toContain('target=memory only for a compact rule the user stated')
+    expect(persona).not.toContain('stable project, environment, decisions')
+    expect(persona.indexOf('Project Documents:')).toBeLessThan(persona.indexOf('Hot memory is loaded'))
+    // The bounded spawn checkpoint keeps its own wording.
+    expect(persona).toContain('Reuse complete evidence already present in the supplied bounded checkpoint')
+  })
+
+  it('refuses a second layer inside one review pass through the child guard (#319)', async () => {
+    const host = subagents({ summary: 'Created one document.', action: 'created', memoryBodyIds: [] })
+    const registry = toolRegistry()
+    let guard: ((execution: ToolExecution) => string | undefined) | undefined
+    const published: HostSubagentsService = { ...host.value, async start(provider, request) {
+      const run = await host.value.start(provider, request)
+      const child = { ...parent('subagent'), id: run.id, ctx: { tools: { guard: (callback: typeof guard) => { guard = callback; return () => {} } } } } as unknown as HostAgent
+      registry.publish(child, request.parent)
+      return { ...run, localAgent: child }
+    } }
+    const coordinator = new MnemonSubagentCoordinator(published, runtimeSource(), registry.value)
+    await coordinator.review(parent(), new AbortController().signal)
+    const call = (name: string, args: unknown) => guard!({ name, arguments: args, signal: new AbortController().signal })
+    expect(call('mnemon_document_search', { query: 'boot account resolution' })).toBeUndefined()
+    expect(call('mnemon_document_create', { title: 'Boot account resolution' })).toBeUndefined()
+    expect(call('mnemon_runtime_memory', { action: 'add', target: 'user', content: 'Prefers short answers.' })).toBeUndefined()
+    expect(call('mnemon_runtime_memory', { action: 'add', target: 'memory', content: 'Boot entries never run the panel as root.' })).toContain('already created a Document')
+  })
+
+  it('withholds runtime memory from idle review when it is switched off', async () => {
+    const host = subagents({ summary: 'No mutation needed.', action: 'skipped', memoryBodyIds: [] })
+    const runtime = runtimeSource()
+    runtime.config.idleReview.runtimeMemory = false
+    const coordinator = createCoordinator(host.value, runtime)
+    await expect(coordinator.review(parent(), new AbortController().signal)).resolves.toMatchObject({ delegated: true, action: 'skipped' })
+    const request = (host.start.mock.calls[0] as unknown as [string, { persona: string; toolFilter: { allow: string[] } }])[1]
+    expect(request.toolFilter.allow).toEqual(expect.arrayContaining(['mnemon_document_search', 'mnemon_document_create']))
+    expect(request.toolFilter.allow).not.toContain('mnemon_runtime_memory')
+    expect(request.persona).toContain('Runtime memory is off for idle review')
+    expect(request.persona).not.toContain('mnemon_runtime_memory')
+    expect(request.persona).toContain('Never update or replace an existing document')
   })
 
   it('answers from pre-recalled evidence without granting any Mnemon retrieval tools', async () => {

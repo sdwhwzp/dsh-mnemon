@@ -10,7 +10,7 @@ First time? Start with [Install and start](./installation.md): from installing N
 
 This section is for command-line users and also covers development checkouts, cloud access and Headless. You need:
 
-- DSH `0.1.7-rc.2` (npm `latest`) or `0.2.0-rc.1` (npm `next`), Node.js `^22.19.0 || >=24.0.0`, and pnpm;
+- DSH `0.2.0-rc.2` (npm `latest` and `next`) or `0.1.7-rc.2`, Node.js `^22.19.0 || >=24.0.0`, and pnpm;
 - a DSH model route that can create independent task Agents;
 - for Mnemon Native only, a local `mnemon` CLI; [Install and start](./installation.md#other-ways-to-install-the-mnemon-cli) covers each platform. The other Providers connect to their own services.
 

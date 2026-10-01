@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { HostAgent, HostSubagentRun, ToolExecution } from '../src/host/dsh.ts'
-import { idleReviewBlockReason, startGuardedReview, type ReviewToolHost } from '../src/host/review-tools.ts'
+import { idleReviewBlockReason, reviewLayerPolicy, startGuardedReview, type ReviewToolHost } from '../src/host/review-tools.ts'
 
 function fixture() {
   const listeners = new Set<(event: { agent: HostAgent }) => void>()
@@ -165,5 +165,54 @@ describe('review publication and execution boundary', () => {
     await expect(startGuardedReview(f.host, f.parent, [], start)).rejects.toThrow('scoped tool guard')
     expect(child.runDispose).toHaveBeenCalledOnce()
     expect(f.listeners.size).toBe(0)
+  })
+})
+
+describe('one layer per idle review pass (#319)', () => {
+  const call = (name: string, args?: unknown): ToolExecution => ({ name, arguments: args, signal: new AbortController().signal })
+
+  it('refuses working memory after a Document, and a Document after working memory', () => {
+    const documentsFirst = reviewLayerPolicy()
+    expect(documentsFirst(call('mnemon_document_create', { title: 'Boot account resolution' }))).toBeUndefined()
+    for (const action of ['add', 'replace', 'remove']) {
+      expect(documentsFirst(call('mnemon_runtime_memory', { action, target: 'memory' }))).toContain('already created a Document')
+    }
+    const memoryFirst = reviewLayerPolicy()
+    expect(memoryFirst(call('mnemon_runtime_memory', { action: 'add', target: 'memory', content: 'Run pnpm verify before pushing.' }))).toBeUndefined()
+    expect(memoryFirst(call('mnemon_document_create', { title: 'Release checklist' }))).toContain('already changed working memory')
+  })
+
+  it('leaves profile changes, reads and the claimed layer alone', () => {
+    const policy = reviewLayerPolicy()
+    expect(policy(call('mnemon_document_search', { query: 'boot account' }))).toBeUndefined()
+    expect(policy(call('mnemon_runtime_memory', { action: 'add', target: 'user', content: 'Prefers short answers.' }))).toBeUndefined()
+    expect(policy(call('mnemon_document_create', { title: 'Boot account resolution' }))).toBeUndefined()
+    // A retry stays in its layer; "at most one" of each remains the persona's rule.
+    expect(policy(call('mnemon_document_create', { title: 'Boot account resolution' }))).toBeUndefined()
+    expect(policy(call('mnemon_runtime_memory', { action: 'replace', target: 'user', old_text: 'short' }))).toBeUndefined()
+    expect(policy(call('run_code', { code: 'await tools.mnemon_document_search({ query: "boot" })' }))).toBeUndefined()
+    expect(policy(call('mnemon_subagent_result', {}))).toBeUndefined()
+  })
+
+  it('claims no layer for a runtime call without target=memory', () => {
+    const policy = reviewLayerPolicy()
+    for (const args of [undefined, null, 'memory', { action: 'add' }, { action: 'add', target: 'project' }]) {
+      expect(policy(call('mnemon_runtime_memory', args))).toBeUndefined()
+    }
+    expect(policy(call('mnemon_document_create', { title: 'Boot account resolution' }))).toBeUndefined()
+  })
+
+  it('judges only calls the allowlist admits, including PTC sub-dispatches', async () => {
+    const f = fixture(), child = f.child('child')
+    const run = await startGuardedReview(f.host, f.parent, ['mnemon_document_create', 'mnemon_runtime_memory'], async () => {
+      f.publish(child.agent)
+      return child.run
+    }, undefined, reviewLayerPolicy())
+    const [guard] = child.guards
+    expect(guard!(call('run_code', {}))).toBeUndefined()
+    expect(guard!({ ...call('mnemon_document_create', { title: 'Boot account resolution' }), parent: Symbol('run_code') })).toBeUndefined()
+    expect(guard!(call('mnemon_runtime_memory', { action: 'add', target: 'memory' }))).toContain('already created a Document')
+    expect(guard!(call('mnemon_remember', { content: 'Same fact.' }))).toContain('Mnemon review cannot execute')
+    await run.dispose()
   })
 })

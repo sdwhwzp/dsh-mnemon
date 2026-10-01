@@ -30,7 +30,7 @@ function createEntry(controller: MnemonWorkspaceController): { entry: HTMLButton
   entry.className = css.entry ?? ''
   const icon = document.createElement('span')
   icon.className = css.entryIcon ?? ''
-  icon.append(createMemoryIcon(18))
+  icon.append(createMemoryIcon(16))
   const label = document.createElement('span')
   label.className = css.entryLabel ?? ''
   entry.append(icon, label)
@@ -101,9 +101,15 @@ export function mountMnemonSidebarEntry(
   const waitObserver = new MutationObserver(tryPlace)
   waitObserver.observe(document.body, { childList: true, subtree: true })
 
+  // Like DSH's own panel row, the open workspace is also the current page.
   const syncActive = (): void => {
-    if (controller.getSnapshot().open) entry.dataset.active = 'true'
-    else delete entry.dataset.active
+    if (controller.getSnapshot().open) {
+      entry.dataset.active = 'true'
+      entry.setAttribute('aria-current', 'page')
+    } else {
+      delete entry.dataset.active
+      entry.removeAttribute('aria-current')
+    }
   }
   const unsubscribe = controller.subscribe(syncActive)
   const unsubscribeLocale = subscribeLocale(syncLabel)

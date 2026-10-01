@@ -6,6 +6,7 @@ For an existing installation, start with [Compatibility and upgrades](../referen
 
 ## v0.5
 
+- [v0.5.21: Large Native Spaces and Leaner Hot Memory](./v0.5.21.md)
 - [v0.5.20: No Separate Starter Switch](./v0.5.20.md)
 - [v0.5.19: DSH 0.2, Desktop Memory and a Guided First Install](./v0.5.19.md)
 - [v0.5.18: Immediate Activation and Quiet Desktop CLI](./v0.5.18.md)

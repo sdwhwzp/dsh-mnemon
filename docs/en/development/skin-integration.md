@@ -20,6 +20,8 @@ Background integration belongs in the skin's Client styles. It needs no new Mnem
 
 The native Sidebar entry is rendered by DSH through `sidebar.panellist`, just like Plugins. The skin's native panel-row rules therefore supply its color, typography, spacing, selection and collapsed presentation. Mnemon supplies only its label and size-responsive icon; the workbench background contract above applies to the opened page.
 
+A replacement layout without the native panel seat gets Mnemon's own entry under New Session instead: `[data-dsh-plugin="dsh-mnemon"][data-dsh-part="sidebar-entry"]`. It copies DSH's panel-row values: inherited 14px type, primary label color, 36px rows with `7px 8px` padding and `0 2px` margins, `--dsw-radius-md` corners, a 16px icon (18px on the collapsed rail), and the hover background for both hover and the open workspace. The open state also sets `data-active` and `aria-current="page"`. A skin that restyles native panel rows can target this selector to match.
+
 The native main seat reserves DSH's `--dsh-frame-top-clearance` once at its outer boundary, keeping desktop window controls accessible. Its page layer sits above decorative body layers and below DSH window chrome; skins should not add another window-title offset to the inner workbench.
 
 ## Add an override to your skin

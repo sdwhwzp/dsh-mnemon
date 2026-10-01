@@ -3,8 +3,8 @@ import { join } from 'node:path'
 import { evaluatePluginCompatibility } from '@deepseek-ai/dsh-app-boot'
 import { describe, expect, it } from 'vitest'
 
-/** DSH releases a user can install today: npm `latest` and `next`. */
-const SUPPORTED_DSH_RUNTIMES = ['0.1.7-rc.2', '0.2.0-rc.1']
+/** The pinned development baseline and DSH 0.2's release candidates; 0.2.0-rc.2 is npm `latest` and `next`. */
+const SUPPORTED_DSH_RUNTIMES = ['0.1.7-rc.2', '0.2.0-rc.1', '0.2.0-rc.2']
 
 const root = join(import.meta.dirname, '..')
 const manifests = [

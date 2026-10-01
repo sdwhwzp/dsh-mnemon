@@ -39,6 +39,6 @@ dsh-mnemon 为 DeepSeek Harness 提供三类记忆：每一轮都会用到的**�
 
 ## 最新变化
 
-[v0.5.20](./releases/v0.5.20.md) 把 Starter 的就绪步骤并入组件组，不再有能让记忆系统无法启动的单独开关，并补充了更新后的恢复说明。[v0.5.19](./releases/v0.5.19.md) 支持 DSH 0.2.0-rc.1、让 DSH 桌面版可以管理记忆，并新增从空白电脑到第一条记忆的安装指南。[全部版本](./releases/README.md) · [路线图](./roadmap.md) · [历史验收证据](../pr-assets/README.md)
+[v0.5.21](./releases/v0.5.21.md) 让大型 Mnemon Native 空间重新可以列出内容、绘制图谱与归档；空闲审查每轮只写一层，项目记录不再进入热记忆；兜底侧栏入口与原生行一致。[v0.5.20](./releases/v0.5.20.md) 把 Starter 的就绪步骤并入组件组。[全部版本](./releases/README.md) · [路线图](./roadmap.md) · [历史验收证据](../pr-assets/README.md)
 
 指南描述当前版本。截图与录屏来自 [v0.5.19 图集](../assets/webui-v0.5.19/README.md)，安装步骤来自[安装图集](../assets/install-v0.5.19/README.md)；带日期的 PR 记录只证明其标注的代码修订与环境。内部 Host RPC 不属于对外插件 SDK。

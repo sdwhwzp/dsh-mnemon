@@ -134,6 +134,21 @@ describe('MnemonSettingsCard', () => {
     expect(screen.queryByRole('button', { name: /^Agent Teams 兼容模式 / })).toBeNull()
   })
 
+  it('switches runtime memory writes for idle review at once (#319)', async () => {
+    const mutate = vi.fn(async () => {})
+    const scope = liveSettingsScope<Config>({ status: 'ready' as const, value: {}, base: {}, user: {}, revision: 0, writable: true, mode: 'host' as const }, mutate)
+    render(threeTier(scope))
+    const runtime = screen.getByRole('switch', { name: '写入运行时记忆' })
+    expect(checked(runtime)).toBe(true)
+    expect(screen.getByText('只记你明确说过的偏好和规则；关闭后只建项目档案')).toBeTruthy()
+    fireEvent.click(runtime)
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith([{ op: 'set', path: ['idleReview'], value: { runtimeMemory: false } }]))
+    expect(checked(screen.getByRole('switch', { name: '写入运行时记忆' }))).toBe(false)
+    // The switch belongs to review: turning review off hides it.
+    fireEvent.click(screen.getByRole('switch', { name: '启用空闲审查' }))
+    await waitFor(() => expect(screen.queryByRole('switch', { name: '写入运行时记忆' })).toBeNull())
+  })
+
   it('keeps Team review compatibility selection read-only without the Host settings grant', () => {
     const snapshot = { status: 'ready' as const, value: { idleReview: { agentTeams: 'scoped' as const } }, revision: 0, writable: false, mode: 'host' as const }
     const scope = settingsScope(snapshot)

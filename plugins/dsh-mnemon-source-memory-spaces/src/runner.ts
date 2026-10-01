@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { JsonValue } from './contracts.ts'
 import type { ResolvedMemorySpacesConfig as ResolvedConfig } from './config.ts'
-import { runProcess, type ProcessOptions, type ProcessRunner } from './providers/process.ts'
+import { ProcessError, runProcess, type ProcessOptions, type ProcessRunner } from './providers/process.ts'
 import { withMemoryStorageLock } from 'dsh-mnemon/extension-sdk'
 import { findMnemonCommand, isMnemonExecutable, resolveMnemonInvocation } from './native-cli.ts'
 
@@ -17,6 +17,8 @@ export interface MnemonRunOptions {
   signal?: AbortSignal
   globalFlags?: boolean
   store?: string
+  /** Output cap for this call. Whole-store reads raise it; everything else keeps the 2 MiB default. */
+  maxOutputBytes?: number
 }
 
 export interface MnemonTextCommand {
@@ -38,6 +40,25 @@ export interface MnemonRunner {
 }
 
 const EMBEDDING_ENVIRONMENT_KEYS = new Set(['MNEMON_EMBED_ENDPOINT', 'MNEMON_EMBED_MODEL', 'MNEMON_EMBED_API_KEY', 'MNEMON_EMBED_PROTOCOL'])
+
+/**
+ * Explain a CLI call that produced no result. Only a failed launch means the
+ * executable is missing or unusable, so only that case carries the install
+ * hint; a timeout, a cancellation or an oversized output names its own cause.
+ */
+function processFailureMessage(error: unknown, args: readonly string[]): string {
+  const detail = error instanceof Error ? error.message : String(error)
+  const reason = error instanceof ProcessError ? error.reason : 'launch'
+  if (reason === 'output-limit') {
+    const command = args.find(arg => !arg.startsWith('-')) ?? 'command'
+    return `mnemon ${command} stopped: ${detail.replace(/^mnemon /u, '')}`
+  }
+  if (reason !== 'launch') return detail
+  const hint = process.platform === 'win32'
+    ? 'Install the official Mnemon Windows release, ensure mnemon.exe is on PATH or under %LOCALAPPDATA%\\Programs\\mnemon, or set MNEMON_CLI_PATH or mnemon.cliPath to its absolute path.'
+    : 'Install Mnemon and ensure "mnemon" is on PATH, or set MNEMON_CLI_PATH or mnemon.cliPath.'
+  return `${detail}. ${hint}`
+}
 
 /** Preserve the Host environment while making saved embedding overrides authoritative. */
 function processEnvironment(config: ResolvedConfig): NodeJS.ProcessEnv | undefined {
@@ -92,6 +113,7 @@ export function createRunner(config: ResolvedConfig, processRunner: ProcessRunne
       timeoutMs: config.timeoutMs,
       ...(environment === undefined ? {} : { env: environment }),
       ...(options.signal === undefined ? {} : { signal: options.signal }),
+      ...(options.maxOutputBytes === undefined ? {} : { maxOutputBytes: options.maxOutputBytes }),
     }
     let result
     try {
@@ -99,13 +121,7 @@ export function createRunner(config: ResolvedConfig, processRunner: ProcessRunne
       result = await processRunner(invocation.command, invocation.args,
         { ...processOptions, ...(invocation.env === undefined ? {} : { env: invocation.env }) })
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error)
-      const hint = process.platform === 'win32'
-        ? 'Install the official Mnemon Windows release, ensure mnemon.exe is on PATH or under %LOCALAPPDATA%\\Programs\\mnemon, or set MNEMON_CLI_PATH or mnemon.cliPath to its absolute path.'
-        : 'Install Mnemon and ensure "mnemon" is on PATH, or set MNEMON_CLI_PATH or mnemon.cliPath.'
-      throw new MnemonCliError(
-        `${detail}. ${hint}`,
-      )
+      throw new MnemonCliError(processFailureMessage(error, args))
     }
     if (result.exitCode !== 0) {
       const detail = result.stderr.trim() || result.stdout.trim() || 'no output'

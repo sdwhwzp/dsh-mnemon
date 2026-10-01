@@ -379,12 +379,19 @@ describe('Mnemon canonical workspace launcher', () => {
   })
 
   it('treats the sidebar entry as navigation and retains an already active workspace', () => {
-    currentDispose = mountMnemonSidebarLauncher(context() as never, key => String(key), new MnemonWorkspaceController())
+    const controller = new MnemonWorkspaceController()
+    currentDispose = mountMnemonSidebarLauncher(context() as never, key => String(key), controller)
     const entry = document.querySelector<HTMLButtonElement>('[data-dsh-mnemon-entry]')!
+    expect(entry.hasAttribute('aria-current')).toBe(false)
     fireEvent.click(entry)
     fireEvent.click(entry)
     expect(document.documentElement.hasAttribute('data-dsh-mnemon-active')).toBe(true)
     expect(entry.getAttribute('data-active')).toBe('true')
+    // As on DSH's own panel rows, the open workspace is the current page (#318).
+    expect(entry.getAttribute('aria-current')).toBe('page')
+    controller.close()
+    expect(entry.hasAttribute('data-active')).toBe(false)
+    expect(entry.hasAttribute('aria-current')).toBe(false)
   })
 
   it.each([true, false])('round-trips with the released legacy panel protocol (Mnemon mounted first: %s)', mnemonFirst => {

@@ -51,7 +51,7 @@ The Host fixes update commands and arguments. The browser cannot supply either; 
 
 ## Legacy Session recovery
 
-DSH `0.1.7-rc.2` and `0.2.0-rc.1` are the supported hosts; see the [compatibility matrix](../reference/compatibility.md). Restart the Web Profile after upgrading Mnemon: the Starter patch gives the owning `connection` entry both `webRuntime` and `webServer`. This restores all seven Mnemon RPC channels when **Memory System** or its configuration page previously returned HTTP 405. Custom profiles that install the Host without the Starter must apply the same dependency declaration to their connection entry, preserving any additional dependencies in their own composition. No DSH package source is changed; browser authentication and Mnemon grants still apply.
+DSH `0.1.7-rc.2` and `0.2.0-rc.2` are the supported hosts; see the [compatibility matrix](../reference/compatibility.md). Restart the Web Profile after upgrading Mnemon: the Starter patch gives the owning `connection` entry both `webRuntime` and `webServer`. This restores all seven Mnemon RPC channels when **Memory System** or its configuration page previously returned HTTP 405. Custom profiles that install the Host without the Starter must apply the same dependency declaration to their connection entry, preserving any additional dependencies in their own composition. No DSH package source is changed; browser authentication and Mnemon grants still apply.
 
 The separate error `source summary requires notice form; source v0 artifact remains unchanged` comes from older Mnemon messages in DSH Session logs. New recall/instruction messages omit that invalid summary. Updating the plugin does not rewrite an existing Session. To repair one affected log:
 
@@ -154,7 +154,7 @@ Existing turns and delegated child activations may still use the old runtime. Wa
 
 ## Cloud-hosted WebUI
 
-DSH 0.1.7-rc.2 and 0.2.0-rc.1 are the supported registry targets. It authenticates the page, every RPC, and every stream through an authority-bound browser session created from the launch-token URL printed by the Host. `--trusted-host` remains a Host/Origin fence; it does not replace HTTPS or deployment access controls.
+DSH 0.1.7-rc.2 and 0.2.0-rc.2 are the supported registry targets. It authenticates the page, every RPC, and every stream through an authority-bound browser session created from the launch-token URL printed by the Host. `--trusted-host` remains a Host/Origin fence; it does not replace HTTPS or deployment access controls.
 
 1. Terminate HTTPS at a reverse proxy or access gateway and protect the public entry for its intended users. Proxy the same-origin `/` and `/api` traffic, including streams, to `http://127.0.0.1:3080` while preserving the external `Host` authority.
 2. Start the loopback service with the external authority. Use a bare `host[:port]`, not a URL:
@@ -223,7 +223,8 @@ For authenticated remote clients, `remoteAccess: trusted-host` grants management
 ### Process
 
 - CLI uses `spawn(command, args, { shell: false })`.
-- stdout + stderr are capped at 2 MiB by default.
+- stdout + stderr are capped at 2 MiB per call. Mnemon Native reads a whole Memory Space for its contents list, its graph and the exact-content check before runtime memory archives entries; those reads grow with the Store and are capped at 128 MiB.
+- A call that fails says why: only a failed launch suggests installing Mnemon or setting `mnemon.cliPath`, while a timeout, a cancellation and an output over the cap each name themselves.
 - Calls use `timeoutMs` and AbortSignal; cancellation sends `SIGTERM`, then `SIGKILL` after 1.5 seconds.
 - One Runner serializes calls; separate DSH processes still rely on Mnemon / SQLite concurrency.
 
@@ -243,6 +244,7 @@ For authenticated remote clients, `remoteAccess: trusted-host` grants management
 - The WebUI neither reads SQLite, starts processes, calls remote providers, nor supplies arbitrary update commands; provider network access remains inside the Host.
 - Workers use persona, tool allowlists, and `maxDepth: 1`. A stable result tool accepts only the current child's revocable request ID and validates each operation's result schema.
 - Distillation and supervised writeback workers cannot call `mnemon_forget`. Idle review has only the create-only Documents tool for document writes, so it cannot replace user originals or archive documents to make room. These restrictions are enabled by default and do not require an enhancement plugin.
+- Idle review writes each pass to one layer: after it creates a Document, working-memory changes are refused, and after a working-memory change, a Document is refused. `idleReview.runtimeMemory: false` removes its runtime memory tool entirely.
 - Queries, candidates, Document bodies, and historical memory are treated as untrusted data.
 
 These boundaries are not a secret scanner. There is no deterministic credential detection; never submit keys, tokens, private keys, or raw sensitive logs.
@@ -306,7 +308,7 @@ Activity score, latest checkpoint, and retry state are not persisted. Host resta
 
 ### Versions and internationalization
 
-DSH 0.1.7-rc.2 and 0.2.0-rc.1 are supported; see the [compatibility matrix](../reference/compatibility.md). The Web interface is bilingual, while commands, tool cards, compatibility metadata and some errors remain partly untranslated.
+DSH 0.1.7-rc.2 and 0.2.0-rc.2 are supported; see the [compatibility matrix](../reference/compatibility.md). The Web interface is bilingual, while commands, tool cards, compatibility metadata and some errors remain partly untranslated.
 
 ## Document archive recovery
 

@@ -39,6 +39,6 @@ dsh-mnemon gives DeepSeek Harness three kinds of memory: **runtime memory** in e
 
 ## What is new
 
-[v0.5.20](./releases/v0.5.20.md) folds the Starter's readiness into its component group, so no separate switch can keep the Memory System from starting, and documents recovery after updates. [v0.5.19](./releases/v0.5.19.md) added DSH 0.2.0-rc.1 support, memory management in the DSH desktop app and a guide from an empty machine to the first memory. [All releases](./releases/README.md) · [Roadmap](./roadmap.md) · [Historical evidence](../pr-assets/README.md)
+[v0.5.21](./releases/v0.5.21.md) lets large Mnemon Native spaces list, draw and archive again, holds idle review to one layer so project records stay out of hot memory, and draws the fallback sidebar entry as a native row. [v0.5.20](./releases/v0.5.20.md) folded the Starter's readiness into its component group. [All releases](./releases/README.md) · [Roadmap](./roadmap.md) · [Historical evidence](../pr-assets/README.md)
 
 Guides describe the current release. Screenshots and recordings come from the [v0.5.19 gallery](../assets/webui-v0.5.19/README.md), and the installation steps from the [installation gallery](../assets/install-v0.5.19/README.md); dated PR records establish only their named revisions and environments. Internal Host RPCs are not an external plugin SDK.

@@ -67,6 +67,7 @@ mnemon:
   idleReviewMs: 30000
   idleReview:
     enabled: true
+    runtimeMemory: true # false：只建项目档案
     provider: spawn
     fallback: spawn
     agentTeams: pause # pause | scoped
@@ -115,6 +116,7 @@ mnemon:
 | `writebackMode` | `guided` | `guided` / `off` | 是否在每个会话注入一次可持续复用的热记忆 cue，并启用评分加 dirty admission 的后台审查；不移除显式写入 |
 | `idleReviewMs` | `30000` | 5000–600000 ms | 达标后需要连续空闲的时间 |
 | `idleReview.enabled` | `true` | boolean | 自动审查独立开关 |
+| `idleReview.runtimeMemory` | `true` | boolean | 允许审查修改运行时记忆（USER.md 与 MEMORY.md）；`false` 时只创建项目档案 |
 | `idleReview.provider` | `spawn` | `spawn` / `fork` | 有界检查点或继承父上下文 |
 | `idleReview.fallback` | `spawn` | `spawn` / `skip` | 仅启动前处理 fork 缺失/不兼容 |
 | `idleReview.agentTeams` | `pause` | `pause` / `scoped` | 安装 Team 工具时暂停，或显式启用受 guard 保护的审查；已验证 DSH/Teams 0.1.7-rc.2 |
@@ -335,6 +337,8 @@ depthLimit   = true
 后台审查默认使用不继承父上下文的 `spawn` Provider，并从父 Agent 当前公开 surface 构建有界检查点。仅收录完整可见文本消息与成功工具结果，不重建被省略或不可用的上下文。`idleReview.provider: fork` 保留完整父上下文审查，并要求 `inheritsParentContext=true`。fork 缺失或不兼容时，`idleReview.fallback` 在启动前选择 `spawn` 或 `skip`；已启动的运行绝不通过其他 Provider 重试。
 
 审查要求本地子 Agent 发布、`agents.isOwnedBy` 和 `agent.ctx.tools.guard`；guard 同样阻止无关的 own-scope 插件工具与 Code Mode 子调用。`maxContextChars` 限制 spawn 检查点；`maxTokens` 限制每次模型响应，不限制 fork 继承输入或多步运行的总用量。
+
+**审查写入什么。**每条知识只进一层。项目记录（设计、实现细节、路径、端口、范围约定、交接说明等）最多写成一份项目档案。工作记忆（MEMORY.md）只收用户明确说过的简短规则，例如约定、纠正、环境事实或工具特性，且项目档案和已有条目都未涵盖；USER.md 收身份与偏好。guard 让每轮审查只写一层：建了项目档案后，修改工作记忆会被拒绝；修改工作记忆后，新建项目档案会被拒绝；USER.md 的修改不受影响。`idleReview.runtimeMemory: false` 会从审查中收回 `mnemon_runtime_memory`，审查只创建项目档案。审查从不写入记忆空间：工作记忆在容量整理时归档进去，项目档案在冷归档时建立索引；**存入记忆**与 `mnemon_remember` 则直接写入。
 
 `idleReviewMs` 仍是连续空闲防抖时间。独立的 `minIntervalMs` 限制尝试间隔，失败与取消也计入；`maxPerSession` 限制当前加载的父 Agent 的尝试次数，零表示暂停。清空或压缩上下文时 DSH 会替换该 Agent；这与重启 Host、卸载后重新打开 Agent 一样，都会获得新的内存内预算。运行结束通过 DSH 公开 API dispose。持久会话历史保留：已发布 Host 没有插件范围的归档/TTL 契约，Mnemon 不删除会话文件或其他插件的 Agent。
 

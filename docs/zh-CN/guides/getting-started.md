@@ -10,7 +10,7 @@
 
 本节写给熟悉命令行的用户，也包括开发检出、云端访问与 Headless。需要：
 
-- DSH `0.1.7-rc.2`（npm `latest`）或 `0.2.0-rc.1`（npm `next`），以及 Node.js `^22.19.0 || >=24.0.0` 与 pnpm；
+- DSH `0.2.0-rc.2`（npm `latest` 与 `next`）或 `0.1.7-rc.2`，以及 Node.js `^22.19.0 || >=24.0.0` 与 pnpm；
 - 一个能够创建独立任务 Agent 的 DSH 模型路由；
 - 仅在使用 Mnemon Native 时需要本地的 `mnemon` CLI，各平台的安装方式见[安装与启动](./installation.md#mnemon-cli-的其他安装方式)；其他 Provider 连接各自的服务。
 

@@ -309,10 +309,13 @@ start a task Agent on the completed turn
   - fork: inherits the parent context
       |
       v
-conservative maintenance decision
-  - hot memory: only new, explicit, durable user assertions
-  - Documents: search first; create at most one separate document,
-    never update or archive an existing one
+conservative maintenance decision, one layer per pass
+  - Documents first: search; create at most one separate document
+    for a project record, never update or archive an existing one
+  - hot memory: only new, explicit, durable user assertions;
+    MEMORY.md takes compact rules no Document covers, never
+    project records (off with idleReview.runtimeMemory: false)
+  - after a Document, working memory is refused, and vice versa
   - no Memory Spaces write tools
       |
       +-- completed, including skip -> clear activity
@@ -320,7 +323,7 @@ conservative maintenance decision
       +-- failed/aborted ------------> retain activity
 ```
 
-The admission check is deliberately structural rather than an LLM classification, so an eligible but ordinary checkpoint starts no background model. The review Agent's tools are exactly `mnemon_document_search`, `mnemon_runtime_memory` and `mnemon_document_create`; “at most one” document is enforced by its persona, not by a Host mutation counter. While Agent Teams tools are installed, review pauses unless `idleReview.agentTeams: scoped`; the Status page says so while it is paused. Background watermarks are not yet persisted, so a Host restart loses accumulated signals that have not been processed.
+The admission check is deliberately structural rather than an LLM classification, so an eligible but ordinary checkpoint starts no background model. The review Agent's tools are exactly `mnemon_document_search`, `mnemon_runtime_memory` and `mnemon_document_create`, without the runtime tool when `idleReview.runtimeMemory` is `false`. The review guard holds each pass to one layer: the first Document creation or working-memory change it admits claims the pass, and the other is refused even if that first call fails; USER.md changes stay independent. “At most one” document or hot-memory change is still enforced by the persona, not by a Host mutation counter. Memory Spaces receive review output only later, through working-memory capacity archiving and Document cold archiving. While Agent Teams tools are installed, review pauses unless `idleReview.agentTeams: scoped`; the Status page says so while it is paused. Background watermarks are not yet persisted, so a Host restart loses accumulated signals that have not been processed.
 
 ## How Configuration Switches Interact
 

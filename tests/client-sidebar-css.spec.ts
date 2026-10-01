@@ -8,6 +8,17 @@ const runtimeCss = readFileSync(new URL('../plugins/dsh-mnemon-source-runtime/pr
 const spacesCss = readFileSync(new URL('../plugins/dsh-mnemon-source-memory-spaces/presentation/sidebar.module.css', import.meta.url), 'utf8')
 
 const sidebarSurface = 'var(--dsw-alias-bg-overlay, var(--dsw-alias-bg-base))'
+// The pinned DSH sidebar; 0.2.0-rc.2 ships the same panel row rules.
+const dshSidebar = readFileSync(new URL('../node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js', import.meta.url), 'utf8')
+
+/** One rule's declarations, with minifier spellings normalized. */
+function declarations(rule: string): Map<string, string> {
+  const spelled = (value: string) => value === '0 0' ? 'transparent' : value.replace(/,\s+/g, ',')
+  return new Map(rule.split(';').map(part => part.trim()).filter(Boolean).map(part => {
+    const colon = part.indexOf(':')
+    return [part.slice(0, colon).trim(), spelled(part.slice(colon + 1).trim())] as [string, string]
+  }))
+}
 
 describe('Sidebar layout invariants', () => {
   it('keeps the workspace surfaces opaque under transparent-base skins with a default-theme fallback', () => {
@@ -28,17 +39,27 @@ describe('Sidebar layout invariants', () => {
     expect(workspaceCss).not.toContain('.dshDesktopConversationSurface')
   })
 
-  it('aligns the launcher label with the sibling plugin entries in the DSH sidebar', () => {
-    // The launcher row sits directly under the task-board and skill-explorer
-    // rows, which both use an 8px icon/label gap. A wider gap here pushed the
-    // label 2px right of its neighbours, so the three rows read as misaligned.
-    const entry = /\.entry \{[^}]*\}/.exec(workspaceCss)?.[0] ?? ''
-    expect(entry).toContain('gap: 8px;')
-    expect(entry).not.toMatch(/gap:\s*(?!8px)\d+px/)
-    // The icon box keeps the shared 24px/18px geometry the gap is measured against.
-    expect(workspaceCss).toContain('.entryIcon {')
-    expect(workspaceCss).toMatch(/\.entryIcon \{[^}]*width: 24px;[^}]*height: 24px;/)
-    expect(workspaceCss).toMatch(/\.entryIcon svg \{[^}]*width: 18px;[^}]*height: 18px;/)
+  it('draws the fallback entry as DSH draws its own panel rows (#318)', () => {
+    // DSH ships its sidebar CSS module minified inside the client bundle.
+    const nativeRule = (selector: string) => declarations(new RegExp(`\\.[\\w-]+_${selector}\\{([^}]*)\\}`).exec(dshSidebar)?.[1] ?? '')
+    const row = nativeRule('panelRow')
+    const entry = declarations(/\.entry \{([^}]*)\}/.exec(workspaceCss)?.[1] ?? '')
+    expect(row.size).toBeGreaterThan(10)
+    for (const [property, value] of row) expect(entry.get(property), property).toBe(value)
+    // The same highlight for hover and the open workspace, with no bold active label.
+    expect(nativeRule('panelRow:hover').get('background')).toBe('var(--dsw-alias-interactive-bg-hover)')
+    const highlight = declarations(/\.entry:hover,\n\.entry\[data-active\] \{([^}]*)\}/.exec(workspaceCss)?.[1] ?? '')
+    expect(highlight.get('background')).toBe('var(--dsw-alias-interactive-bg-hover)')
+    expect(workspaceCss).not.toMatch(/\.entry[^{]*\{[^}]*font-weight/)
+    expect(declarations(/\.entry:focus-visible \{([^}]*)\}/.exec(workspaceCss)?.[1] ?? '')).toEqual(nativeRule('panelRow:focus-visible'))
+    // Glyphs follow the native slot: 16px in the wide sidebar and 18px on the rail, with no wider box.
+    expect(dshSidebar).toMatch(/size:\s*wide\s*\?\s*16\s*:\s*18/)
+    expect(workspaceCss).toMatch(/\.entryIcon svg \{[^}]*width: 16px;[^}]*height: 16px;/)
+    expect(workspaceCss).toMatch(/\[data-sidebar-collapsed\] \.entryIcon svg \{[^}]*width: 18px;[^}]*height: 18px;/)
+    expect(/\.entryIcon \{([^}]*)\}/.exec(workspaceCss)?.[1]).not.toMatch(/width|height/)
+    const rail = declarations(/\[data-sidebar-collapsed\] \.entry \{([^}]*)\}/.exec(workspaceCss)?.[1] ?? '')
+    expect({ width: rail.get('width'), height: rail.get('height'), padding: rail.get('padding'), 'justify-content': rail.get('justify-content'), 'border-radius': rail.get('border-radius') })
+      .toEqual({ width: '36px', height: '36px', padding: '0', 'justify-content': 'center', 'border-radius': undefined })
   })
 
   it('pins primary page headers at the canvas origin without an initial sticky settling distance', () => {

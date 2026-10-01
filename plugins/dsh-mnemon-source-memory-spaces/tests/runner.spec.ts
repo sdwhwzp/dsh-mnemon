@@ -4,7 +4,7 @@ import { join, win32 } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { resolveMemorySpacesConfig as resolveConfig } from '../src/config.ts'
 import { createRunner } from '../src/runner.ts'
-import type { ProcessRunner } from '../src/providers/process.ts'
+import { ProcessError, type ProcessRunner } from '../src/providers/process.ts'
 import { findMnemonCommand, nodeLauncherEnvironment } from '../src/native-cli.ts'
 
 const temporaryDirectories: string[] = []
@@ -231,5 +231,54 @@ describe('Mnemon CLI discovery', () => {
     await runner.runJson(['status'], { signal })
     expect(run).toHaveBeenCalledWith(command, ['--data-dir', root, 'status'], { timeoutMs: 4321, signal })
     expect(process.env.ELECTRON_RUN_AS_NODE).toBeUndefined()
+  })
+})
+
+describe('Mnemon CLI output caps and failure messages', () => {
+  function fixture(run: ProcessRunner) {
+    vi.stubEnv('ELECTRON_RUN_AS_NODE', undefined)
+    const root = temporaryDirectory()
+    const command = join(root, 'mnemon.exe')
+    return { root, command, runner: createRunner(resolveConfig({ cliPath: command, dataDir: root, timeoutMs: 4321 }), run) }
+  }
+
+  it('forwards a per-call output cap to the process and leaves the default alone otherwise', async () => {
+    const run = vi.fn<ProcessRunner>(async () => ({ stdout: '[]', stderr: '', exitCode: 0 }))
+    const { root, command, runner } = fixture(run)
+    await runner.runJson(['--readonly', 'recall', '', '--basic', '--limit', '100000'], { store: 'work', maxOutputBytes: 128 * 1024 * 1024 })
+    await runner.runText(['viz', '--format', 'html', '--output', '-'], { store: 'work', maxOutputBytes: 64 })
+    await runner.runJson(['status'], { store: 'work' })
+    await runner.runTextBatch([{ args: ['store', 'set', 'work'], options: { store: 'work', maxOutputBytes: 32 } }])
+    expect(run.mock.calls.map(call => call[2])).toEqual([
+      { timeoutMs: 4321, maxOutputBytes: 128 * 1024 * 1024 },
+      { timeoutMs: 4321, maxOutputBytes: 64 },
+      { timeoutMs: 4321 },
+      { timeoutMs: 4321, maxOutputBytes: 32 },
+    ])
+    expect(run.mock.calls[0]?.slice(0, 2)).toEqual([command, ['--data-dir', root, '--store', 'work', '--readonly', 'recall', '', '--basic', '--limit', '100000']])
+  })
+
+  it('reports an oversized output as such instead of suggesting a reinstall', async () => {
+    const run = vi.fn<ProcessRunner>(async () => { throw new ProcessError('mnemon output exceeded 2097152 bytes', 'output-limit') })
+    const { runner } = fixture(run)
+    const failure = runner.runJson(['--readonly', 'recall', '', '--basic', '--limit', '100000'], { store: 'work' })
+    await expect(failure).rejects.toMatchObject({ name: 'MnemonCliError', message: 'mnemon recall stopped: output exceeded 2097152 bytes' })
+    await expect(failure).rejects.not.toThrow(/Install|PATH|cliPath/u)
+  })
+
+  it('keeps the install hint for launch failures only', async () => {
+    const reasons = ['launch', 'timeout', 'aborted'] as const
+    const messages: string[] = []
+    for (const reason of reasons) {
+      const run = vi.fn<ProcessRunner>(async () => { throw new ProcessError(`mnemon ${reason} detail`, reason) })
+      const { runner } = fixture(run)
+      messages.push(await runner.runJson(['status']).then(() => '', (error: Error) => error.message))
+    }
+    expect(messages[0]).toMatch(/^mnemon launch detail\. Install/u)
+    expect(messages[1]).toBe('mnemon timeout detail')
+    expect(messages[2]).toBe('mnemon aborted detail')
+    // A custom process runner without failure reasons still gets the hint, as before.
+    const plain = vi.fn<ProcessRunner>(async () => { throw new Error('spawn mnemon ENOENT') })
+    await expect(fixture(plain).runner.runJson(['status'])).rejects.toThrow(/^spawn mnemon ENOENT\. Install/u)
   })
 })

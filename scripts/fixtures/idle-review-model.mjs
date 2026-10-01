@@ -24,9 +24,10 @@ export function idleReviewModel(report) {
     assert(created?.document?.id, 'review must have a real document creation receipt')
     if (stage === 2) {
       report({ event: 'document-committed', documentId: created.document.id })
-      return { name: 'mnemon_runtime_memory', args: { action: 'add', target: 'memory', content: 'The disposable idle review fixture uses SQLite.', importance: 'normal' } }
+      // The Document claims this pass for project knowledge (#319); a profile entry stays independent.
+      return { name: 'mnemon_runtime_memory', args: { action: 'add', target: 'user', content: 'The fixture user reviews disposable SQLite checkpoints.', importance: 'low' } }
     }
-    const runtime = receipts.find(value => value.success === true && value.target === 'memory' && typeof value.added === 'string'
+    const runtime = receipts.find(value => value.success === true && value.target === 'user' && typeof value.added === 'string'
       && value.memoryReceipt?.status === 'succeeded' && value.memoryReceipt?.completion === 'committed')
     assert(runtime, 'review must have a real committed Runtime mutation receipt')
     report({ event: 'partial-failure', documentId: created.document.id, runtimeRevision: runtime.revision, replayed: stage > 3 })

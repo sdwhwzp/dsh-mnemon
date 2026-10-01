@@ -3,6 +3,14 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { NORMALIZED_RELEVANCE_SCORE, type MemorySpaceNativeRunner, type MemoryProviderAdapter, type JsonValue, type Insight, type MemoryBody as MemorySpace, type MemoryBodyStats as MemorySpaceStats, type MemoryGraphEdge, type MemoryGraphNode, type MemoryGraphSnapshot, type MemoryListRequest, type EdgeType, type RememberRequest, type SearchRequest, type ProviderBodyStatus as ProviderSpaceStatus, type ProviderSearchResult } from 'dsh-mnemon-source-memory-spaces/provider-sdk'
 
+/**
+ * Output cap for the two whole-Store reads: the full readonly recall and the
+ * HTML graph. Their size grows with the Store, not with a misbehaving command,
+ * and a Store of about 1,000 insights already produces 3–9 MB (issue #320).
+ * Every other command keeps the Source's 2 MiB default.
+ */
+export const STORE_DUMP_MAX_OUTPUT_BYTES = 128 * 1024 * 1024
+
 function record(value: JsonValue | undefined): Record<string, JsonValue> | undefined {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
     ? value as Record<string, JsonValue>
@@ -155,7 +163,9 @@ export class MnemonNativeProvider implements MemoryProviderAdapter {
 
   async graph(body: MemorySpace, signal?: AbortSignal): Promise<MemoryGraphSnapshot> {
     const [html, insights] = await Promise.all([
-      this.runner.runText(['viz', '--format', 'html', '--output', '-'], { ...(signal === undefined ? {} : { signal }), store: body.id }),
+      this.runner.runText(['viz', '--format', 'html', '--output', '-'], {
+        ...(signal === undefined ? {} : { signal }), store: body.id, maxOutputBytes: STORE_DUMP_MAX_OUTPUT_BYTES,
+      }),
       // Mnemon's HTML visualization omits tags and entities. A readonly recall
       // supplies that metadata without incrementing access counters.
       this.allNativeInsights(body, signal, true),
@@ -177,7 +187,7 @@ export class MnemonNativeProvider implements MemoryProviderAdapter {
     const payload = await this.runner.runJson([
       ...(readonly ? ['--readonly'] : []),
       'recall', '', '--basic', '--limit', '100000',
-    ], { ...(signal === undefined ? {} : { signal }), store: body.id })
+    ], { ...(signal === undefined ? {} : { signal }), store: body.id, maxOutputBytes: STORE_DUMP_MAX_OUTPUT_BYTES })
     const values = Array.isArray(payload) ? payload : Array.isArray(record(payload)?.results) ? record(payload)!.results as JsonValue[] : []
     return values.map(normalizeInsight).filter((entry): entry is Insight => entry !== undefined)
   }

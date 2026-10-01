@@ -309,10 +309,13 @@ Host 判断是否存在待整理内容
   - fork：继承父 Agent 上下文
       |
       v
-保守的整理决策
-  - 热记忆：只收录用户新提出的、明确且持久的陈述
-  - 档案：先检索；至多新建一份独立档案，
+保守的整理决策，每轮只写一层
+  - 先看档案：先检索；项目记录至多新建一份独立档案，
     不更新或归档已有档案
+  - 热记忆：只收录用户新提出的、明确且持久的陈述；
+    MEMORY.md 只收档案未涵盖的简短规则，不收项目记录
+    （idleReview.runtimeMemory: false 时关闭）
+  - 建了档案就不能再改工作记忆，反之亦然
   - 不提供记忆空间写入工具
       |
       +-- 已完成（含跳过）--> 清空累计活动
@@ -320,7 +323,7 @@ Host 判断是否存在待整理内容
       +-- 失败/中止 --------> 保留累计活动
 ```
 
-admission 有意只使用结构信号，不调用 LLM 分类；因此达到 activity 门槛但没有 dirty candidate 的普通 checkpoint 不会启动后台模型。审查 Agent 的工具恰好是 `mnemon_document_search`、`mnemon_runtime_memory` 与 `mnemon_document_create`；“至多一份”档案由其 persona 约束，不是 Host mutation counter。安装了 Agent Teams 工具时，除非设置 `idleReview.agentTeams: scoped`，审查会暂停；暂停期间状态页会给出提示。后台水位尚未持久化，Host 重启会丢失未处理的累计信号。
+admission 有意只使用结构信号，不调用 LLM 分类；因此达到 activity 门槛但没有 dirty candidate 的普通 checkpoint 不会启动后台模型。审查 Agent 的工具恰好是 `mnemon_document_search`、`mnemon_runtime_memory` 与 `mnemon_document_create`；`idleReview.runtimeMemory` 为 `false` 时不提供运行时记忆工具。审查 guard 让每轮只写一层：它放行的第一次新建档案或工作记忆修改决定本轮所写的层，另一层随后被拒绝，即使第一次调用失败也是如此；USER.md 的修改不受影响。“至多一份”档案或一次热记忆修改仍由 persona 约束，不是 Host mutation counter。审查的产出之后才进入记忆空间：工作记忆在容量整理时归档，项目档案在冷归档时建立索引。安装了 Agent Teams 工具时，除非设置 `idleReview.agentTeams: scoped`，审查会暂停；暂停期间状态页会给出提示。后台水位尚未持久化，Host 重启会丢失未处理的累计信号。
 
 ## 配置开关的关系
 

@@ -20,11 +20,43 @@ export function idleReviewBlockReason(parent: HostAgent, agentTeams: 'pause' | '
     && parent.ctx.tools?.get?.('spawn_teammate', parent) !== undefined ? 'agent-team' : undefined
 }
 
+export type ReviewToolPolicy = (execution: Readonly<ToolExecution>) => string | undefined
+
+type ReviewLayer = 'working-memory' | 'documents'
+
+function reviewLayer(execution: Readonly<ToolExecution>): ReviewLayer | undefined {
+  if (execution.name === 'mnemon_document_create') return 'documents'
+  if (execution.name !== 'mnemon_runtime_memory') return undefined
+  const input = execution.arguments
+  // Profile changes (target=user) never belong in a Document, so they stay independent.
+  return typeof input === 'object' && input !== null && (input as { target?: unknown }).target === 'memory' ? 'working-memory' : undefined
+}
+
+/**
+ * One idle review pass records project knowledge in one layer (#319). The first
+ * Document creation or working-memory change it admits claims the pass; the
+ * other layer is refused from then on, even when that first call fails, so a
+ * refused or full layer is never evaded by writing the same knowledge elsewhere.
+ */
+export function reviewLayerPolicy(): ReviewToolPolicy {
+  let claimed: ReviewLayer | undefined
+  return execution => {
+    const layer = reviewLayer(execution)
+    if (layer === undefined) return undefined
+    claimed ??= layer
+    if (claimed === layer) return undefined
+    return claimed === 'documents'
+      ? 'This idle review already created a Document, so it cannot also change working memory (target=memory). Finish with the result tool.'
+      : 'This idle review already changed working memory, so it cannot also create a Document. Finish with the result tool.'
+  }
+}
+
 /**
  * DSH restrict() filters inherited capabilities, leaving own-scope plugin tools
  * visible. Attach its monotonic execution guard during publication, before a
  * review child can run. Async context attributes concurrent provider starts;
- * public registry ownership verifies the exact causal parent.
+ * public registry ownership verifies the exact causal parent. An optional
+ * policy then judges each allowed call, PTC sub-dispatches included.
  */
 export async function startGuardedReview(
   host: ReviewToolHost,
@@ -32,6 +64,7 @@ export async function startGuardedReview(
   toolNames: readonly string[],
   start: () => Promise<HostSubagentRun>,
   published?: (agent: HostAgent) => void,
+  policy?: ReviewToolPolicy,
 ): Promise<HostSubagentRun> {
   const agents = host.agents
   if (typeof agents?.isOwnedBy !== 'function') throw new Error('Mnemon review requires DSH Agent ownership and scoped tool guard support')
@@ -47,7 +80,7 @@ export async function startGuardedReview(
       if (typeof tools?.guard !== 'function') throw new Error('Mnemon review requires DSH scoped tool guard support')
       const dispose = tools.guard((execution: ToolExecution) => {
         // PTC is a transport: DSH also guards each end-capability sub-dispatch.
-        if (execution.name === 'run_code' || (execution.name !== undefined && allowed.has(execution.name))) return
+        if (execution.name === 'run_code' || (execution.name !== undefined && allowed.has(execution.name))) return policy?.(execution)
         return `Mnemon review cannot execute ${JSON.stringify(execution.name)}; reuse the inherited checkpoint and bounded Document search.`
       })
       if (typeof dispose !== 'function') throw new Error('Mnemon review tool guard did not return a disposer')

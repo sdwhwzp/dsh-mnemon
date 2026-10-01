@@ -65,6 +65,7 @@ mnemon:
   idleReviewMs: 30000
   idleReview:
     enabled: true
+    runtimeMemory: true # false: Documents only
     provider: spawn
     fallback: spawn
     agentTeams: pause # pause | scoped
@@ -113,6 +114,7 @@ mnemon:
 | `writebackMode` | `guided` | `guided` / `off` | Whether to inject one durable hot-memory cue per session and enable scored, dirty-admitted background review; does not remove explicit writes |
 | `idleReviewMs` | `30000` | 5000–600000 ms | Required continuous idle time after the threshold is reached |
 | `idleReview.enabled` | `true` | boolean | Independent automatic-review switch |
+| `idleReview.runtimeMemory` | `true` | boolean | Lets review change runtime memory (USER.md and MEMORY.md); `false` limits it to creating Documents |
 | `idleReview.provider` | `spawn` | `spawn` / `fork` | Bounded checkpoint or inherited parent context |
 | `idleReview.fallback` | `spawn` | `spawn` / `skip` | Missing/incompatible fork handling before startup only |
 | `idleReview.agentTeams` | `pause` | `pause` / `scoped` | Pause while Team tools are installed or explicitly allow guarded review; verified with DSH/Teams 0.1.7-rc.2 |
@@ -333,6 +335,8 @@ depthLimit   = true
 Background review defaults to a non-inheriting `spawn` provider and an explicit, bounded checkpoint from the parent's current public surface. It includes whole visible text messages and successful tool results; omitted or unavailable context is not reconstructed. `idleReview.provider: fork` retains full-parent-context review and requires `inheritsParentContext=true`. If fork is missing or incompatible, `idleReview.fallback` chooses `spawn` or `skip` before startup. A started run is never retried through another provider.
 
 Review requires local child publication, `agents.isOwnedBy`, and `agent.ctx.tools.guard`; the guard also blocks unrelated own-scope plugin tools and Code Mode subcalls. `maxContextChars` bounds the spawn checkpoint, while `maxTokens` limits each model response, not the inherited fork input or total multi-step usage.
+
+**What review writes.** Each piece of knowledge goes to one layer. Project records, such as a design, implementation details, paths, ports, scope agreements or a handoff, go to at most one Document. Working memory (MEMORY.md) takes only a compact rule the user stated, such as a convention, a correction, an environment fact or a tool quirk, that no Document or existing entry already covers; USER.md takes identity and preferences. The guard holds each pass to one layer: after a Document, working-memory changes are refused, and after a working-memory change, a Document is refused; USER.md changes stay independent. `idleReview.runtimeMemory: false` withholds `mnemon_runtime_memory` from review, so it only creates Documents. Review never writes Memory Spaces: working memory reaches them through capacity archiving and Documents through cold archiving, while **Save to memory** and `mnemon_remember` write them directly.
 
 `idleReviewMs` remains the continuous-idle debounce. A separate `minIntervalMs` spaces attempts, including failures and cancellations. `maxPerSession` caps attempts for the loaded parent Agent; zero suspends review. Clearing or compacting the context (DSH replaces the Agent), restarting the Host, or unloading and reopening the Agent starts a new in-memory budget. Completed runs are disposed through DSH's public API. Persisted session history is retained: the published Host provides no plugin-scoped archive/TTL contract, and Mnemon never deletes session files or other plugins' agents.
 

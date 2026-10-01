@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { MemorySpaceNativeRunner } from 'dsh-mnemon-source-memory-spaces/provider-sdk'
 import { createMemorySpaceProviderFixture, mountMemorySpaceProvider } from 'dsh-mnemon-source-memory-spaces/testing'
 import module, { definition, descriptor, MnemonNativeProvider } from '../src/index.ts'
+import { STORE_DUMP_MAX_OUTPUT_BYTES } from '../src/driver.ts'
 
 describe('independent Native Provider', () => {
   it('mounts through the public module fixture and honors an aliased child identity', async () => {
@@ -94,5 +95,32 @@ describe('independent Native Provider', () => {
         errors: 0, results: [{ index: 0, id: 'other', action, content }] })
     const provider = new MnemonNativeProvider({ runJson, runText: vi.fn() })
     await expect(provider.rememberMany(body, [{ content }])).rejects.toThrow('invalid or partial result')
+  })
+
+  it('raises the output cap for whole-Store reads only', async () => {
+    const { body } = createMemorySpaceProviderFixture(descriptor, {}, { dataDir: '/unused', memoryBodyId: 'work' })
+    const html = 'var nodes = new vis.DataSet([{id:"a",label:"a: [fact] One",title:"One",color:"#3498db",font:{color:"white"}}]);\nvar edges = new vis.DataSet([]);'
+    const runJson = vi.fn<MemorySpaceNativeRunner['runJson']>(async args => {
+      if (args[0] === 'import') {
+        const draft = JSON.parse(readFileSync(args[1]!, 'utf8')) as { insights: Array<{ content: string }> }
+        return { imported: 1, updated: 0, skipped: 0, errors: 0, results: [{ index: 0, id: 'b', action: 'added', content: draft.insights[0]!.content }] }
+      }
+      if (args[0] === 'status') return { total_insights: 1 }
+      return [{ id: 'a', content: 'One' }]
+    })
+    const runText = vi.fn<MemorySpaceNativeRunner['runText']>(async () => html)
+    const provider = new MnemonNativeProvider({ runJson, runText })
+    await provider.list(body, {})
+    await provider.graph(body)
+    await provider.rememberMany(body, [{ content: 'Two' }])
+    await provider.search(body, { query: 'one' })
+    await provider.status(body)
+    const cap = (args: readonly string[], options?: { maxOutputBytes?: number }) => [args.find(arg => !arg.startsWith('-')), options?.maxOutputBytes]
+    expect(runText.mock.calls.map(([args, options]) => cap(args, options))).toEqual([['viz', STORE_DUMP_MAX_OUTPUT_BYTES]])
+    expect(runJson.mock.calls.map(([args, options]) => cap(args, options))).toEqual([
+      ['recall', STORE_DUMP_MAX_OUTPUT_BYTES], ['recall', STORE_DUMP_MAX_OUTPUT_BYTES], ['recall', STORE_DUMP_MAX_OUTPUT_BYTES],
+      ['import', undefined], ['recall', undefined], ['status', undefined],
+    ])
+    expect(STORE_DUMP_MAX_OUTPUT_BYTES).toBeGreaterThanOrEqual(64 * 1024 * 1024)
   })
 })

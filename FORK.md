@@ -1,9 +1,9 @@
 # dsh-mnemon 账号隔离融合
 
-- 原作者源：`https://github.com/omdsh-dev/dsh-mnemon.git`，`main`，同步基线 `dfb3196cbcea58fb9b36b7283ccac4662d366858`。
+- 原作者源：`https://github.com/omdsh-dev/dsh-mnemon.git`，`main`，同步基线 `06182f4d828efb1569d2f68a2df5e0e1d1c69f89`。
 - 自有 fork：`https://github.com/sdwhwzp/dsh-mnemon.git`，上传地址 `git@github.com:sdwhwzp/dsh-mnemon.git`。
 - 当前融合分支：`dev`；`main` 跟随源分支。所有临时分支的提交必须可从 `dev` 到达后，才删除本地和自有远端临时分支。
-- 适配版本：`0.5.20-dsh.20260929.1`，18 个 Mnemon 包使用同一版本；配套本地 Harness `0.2.0-rc.1` 与 `dsh-passwords 2.7.5-dsh.20260929.1`。
+- 适配版本：`0.5.21-dsh.20261001.1`，18 个 Mnemon 包使用同一版本；账号行为验证使用本地 Harness `0.2.0-rc.2`；线上网关基线为 `dsh-passwords 2.7.6-dsh.20260930.5`。
 
 本 fork 保留原作者的三层记忆、工具、工作台与数据格式，增加可选的登录账号隔离，以及可选的共享记忆层：设置 `sharedMemoryDir` 后所有账号共读一个记忆空间，只有 `role=admin` 的账号可写，目录与写权限均由 Host 指派。配置与使用限制见 [账号部署](docs/zh-CN/guides/accounts.md)。未设置 `accountDataDir` 时仍使用原作者的单用户存储规则；未设置 `sharedMemoryDir` 时共享条目自动停用。
 
@@ -36,7 +36,7 @@ pnpm install --frozen-lockfile
 pnpm_config_verify_deps_before_run=false pnpm run typecheck
 pnpm_config_verify_deps_before_run=false pnpm run build
 pnpm_config_verify_deps_before_run=false pnpm --workspace-concurrency=4 --no-sort -r build
-export DSH_SOURCE_VERSION=0.2.0-rc.1 DSH_SOURCE_ROOT=/absolute/path/to/deepseek-harness
+export DSH_SOURCE_VERSION=0.2.0-rc.2 DSH_SOURCE_ROOT=/absolute/path/to/deepseek-harness
 pnpm run dsh:link-source
 pnpm_config_verify_deps_before_run=false pnpm exec vitest run tests/account-isolation.spec.ts tests/account-host.spec.ts tests/dsh-connection-compat.spec.ts
 pnpm run dsh:restore-registry

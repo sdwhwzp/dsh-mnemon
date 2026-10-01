@@ -189,6 +189,7 @@ export type MnemonDisplayMode = 'sidebar' | 'builtin'
 
 export const DEFAULT_IDLE_REVIEW = {
   enabled: true,
+  runtimeMemory: true,
   provider: 'spawn',
   fallback: 'spawn',
   agentTeams: 'pause',
@@ -200,6 +201,8 @@ export const DEFAULT_IDLE_REVIEW = {
 
 export interface ResolvedIdleReviewConfig {
   enabled: boolean
+  /** Whether review may change USER.md and MEMORY.md; it can create Documents either way. */
+  runtimeMemory: boolean
   provider: 'spawn' | 'fork'
   /** Applies only before a child starts; a failed run is never replayed. */
   fallback: 'spawn' | 'skip'

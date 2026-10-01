@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { spawn } from 'node:child_process'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { runProcess } from '../src/providers/process.ts'
+import { DEFAULT_MAX_OUTPUT_BYTES, ProcessError, runProcess } from '../src/providers/process.ts'
 
 vi.mock('node:child_process', () => ({ spawn: vi.fn() }))
 
@@ -59,5 +59,55 @@ describe('bounded subprocess UTF-8 output', () => {
     child.exitCode = 1
     child.emit('close', 1)
     expect(await result).toEqual({ stdout: '�', stderr: '�', exitCode: 1 })
+  })
+})
+
+describe('subprocess failure reasons', () => {
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('keeps the 2 MiB default and marks an oversized output as an output limit, not a launch failure', async () => {
+    const child = subprocess()
+    const result = runProcess('test-cli', [], { timeoutMs: 1000 })
+    const rejected = expect(result).rejects.toMatchObject({ name: 'ProcessError', reason: 'output-limit', message: `mnemon output exceeded ${DEFAULT_MAX_OUTPUT_BYTES} bytes` })
+    child.stdout.emit('data', Buffer.alloc(DEFAULT_MAX_OUTPUT_BYTES + 1, 0x61))
+    await rejected
+    expect(DEFAULT_MAX_OUTPUT_BYTES).toBe(2 * 1024 * 1024)
+    child.emit('close', null)
+  })
+
+  it('honors a per-call cap above the default', async () => {
+    const child = subprocess()
+    const big = Buffer.alloc(DEFAULT_MAX_OUTPUT_BYTES + 1024, 0x61)
+    const result = runProcess('test-cli', [], { timeoutMs: 1000, maxOutputBytes: big.length })
+    child.stdout.emit('data', big)
+    child.exitCode = 0
+    child.emit('close', 0)
+    expect((await result).stdout).toHaveLength(big.length)
+  })
+
+  it('names launch failures, timeouts and cancellations', async () => {
+    const launch = subprocess()
+    const launched = runProcess('missing-cli', [], { timeoutMs: 1000 })
+    launch.emit('error', Object.assign(new Error('spawn missing-cli ENOENT'), { code: 'ENOENT' }))
+    await expect(launched).rejects.toMatchObject({ reason: 'launch' })
+
+    vi.useFakeTimers()
+    try {
+      const slow = subprocess()
+      const timed = runProcess('slow-cli', [], { timeoutMs: 50 })
+      const timedOut = expect(timed).rejects.toMatchObject({ reason: 'timeout' })
+      await vi.advanceTimersByTimeAsync(60)
+      await timedOut
+      slow.emit('close', null)
+    } finally {
+      vi.useRealTimers()
+    }
+
+    subprocess()
+    const controller = new AbortController()
+    const aborted = runProcess('test-cli', [], { timeoutMs: 1000, signal: controller.signal })
+    controller.abort('user closed the page')
+    await expect(aborted).rejects.toBeInstanceOf(ProcessError)
+    await expect(aborted).rejects.toMatchObject({ reason: 'aborted' })
   })
 })
