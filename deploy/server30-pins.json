@@ -46,31 +46,31 @@
     },
     {
       "name": "@linxin666/dsh-client-ui-git-graph",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-client-ui-git-graph-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-client-ui-git-graph-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "be95278ec50ef503fa4c8f6ee2976e1e47d15894587302a8a9afa428c1275fc8"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-client-ui-git-graph-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-client-ui-git-graph-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "08c4f37adafa0535aba641f72789bb5ba97d0702b157f9254d9575fee3c5f88a"
     },
     {
       "name": "@linxin666/dsh-client-ui-market",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-client-ui-market-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-client-ui-market-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "4a8236ee377126d6b2907ce2162826897dddd9bcadb65de47469df0c4d867bf4"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-client-ui-market-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-client-ui-market-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "0596eea3f421ac224c5908c530bfb67700d53fcf8b8b01edffbbcf19ec100afa"
     },
     {
       "name": "@linxin666/dsh-client-ui-model-capabilities",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-client-ui-model-capabilities-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-client-ui-model-capabilities-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "79741c1dd21b848e1e1ca9747d041f91bcc1d8576a3484ccd9b9c0366b44acf5"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-client-ui-model-capabilities-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-client-ui-model-capabilities-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "09e522e9534e269e0c099a0179731b94dd4aee1eb3866842c7073999b96fa450"
     },
     {
       "name": "@linxin666/dsh-client-ui-plugin-manager",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-client-ui-plugin-manager-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-client-ui-plugin-manager-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "42a82b378b529373efe942dbe2ad7ed56a7be0eaa7b210fc827b2f90fda9944a"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-client-ui-plugin-manager-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-client-ui-plugin-manager-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "13b795530c228098049cde93148fd84bef2b8ce6814e86be8ec97bdd0f6ce763"
     },
     {
       "name": "@linxin666/dsh-client-ui-preset-center",
@@ -81,17 +81,17 @@
     },
     {
       "name": "@linxin666/dsh-client-ui-session-id",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-client-ui-session-id-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-client-ui-session-id-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "2b0ab31a67c0e5f0602bd597d87d36f61b66e8698089cce0249c53cdff73464a"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-client-ui-session-id-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-client-ui-session-id-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "17fdb7fc119bf918c16d2c65ea384d71dd844c1432cfe16f5b256b84e2786f00"
     },
     {
       "name": "@linxin666/dsh-client-ui-skill-explorer",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-client-ui-skill-explorer-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-client-ui-skill-explorer-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "7660cc70ae37e76ceab230c84e00ccca80c33cae381f9f017574a0ca9e814284"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-client-ui-skill-explorer-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-client-ui-skill-explorer-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "4e4e0893e6d4e5cc4d05cadff4fd6ea8095ec70211e9102bca6bbddc651f5bbb"
     },
     {
       "name": "@linxin666/dsh-client-ui-skin-center",
@@ -102,31 +102,38 @@
     },
     {
       "name": "@linxin666/dsh-client-ui-task-board",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-client-ui-task-board-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-client-ui-task-board-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "0956d41e44a83e4c880d059cc55199b35dfe5e37a23284e1ef14081759364eb2"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-client-ui-task-board-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-client-ui-task-board-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "6c3f8931c0c9a46d21478ba195b926538cf22c4b9e03041feda326cfbf24434d"
+    },
+    {
+      "name": "@linxin666/dsh-client-ui-task-board-github",
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-client-ui-task-board-github-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-client-ui-task-board-github-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "42f1cb478c8e4e907a0ea878edb2a24c4ccb34ffd8107a4ad45150fdd1b3e7b2"
     },
     {
       "name": "@linxin666/dsh-client-ui-web-ui-settings",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-client-ui-web-ui-settings-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-client-ui-web-ui-settings-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "5ea08cfa8a4e2168ae4a87bdf77cbcdf7f3f177a82f5f93004c85ba9c80888f4"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-client-ui-web-ui-settings-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-client-ui-web-ui-settings-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "66efd40293a673d18aefe394766346b9fa75451126aeed64b79e197b4726a05b"
     },
     {
       "name": "@linxin666/dsh-i18n",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-i18n-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-i18n-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "f2b1c1103084f9c26dbd8fb045bb9eba8da29fd7c1147e81523f24c6f7d6fb78"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-i18n-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-i18n-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "ece699ba373b734814a5114579b57c077568f48ccc10fb9a564ad6a9f0627ac4"
     },
     {
       "name": "@linxin666/dsh-liangshen",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-liangshen-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-liangshen-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "b4e2ceed803ccbe8934485851fef3f22e036d79e21f82776ca3adbfb93d649be"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-liangshen-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-liangshen-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "e32ae8b0ae0143be1814be8cc99f56c85cab21453a67eda8acb99248ce9f1ae4"
     },
     {
       "name": "@linxin666/dsh-pet",
@@ -137,45 +144,45 @@
     },
     {
       "name": "@linxin666/dsh-remote-web-ui",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-remote-web-ui-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-remote-web-ui-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "46f1258a3b9f44674f7d1114fcada80092bb549e7ef99e4adb6408c7d7a57895"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-remote-web-ui-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-remote-web-ui-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "c3c781d3c379dcbff12f5f3aa879d63090b4fea2eddbf0983981b99953e28334"
     },
     {
       "name": "@linxin666/dsh-session-archive",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-session-archive-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-session-archive-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "15661a78afe2663474b8e1b978dcaf90e6bbf78b4a3ff78b3928b75e9041d5f3"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-session-archive-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-session-archive-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "602a05f79353cf89fc7eb1263b100e50757f62caa4cfd6ddb9b3e23ffebf7dd6"
     },
     {
       "name": "@linxin666/dsh-ssh",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-ssh-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-ssh-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "53569c5409f83fbe6cc0187b996af3b35af9f50b2217d9eeeda00bb31d4803d6"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-ssh-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-ssh-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "f4578822f5d51bbad733756a2c7ff05bb4431e9fed6103bf429f47ab49a70819"
     },
     {
       "name": "@linxin666/dsh-update",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-update-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-update-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "7d0227646d0cf9f6c0d07fa62f0f907154cd00b3292dcc9e52bd19791af5c1c0"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-update-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-update-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "08161b9bae7a8ecb51b8d8789239a17766fd24b21372296a8664a11a6012305d"
     },
     {
       "name": "@linxin666/dsh-usage",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-usage-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-usage-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "2363d1fb0c590204385da53bb04369c7080f63ae5c7e0ecca9203198a2b9e9be"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-usage-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-usage-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "6191e53e8f7950ee027aade2e52872e5d77cd161b163eee655417a91fd02340b"
     },
     {
       "name": "@linxin666/dsh-web-all",
-      "version": "0.4.4-dsh.20261001.1",
-      "file": "linxin666-dsh-web-all-0.4.4-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/linxin666-dsh-web-all-0.4.4-dsh.20261001.1.tgz",
-      "sha256": "b6cd87046c5bc2565f7c400222773d8340eb9f2bf38b57dd2a00a360f07ac317"
+      "version": "0.4.4-dsh.20261001.2",
+      "file": "linxin666-dsh-web-all-0.4.4-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/linxin666-dsh-web-all-0.4.4-dsh.20261001.2.tgz",
+      "sha256": "d2c0676881ca06a83a9d185d5bda9aca07edb7ab39f2af80c274f9714fa31669"
     },
     {
       "name": "@wxg-prc-cpg/dsh-weknora",
@@ -354,10 +361,10 @@
     },
     {
       "name": "dsh-passwords",
-      "version": "2.7.6-dsh.20261001.1",
-      "file": "dsh-passwords-2.7.6-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/dsh-passwords-2.7.6-dsh.20261001.1.tgz",
-      "sha256": "d36cad2391ed1591e0bac52b8811307088f16d05557f01354b3e742c0205fc47"
+      "version": "2.7.6-dsh.20261001.2",
+      "file": "dsh-passwords-2.7.6-dsh.20261001.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261001-fork-audit-1105/artifacts/dsh-passwords-2.7.6-dsh.20261001.2.tgz",
+      "sha256": "a1ec56c5046e30561fb3d43bd41ec72ec7f26257af9818da13cab9d574ffa8d0"
     },
     {
       "name": "dsh-plugin-mobile-gateway",
@@ -409,7 +416,7 @@
   },
   "preservePackages": [],
   "handoff": "20260910-plugin-pinning-handoff.md",
-  "release": "20260930-fork-audit-1318",
+  "release": "20261001-fork-audit-1105",
   "status": "deployed-verified",
   "requiredEntries": [
     {
