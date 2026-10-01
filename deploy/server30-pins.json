@@ -4,10 +4,10 @@
   "artifacts": [
     {
       "name": "@changfenhuang/dsh-genui",
-      "version": "0.11.3-dsh.20261001.1",
-      "file": "changfenhuang-dsh-genui-0.11.3-dsh.20261001.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260930-fork-audit-1318/artifacts/changfenhuang-dsh-genui-0.11.3-dsh.20261001.1.tgz",
-      "sha256": "cd013aaf0663710b9e81ed74c7ab588c0a05aee17ebf11cd335f27c94f2b4910"
+      "version": "0.11.3-dsh.20261002.1",
+      "file": "changfenhuang-dsh-genui-0.11.3-dsh.20261002.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261002-fork-audit-0040/artifacts/changfenhuang-dsh-genui-0.11.3-dsh.20261002.1.tgz",
+      "sha256": "f23114b0191c7623614b352752b263e2f01c16fe505105e9d36fe8e1d272be5b"
     },
     {
       "name": "@dsh-external/dsh-graded-mode",
@@ -207,10 +207,10 @@
     },
     {
       "name": "dsh-better-sidebar",
-      "version": "0.24.1-dsh.20260929.1",
-      "file": "dsh-better-sidebar-0.24.1-dsh.20260929.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260929-fork-audit-0728/artifacts/dsh-better-sidebar-0.24.1-dsh.20260929.1.tgz",
-      "sha256": "a5e89f58a7757a8668090f3571a65953d6a3665f80cbe01896e0320aeb1be63e"
+      "version": "0.24.1-dsh.20261002.1",
+      "file": "dsh-better-sidebar-0.24.1-dsh.20261002.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261002-fork-audit-0040/artifacts/dsh-better-sidebar-0.24.1-dsh.20261002.1.tgz",
+      "sha256": "8f1a9a29a91379a5d00ba2d836b6944e2fc47ddb9f7c287b6abd16337f327742"
     },
     {
       "name": "dsh-context",
@@ -375,10 +375,10 @@
     },
     {
       "name": "dsh-plugin-subscriptions",
-      "version": "0.9.6-dsh.20260929.1",
-      "file": "dsh-plugin-subscriptions-0.9.6-dsh.20260929.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260929-fork-audit-0728/artifacts/dsh-plugin-subscriptions-0.9.6-dsh.20260929.1.tgz",
-      "sha256": "d7ff66ed39dd5ba063e3ae714e97f940e05fa50b1c149c63cb980d80e5e74b5d"
+      "version": "0.9.7-dsh.20261002.1",
+      "file": "dsh-plugin-subscriptions-0.9.7-dsh.20261002.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261002-fork-audit-0040/artifacts/dsh-plugin-subscriptions-0.9.7-dsh.20261002.1.tgz",
+      "sha256": "9067d79c402bb26f7fc265857d597f5de741ac635062fc62ae093e3a406494c7"
     },
     {
       "name": "dsh-shandong-tizhi-brand",
