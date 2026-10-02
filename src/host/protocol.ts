@@ -533,7 +533,10 @@ export interface StatusView {
   healthy: boolean
   error?: string
   version?: string
+  /** The dsh-mnemon version this Host runs, which an installed update replaces only when DSH restarts. */
   dshMnemonVersion?: string
+  /** Updates installed while this Host runs; they load when DSH restarts. */
+  restartPending?: VersionRestartStatus
   cliPath: string
   commandFound: boolean
   dataDir: string
@@ -651,6 +654,26 @@ export interface VersionPackageStatus extends VersionComponentStatus {
 export interface VersionStatus {
   checkedAt: string
   components: VersionComponentStatus[]
+  /** How the last update this Host ran from Check versions ended, for a page DSH swapped in meanwhile. */
+  lastUpdate?: VersionUpdateOutcome
+}
+
+export interface VersionUpdateOutcome {
+  at: string
+  component: VersionComponentId
+  /** The update's reply, when it ended without an error. */
+  result?: VersionUpdateResult
+  /** Why it failed, when it did. */
+  error?: string
+}
+
+export interface VersionRestartStatus {
+  /** The dsh-mnemon version this Host runs. */
+  running: string
+  /** The dsh-mnemon version now installed, when it differs, however it was installed: Check versions or `dsh plugin`, for example. */
+  installed?: string
+  /** Packages Check versions updated on their own. */
+  packages?: VersionPackageId[]
 }
 
 export interface VersionUpdateResult {

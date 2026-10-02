@@ -16,6 +16,7 @@ import type { ComposableMemoryTurn } from '../core/turns.ts'
 import type { MnemonAccounts } from './account-access.ts'
 import { idleReviewBlockReason, reviewLayerPolicy, startGuardedReview, type ReviewToolHost } from './review-tools.ts'
 import { reviewCheckpoint } from './review-checkpoint.ts'
+import { startWithContinuationTurns } from './continuation-turn.ts'
 import type { IdleReviewFailure } from './protocol.ts'
 
 export type { SubagentCounters } from "./protocol.ts"
@@ -1826,7 +1827,9 @@ This is the only completion channel for this run. Do not finish with a plain-tex
       const fixed = this.taskAgentModelResolver?.()
       const baseAgentOptions = perOpMaxTokens === undefined ? undefined : { maxTokens: perOpMaxTokens }
       const resolvedAgentOptions = fixed === undefined ? baseAgentOptions : { ...(baseAgentOptions ?? {}), provider: fixed.provider, model: fixed.model }
-      const start = () => this.subagents.start(provider, {
+      const host = this.resultRuntime
+      // Every tool continuation ends with a user turn, which strict chat templates require (#327).
+      const start = () => startWithContinuationTurns(host, parent, () => this.subagents.start(provider, {
         label,
         prompt: [{ type: 'text', text: prompt }],
         parent,
@@ -1835,7 +1838,7 @@ This is the only completion channel for this run. Do not finish with a plain-tex
         maxDepth: 1,
         toolFilter: { allow: [...tools, resultToolName] },
         persona: completionPersona,
-      })
+      }))
       run = operation === 'review'
         ? await startGuardedReview(this.resultRuntime, parent, [...tools, resultToolName], start, child => { reviewChildId = child.id }, reviewLayerPolicy())
         : await start()

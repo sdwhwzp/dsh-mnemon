@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto'
 import { resolve } from 'node:path'
-import type { MessageSourceMap } from '@deepseek-ai/dsh-llm'
 import type { ResolvedConfig } from './config.ts'
 import type {
   CreateHostAgentOptions,
@@ -27,15 +26,7 @@ import type { PreparedMemoryPlacement } from 'dsh-mnemon-source-memory-spaces/co
 import type { MemoryWake } from "../core/contracts/index.ts"
 import { agentScope, type MnemonAgentRuntimeSource } from './runtime.ts'
 import type { MnemonAccounts } from './account-access.ts'
-
-declare module '@deepseek-ai/dsh-llm' {
-  interface MessageSourceMap {
-    'dsh-mnemon': {
-      kind: 'dsh-mnemon'
-      form: 'recall' | 'instructions'
-    }
-  }
-}
+import { createPluginMessage, MNEMON_PLUGIN_SOURCE } from './plugin-message.ts'
 
 type AgentRuntimeSource = Pick<MnemonAgentRuntimeSource, 'forAgent' | 'executions'>
 
@@ -66,7 +57,7 @@ function llmService(value: unknown): HostLlmService | undefined {
 export type { TurnMemoryActivity, TurnMemoryActivitySnapshot } from './activity.ts'
 export type { AssistantMessageText, LifecycleAgentSnapshot, LifecycleCounters, LifecyclePhase, LifecycleSnapshot } from "./protocol.ts"
 
-export const MNEMON_PLUGIN_SOURCE = 'dsh-mnemon'
+export { MNEMON_PLUGIN_SOURCE }
 
 export interface SupervisedWritebackResult extends DelegatedWriteResult { sessionId: string }
 
@@ -99,18 +90,6 @@ interface PromptAssembly {
 interface PromptAssemblyContext {
   agent?: HostAgent
   signal?: AbortSignal
-}
-
-function createPluginMessage(text: string, form: 'recall' | 'instructions'): HostUserMessage {
-  return structuredClone({
-    id: crypto.randomUUID(),
-    role: 'user' as const,
-    content: [{ type: 'text' as const, text }],
-    source: {
-      kind: MNEMON_PLUGIN_SOURCE,
-      form,
-    } satisfies MessageSourceMap['dsh-mnemon'],
-  })
 }
 
 function isMnemonMessageSource(source: unknown): boolean {
@@ -806,6 +785,17 @@ export class MnemonLifecycle {
     return this.coordinator.document(this.liveAgent(sessionId), request, signal)
   }
 
+  /**
+   * The same Document write under a fresh task Agent, for a conversation whose
+   * Agent is not loaded: it archives the least recently used Document to make
+   * room, as the conversation's Agent would.
+   */
+  mutateDocumentTask(sessionId: string, request: DocumentMutation, workspaceRoot?: string, signal = new AbortController().signal) {
+    const root = workspaceRoot?.trim() || this.workspaceRoot(sessionId)
+    if (root === undefined || root.trim() === '') throw new Error('a selected DSH workspace is required to write a Mnemon Document')
+    return this.runTaskAgent(sessionId, root, signal, agent => this.coordinator.document(agent, request, signal))
+  }
+
   archiveDocument(sessionId: string, id: string, workspaceRoot?: string, signal = new AbortController().signal) {
     const root = workspaceRoot?.trim() || this.workspaceRoot(sessionId)
     if (root === undefined || root.trim() === '') throw new Error('a selected DSH workspace is required to archive a Mnemon Document')
@@ -818,6 +808,12 @@ export class MnemonLifecycle {
 
   placeProvider(sessionId: string, body: { name: string; description: string }, prepared: PreparedMemoryPlacement, signal = new AbortController().signal) {
     return this.coordinator.placeProvider(this.liveAgent(sessionId), body, prepared, signal)
+  }
+
+  /** Choose a new Memory Space's Provider under a fresh task Agent, as Ask Agent does without a loaded conversation Agent. */
+  placeProviderTask(sessionId: string, body: { name: string; description: string }, prepared: PreparedMemoryPlacement, workspaceRoot?: string, signal = new AbortController().signal) {
+    const root = workspaceRoot?.trim() || this.workspaceRoot(sessionId)
+    return this.runTaskAgent(sessionId, root, signal, agent => this.coordinator.placeProvider(agent, body, prepared, signal))
   }
 
   maintainMetadata(sessionId: string, memoryBodyIds: readonly string[], workspaceRoot?: string, signal = new AbortController().signal) {

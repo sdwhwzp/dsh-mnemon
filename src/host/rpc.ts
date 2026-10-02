@@ -3,6 +3,7 @@ import type { HostConnectionHandle, HostRpcHandler, RpcResult } from './dsh.ts'
 import type { MnemonLifecycle } from './lifecycle.ts'
 import type { LiveMnemonRuntime } from './runtime.ts'
 import { assertParticipation } from './access.ts'
+import { sourceFailure } from './source-session.ts'
 import { isVersionComponentId, VersionUpdateManager } from './version-updates.ts'
 import type { MemoryCapability, MemoryJsonValue, MemoryOperationScope, MemorySourceManagementInstance, MemorySourceManagementRequest } from '../core/contracts/index.ts'
 import type { CreateMemoryBodyRequest as CreateMemorySpaceRequest, Insight, MemoryBodyCatalog as MemorySpaceCatalog, PreparedMemoryPlacement, RememberRequest } from 'dsh-mnemon-source-memory-spaces/contracts'
@@ -128,7 +129,15 @@ async function assisted(runtime: ScopedRuntime, lifecycle: MnemonLifecycle, type
     if (operation === 'mutate') {
       requireCapability(runtime, typeId, 'write')
       const request = input as unknown as DocumentMutation
-      return runtime.aligned && lifecycle.workspaceRoot(sessionId) !== undefined ? lifecycle.mutateDocument(sessionId, request, signal) : runtime.source(typeId).mutate('mutate', request, signal)
+      if (runtime.aligned && runtime.liveSession && sessionId !== '') return lifecycle.mutateDocument(sessionId, request, signal)
+      try {
+        return await runtime.source(typeId).mutate('mutate', request, signal)
+      } catch (error) {
+        // A conversation whose Agent is not loaded makes room as its Agent would:
+        // a task Agent archives the least recently used Document, then writes.
+        if (!runtime.aligned || sessionId === '' || !sourceFailure(error, 'document-capacity')) throw error
+        return lifecycle.mutateDocumentTask(sessionId, request, workspaceRoot, signal)
+      }
     }
   }
   if (typeId !== 'memory-spaces') throw new Error('unsupported Source assistance operation')
@@ -149,7 +158,11 @@ async function assisted(runtime: ScopedRuntime, lifecycle: MnemonLifecycle, type
       if (request.placement === undefined) return source.mutate('body-create', request, signal)
       requireAligned(runtime)
       const prepared = await source.read<PreparedMemoryPlacement>('prepare-body-placement', request, signal)
-      const placementDecision = await lifecycle.placeProvider(sessionId, { name: request.name, description: request.description }, prepared, signal)
+      const body = { name: request.name, description: request.description }
+      // Without a loaded conversation Agent, a task Agent in the same workspace decides.
+      const placementDecision = runtime.liveSession
+        ? await lifecycle.placeProvider(sessionId, body, prepared, signal)
+        : await lifecycle.placeProviderTask(sessionId, body, prepared, workspaceRoot, signal)
       return source.mutate('body-create', { request, placementDecision }, signal)
     }
     case 'body-metadata-maintain': {
@@ -223,6 +236,9 @@ export function createReadHandler(input: LiveMnemonRuntime, lifecycle?: MnemonLi
           let documents
           try { documents = await runtime.source('documents').read('snapshot', null, signal) } catch { /* Optional Source may be unavailable in this scope. */ }
           const composition = await compositionStatus(runtime)
+          // Every Memory System page reads this status, so each one can say what a restart would load.
+          let restartPending
+          try { restartPending = versions?.restartStatus() } catch { /* The reminder is optional; the status is not. */ }
           const hasSpaces = composition.sources.some(source => source.sourceTypeId === 'memory-spaces')
           const status = hasSpaces ? await runtime.source('memory-spaces').read<Record<string, unknown>>(endpoint, payload, signal) : {
             healthy: composition.evaluation.state === 'ready', commandFound: false, cliPath: runtime.graph.config.cliPath ?? '',
@@ -231,7 +247,8 @@ export function createReadHandler(input: LiveMnemonRuntime, lifecycle?: MnemonLi
           }
           return success({
             ...status,
-            ...(versions === undefined ? {} : { dshMnemonVersion: versions.currentDshMnemonVersion }),
+            ...(versions === undefined ? {} : { dshMnemonVersion: versions.runningVersion }),
+            ...(restartPending === undefined ? {} : { restartPending }),
             ...(lifecycle === undefined ? {} : { lifecycle: lifecycle.snapshot(runtime.scope.sessionId, isWorkspaceStorageScope(runtime.graph.config.storageScope) ? runtime.scope.workspaceId : undefined) }),
             ...(documents === undefined ? {} : { documents }),
             memorySystem: composition,
@@ -353,7 +370,7 @@ export function createWriteHandler(input: LiveMnemonRuntime, lifecycle?: MnemonL
       }
       if (Object.hasOwn(SPACE_WRITE_CAPABILITIES, endpoint)) {
         requireCapability(runtime, 'memory-spaces', SPACE_WRITE_CAPABILITIES[endpoint]!)
-        if (endpoint === 'remember' && lifecycle !== undefined && runtime.aligned && runtime.scope.sessionId) {
+        if (endpoint === 'remember' && lifecycle !== undefined && runtime.aligned && runtime.liveSession && runtime.scope.sessionId) {
           return success(await lifecycle.remember(runtime.scope.sessionId, { ...payload, source: 'user' } as unknown as RememberRequest, signal))
         }
         return success(await runtime.source('memory-spaces').mutate(endpoint, endpoint === 'remember' ? { ...payload, source: 'user' } : payload, signal))

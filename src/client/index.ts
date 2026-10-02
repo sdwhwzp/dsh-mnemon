@@ -16,6 +16,7 @@ import { MnemonTurnTail } from './MnemonTurnTail.tsx'
 import { MnemonPluginActions, MNEMON_PACKAGE_NAME } from './MnemonPluginActions.tsx'
 import { MnemonSaveAction } from './MnemonSaveAction.tsx'
 import { MnemonActionSeat } from './action-seat.ts'
+import { reopenAfterStarterUpdate } from './starter-update.ts'
 import { MnemonChangeSignal } from './change-signal.ts'
 import { en, zh, type MnemonKey } from './locales.ts'
 import { MnemonSettingsScope } from './settings.ts'
@@ -344,6 +345,10 @@ export function apply(rawContext: unknown): void {
       activeMemoryWorkspace = undefined
     }
   }, 'dsh-mnemon: memory workspace entry')
+  // DSH swaps this client in once a Starter update replaces its files, which
+  // closed the Memory System the update ran from; reopen it, and Status
+  // reopens the version dialog.
+  ctx.effect(() => reopenAfterStarterUpdate(seats.workspace), 'dsh-mnemon: reopen after a Starter update')
   // DSH 0.1.7 edits a plugin's configuration on its own page under Plugins;
   // Settings keeps only the read-only plugin inventory. The whole Mnemon
   // configuration is the dsh-mnemon bundle's page, between its description

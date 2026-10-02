@@ -5,11 +5,12 @@ import { IconChevronLeftOutline14, IconRefreshOutlineRegular, IconSettingsOutlin
 import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
 import { consumeMnemonAnchor, subscribeMnemonAnchor, type MnemonAnchor } from "./anchor.ts"
 
-import { type ClientConnectionHandle, type ClientSettingsScope, type Config, type JsonValue, type MemoryProviderRuntimeStatus, type MemorySourceManagementCatalog, type MemorySourceManagementInstance, type StatusView, type StorageAreaInventory, type StorageScopeInventory, type StorageScopeKind } from "../host/protocol.ts"
+import { type ClientConnectionHandle, type ClientSettingsScope, type Config, type JsonValue, type MemoryProviderRuntimeStatus, type MemorySourceManagementCatalog, type MemorySourceManagementInstance, type StatusView, type StorageAreaInventory, type StorageScopeInventory, type StorageScopeKind, type VersionRestartStatus } from "../host/protocol.ts"
 import type { MemoryPluginEntryView, MemoryViewDashboard } from '../host/view-protocol.ts'
 import { MnemonClient } from "./api.ts"
 import { isRemoteConnection } from "./remote-rpc.ts"
 import { VersionDialog } from "./VersionDialog.tsx"
+import { clearStarterUpdate, pendingStarterUpdate } from './starter-update.ts'
 import { translateZh, type MnemonKey, type MnemonTranslate } from "./locales.ts"
 
 import { ProviderIcon } from "./ProviderIcon.tsx"
@@ -356,8 +357,21 @@ function StatusPage(props: {
   onOpenConfiguration?: (() => void) | undefined
 }): JSX.Element {
   const t = useT()
+  // DSH swapped this client in during a Starter update started here: show how it ended.
+  const [resumedUpdate, setResumedUpdate] = useState(() => pendingStarterUpdate())
   const [versionsOpen, setVersionsOpen] = useState(false)
   const status = props.status
+  const answered = status !== null || !props.loading
+  useEffect(() => {
+    if (resumedUpdate === undefined || !answered) return
+    // A DSH that already restarted onto the update has nothing left to report.
+    if (status !== null && status.restartPending === undefined && resumedUpdate.to !== undefined && status.dshMnemonVersion === resumedUpdate.to) {
+      clearStarterUpdate()
+      setResumedUpdate(undefined)
+      return
+    }
+    setVersionsOpen(true)
+  }, [answered])
   const reviewError = status?.lifecycle?.current?.lastError
   const storage = status?.storage
   const selectedScopeKind = storage?.activeKind ?? 'global'
@@ -384,9 +398,20 @@ function StatusPage(props: {
 
       <div className={css.asyncStatusBlock}>{status !== null && (status.providerServices !== undefined || (status.memoryBodies !== undefined && nativeInUse(status))) && <ProviderHealth status={status} services={status.providerServices ?? []} onOpenConfiguration={props.onOpenConfiguration} />}</div>
       <div className={css.asyncStatusBlock}><StorageDomains catalog={storage} selected={selectedScope} selectedKind={selectedScopeKind} areaName={props.areaName} /></div>
-      {versionsOpen && <VersionDialog client={props.client} writeEnabled={props.writeEnabled} onClose={() => setVersionsOpen(false)} onRefreshStatus={props.onRefresh} />}
+      {versionsOpen && <VersionDialog client={props.client} writeEnabled={props.writeEnabled} resumedUpdate={resumedUpdate} onClose={() => { setResumedUpdate(undefined); setVersionsOpen(false) }} onRefreshStatus={props.onRefresh} />}
     </div>
   )
+}
+
+/**
+ * An installed update waits for DSH to restart: the Host keeps the code it loaded, while DSH has
+ * already swapped in this page. Every Memory System page says so until the restart.
+ */
+function RestartReminder({ pending }: { pending: VersionRestartStatus }): JSX.Element {
+  const t = useT()
+  return pending.installed !== undefined
+    ? <Callout tone="warning" title={t('versions.pendingInstalledTitle', { version: pending.installed })}>{t('versions.pendingInstalledDetail', { running: pending.running })}</Callout>
+    : <Callout tone="warning" title={t('versions.pendingPackagesTitle', { names: (pending.packages ?? []).join(t('config.listSeparator')) })}>{t('versions.pendingPackagesDetail')}</Callout>
 }
 
 /** Mnemon Native is one Provider among peers: it has a health card once its CLI is installed or a space uses it. */
@@ -884,6 +909,7 @@ function MnemonWorkspace({ connection, settingsScope, sessionId, workspaceId, wo
         actions={openConfiguration === undefined ? undefined : <Button variant="outline" size="sm" onClick={openConfiguration}>{t('common.openConfiguration')}</Button>}>
         {notice.detail}
       </Callout>}</Reveal>
+      <Reveal className={css.notice}>{status?.restartPending !== undefined && <RestartReminder pending={status.restartPending} />}</Reveal>
       {workspaceToast.element}
       {remoteReadOnly && <div className={css.alert} role="status">{t('workspace.remoteReadOnly')}</div>}
       {status?.lifecycle?.current?.idleReviewBlocked === 'agent-team' && <div className={css.alert} role="status">{t('status.reviewTeamPaused')}</div>}

@@ -32,10 +32,12 @@ Test-Path "$env:LOCALAPPDATA\Programs\mnemon\mnemon.exe"
 
 状态页的“检查版本”打开“检查与更新版本”面板：
 
-- **dsh-mnemon**：运行版本来自当前插件包，更新查询 npm `latest`；已安装的 beta/alpha/rc 同时查询自身通道，也可升级到更高的正式版。稳定版用户不会自动进入预发布通道。
+- **dsh-mnemon**：当前版本是所属 Profile 记录的版本（状态页显示正在运行的版本），更新查询 npm `latest`；已安装的 beta/alpha/rc 同时查询自身通道，也可升级到更高的正式版。稳定版用户不会自动进入预发布通道。
 - **Mnemon CLI**：本地版本来自 `mnemon --version`，最新版本来自官方 `@mnemon-dev/mnemon` npm 包。只有 Mnemon Native 需要它，未安装时显示为可选并给出安装命令。
 
-检查只读，不会自动安装。只有发现更高版本并安全识别安装来源时才显示“更新”：Mnemon 支持官方 npm 启动器、Homebrew Cask / Formula 与 `go install`；dsh-mnemon 支持当前 DSH Profile 中由 pnpm 管理的 npm 安装。`link:` / `file:` 开发版本与无法识别的手工安装只显示说明，避免覆盖源码。
+检查只读，不会自动安装。只有发现更高版本并安全识别安装来源时才显示“更新”：Mnemon 支持官方 npm 启动器、Homebrew Cask / Formula 与 `go install`；dsh-mnemon 支持当前 DSH Profile 中的 npm 安装。`link:` / `file:` 开发版本与无法识别的手工安装只显示说明，避免覆盖源码。
+
+dsh-mnemon 通过 DSH 自己的插件安装器更新，效果与 `dsh plugin add dsh-mnemon@<版本>` 相同；Profile 单独安装的可选 Strategy 也是如此。安装器使用 Profile 自己的包管理器，桌面版中即应用自带的 pnpm，因此 PATH 上不需要 pnpm；同时沿用 Profile 的安装源设置与备用源，并等待 Profile 的锁。保留新版本之前，DSH 会检查它声明支持的 DSH 版本。安装失败时，DSH 恢复 Profile 的 `package.json` 与锁文件，面板显示 pnpm 的错误行和 DSH 的日志路径，已启用的插件保持不变；安装已下载的文件可能留下，“检查版本”仍显示 Profile 记录的版本。通过 DSH 的安装器，Host 只更新自己所运行的 Profile。DSH 未提供插件安装器时，Host 在所属 Profile 中运行 PATH 上的 pnpm。既没有应用自带的 pnpm、PATH 上也没有 pnpm 时，面板会提示安装 pnpm 并重启 DSH。dsh-mnemon 0.5.21 及更早的版本只有 pnpm 这一种方式：在桌面版中从这些版本更新时，需要在插件页移除 dsh-mnemon 后重新添加一次，记忆数据会保留。
 
 npm 更新要求当前启动器属于现有 npm 所报告的全局安装目录；不同 Node/npm 环境或启动器故障会显示修复指引。首次安装或迁移使用 `npm install --global @mnemon-dev/mnemon@latest`，后续使用 `mnemon update`。命令在 DSH 宿主运行，需要 Node.js 22+。修改 PATH 或 CLI 配置后，重新检查并核对面板中的可执行文件路径。
 
@@ -45,7 +47,7 @@ npm 更新要求当前启动器属于现有 npm 所报告的全局安装目录�
 
 Go 更新还要求当前执行文件确实位于本机 Go 的安装输出位置（`GOBIN`，或 `GOPATH` 第一项的 `bin` 目录），且未配置交叉编译目标。不能仅因下载的二进制包含 Go 构建信息就认定它由 Go 管理。CLI 更新后还会核验当前执行文件已达到所检查的版本，才报告成功。
 
-更新命令由 Host 固定选择：浏览器不能传入命令或参数，执行禁用 shell，并限制时间与输出。插件更新在所属 profile 中安装已检查的精确版本，确认实际安装版本后才报告成功，避免固定 beta 版本未变却提示已更新。更新完成后界面自动重新检查两个组件并刷新状态。Mnemon CLI 从下一次调用起生效；dsh-mnemon 仍需重启 `dsh web` 才能加载新插件代码。
+更新命令由 Host 固定选择：浏览器不能传入命令或参数，执行禁用 shell，并限制时间与输出。插件更新在所属 profile 中安装已检查的精确版本，确认实际安装版本后才报告成功，避免固定 beta 版本未变却提示已更新。更新完成后界面自动重新检查两个组件并刷新状态。Mnemon CLI 从下一次调用起生效；dsh-mnemon 在 DSH 重启后才加载新插件代码：停止并重新运行 `dsh web`，或完全退出桌面版（macOS 上按 `Cmd+Q`）后重新打开。在此之前 Host 仍运行之前的版本，而 DSH 会在文件变化后立即载入新的记忆系统页面；该页面会重新打开**检查版本**，显示这次更新以及需要的重启。DSH 重启之前，记忆系统每个页面的顶部都会提示已安装的版本和仍在运行的版本，无论更新来自检查版本还是 `dsh plugin`；单独更新的子包也会列出。状态页显示的是正在运行的版本，**检查版本**显示已安装的版本，不会再次提供这次更新。
 
 <a id="dsh-015-兼容与旧会话恢复"></a>
 
@@ -273,6 +275,7 @@ HTTP 403 可能来自 Host/Origin 不匹配，或旧远程 Client 仍调用独�
 | `memoryBodyId is required...` | active 数量不是恰好 1；显式选择目标 |
 | `memory space is not active for reading` | 在概览激活目标；写入 inactive 可以，读取不行 |
 | Provider 错误 | 审查需要受 guard 保护的本地子 Agent；默认有界 `spawn`，可选择 `fork`。DSH/Teams 0.1.7-rc.2 可选择 `idleReview.agentTeams: scoped`，默认仍为 `pause`；重试前核对部分写入回执 |
+| 本地模型（例如 Ollama 上的 Qwen3.x）下后台审查报 `no user query found in messages` | 工具结果填满模型的上下文窗口后，Ollama 截断时丢掉了子代理的任务提示。0.5.22 起，Mnemon 会给被拒的子代理步骤追加一条用户消息并重试（[#327](https://github.com/omdsh-dev/dsh-mnemon/issues/327)），请更新 dsh-mnemon。调大 Ollama 的上下文长度（`OLLAMA_CONTEXT_LENGTH` 或模型的 `num_ctx`）也能避免截断。审查可能在失败前已创建项目档案，请核对部分写入回执 |
 | Runtime replace 超容量 | 缩短 replacement 或先显式整理；自动维护只处理 add 溢出 |
 | Document source path 被拒绝 | 路径必须在会话工作区内，且不能引用受管 Documents 目录 |
 | CLI timeout | 增大 `timeoutMs`；大 Store 的状态与图谱可能超过 10 秒 |

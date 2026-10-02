@@ -279,6 +279,8 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
     selectedRoot: string
     effectiveRoot: string
     aligned: boolean
+    /** The request names a session whose Agent is loaded. */
+    liveSession: boolean
   }> {
     this.assertOpen()
     const effectiveAgent = this.agent(request.sessionId)
@@ -289,13 +291,13 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
     this.assertOpen()
     const current = this.accounts === undefined ? this.current : this.forAccount(this.accounts.require())
     const sessionWorkspaceRoot = effectiveAgent?.session.header?.cwd ?? stored?.header.cwd
+      ?? this.workspaceForSession(request.sessionId)?.path
     const effectiveWorkspace = this.workspaceForPath(sessionWorkspaceRoot)
-    const effectiveGraph = effectiveAgent !== undefined ? this.forAgent(effectiveAgent)
-      : sessionWorkspaceRoot !== undefined && isWorkspaceStorageScope(current.config.storageScope)
-        ? this.forWorkspacePath(sessionWorkspaceRoot) : current
     const selectedWorkspace = request.workspaceId === undefined || request.workspaceId.trim() === ''
       ? effectiveWorkspace
       : this.requireWorkspace(request.workspaceId)
+    const effectiveGraph = effectiveAgent !== undefined ? this.forAgent(effectiveAgent)
+      : sessionWorkspaceRoot !== undefined && isWorkspaceStorageScope(current.config.storageScope) ? this.forWorkspacePath(sessionWorkspaceRoot) : current
     const graph = selectedWorkspace === undefined
       ? effectiveGraph
       : isWorkspaceStorageScope(current.config.storageScope) ? this.forWorkspacePath(selectedWorkspace.path) : current
@@ -309,6 +311,7 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
       selectedRoot,
       effectiveRoot,
       aligned: selectedRoot === effectiveRoot,
+      liveSession: effectiveAgent !== undefined,
     }
   }
 
@@ -349,6 +352,12 @@ export class LiveMnemonRuntime implements MnemonAgentRuntimeSource {
     const workspace = normalized === '' ? undefined : this.workspaceRegistry?.get(normalized)
     if (workspace === undefined) throw new Error('selected DSH workspace is unavailable')
     return workspace
+  }
+
+  private workspaceForSession(sessionId?: string): HostWorkspace | undefined {
+    const normalized = sessionId?.trim()
+    if (normalized === undefined || normalized === '') return undefined
+    return this.workspaceRegistry?.list().find(workspace => workspace.sessionIds?.includes(normalized) === true)
   }
 
   private workspaceForPath(path?: string): HostWorkspace | undefined {

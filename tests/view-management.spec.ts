@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { AgentMemoryTurn } from '../src/host/agent-memory-turn.ts'
 import type { HostAgent } from '../src/host/dsh.ts'
 import { createViewHandler } from '../src/host/view-rpc.ts'
-import { createRuntimeGraph } from '../src/host/runtime.ts'
+import { createRuntimeGraph, LiveMnemonRuntime } from '../src/host/runtime.ts'
 import type { MemoryViewConfigurationRequest, MemoryViewPreferences } from '../src/host/view-protocol.ts'
 import { viewManagementFixture } from './fixtures/view-management.ts'
 import type { RuntimeMemorySnapshot } from 'dsh-mnemon-source-runtime/contracts'
@@ -338,6 +338,25 @@ describe('View configuration with the real pinned DSH Cordis Loader', () => {
     await expect(writer('install-plugin', { packageName: 'dsh-mnemon-strategy-focus', version: '0.5.0-beta.4', confirmed: true })).resolves.toMatchObject({ ok: true, value: { restartRequired: true } })
     expect(installation.install).toHaveBeenCalledOnce()
     await expect(reader('dashboard', {})).resolves.toMatchObject({ ok: true, value: { pluginInstallation: { supported: true, profileName: 'web' } } })
+  })
+
+  it('aligns a listed session whose Agent is not loaded with the workspace DSH lists it under', async () => {
+    const f = await fixture()
+    const listed = { id: 'workspace', path: f.workspace, title: 'Fixture', sessionIds: ['listed'] }
+    const live = new LiveMnemonRuntime(f.graph, { list: () => [listed], get: id => id === 'workspace' ? listed : undefined }, undefined, f.engine)
+    try {
+      // No loaded Agent, so the lifecycle knows no root for the session.
+      const memoryView = vi.fn(() => undefined)
+      const lifecycle = { workspaceRoot: () => undefined, memoryView, turnActivities: () => ({ cursor: 0, activities: [] }) }
+      const handler = createViewHandler(live, f.engine, f.management, 'read', lifecycle as never)
+      await expect(handler('dashboard', { sessionId: 'listed', workspaceId: 'workspace' })).resolves.toMatchObject({ ok: true, value: { currentUnavailable: 'not-generated' } })
+      await expect(handler('dashboard', { sessionId: 'listed' })).resolves.toMatchObject({ ok: true, value: { currentUnavailable: 'not-generated' } })
+      expect(memoryView.mock.calls).toEqual([['listed', f.workspace], ['listed', f.workspace]])
+      // A session no workspace lists stays unaligned with a selected workspace.
+      await expect(handler('dashboard', { sessionId: 'elsewhere', workspaceId: 'workspace' })).resolves.toMatchObject({ ok: true, value: { currentUnavailable: 'unaligned' } })
+    } finally {
+      live.dispose()
+    }
   })
 
   it('keeps durable turn activity beside, rather than inside, the frozen View inspection', async () => {

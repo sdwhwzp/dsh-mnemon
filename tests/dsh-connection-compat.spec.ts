@@ -15,6 +15,7 @@ import type {
 import { registerSettingsRpc } from "../src/host/settings.ts"
 import { MNEMON_SETTINGS_CHANNEL } from "../src/host/protocol.ts"
 import { MnemonRemoteService } from '../src/host/remote-rpc.ts'
+import { VersionUpdateManager } from '../src/host/version-updates.ts'
 
 interface RegisteredRoute {
   path: string
@@ -39,6 +40,14 @@ type BranchFreeConnectionConstructor = new (
 describe('released and source DSH Connection compatibility', () => {
   it('registers account Web RPC from a mounted plugin with Cordis injection checks', async () => {
     const root = await mkdtemp(join(tmpdir(), 'mnemon-web-account-'))
+    const versionCheck = vi.spyOn(VersionUpdateManager.prototype, 'check').mockResolvedValue({
+      checkedAt: '2026-10-03T00:00:00.000Z',
+      components: [{ id: 'dsh-mnemon', name: 'dsh-mnemon', current: '0.5.21', latest: '0.5.22',
+        installMode: 'npm', outdated: true, updateSupported: true, updateHint: 'dsh',
+        packages: [{ id: 'dsh-mnemon-source-documents', name: 'Documents', kind: 'source', current: '0.5.21', latest: '0.5.22',
+          installMode: 'npm', outdated: true, updateSupported: true, updateHint: 'dsh', managedBy: 'profile' }] }],
+    })
+    const update = vi.spyOn(VersionUpdateManager.prototype, 'update')
     const context = new Context()
     const routes: RegisteredRoute[] = []
     try {
@@ -80,8 +89,30 @@ describe('released and source DSH Connection compatibility', () => {
       const reply = await response.json()
       expect(reply, JSON.stringify(reply)).toMatchObject({ result: { ok: true, value: { ok: true, value: { value: { accountDataDir: root, defaultRecallLimit: 10 } } } } })
       expect(routes.some(route => route.path === '/dsh-mnemon-settings')).toBe(true)
+      const request = async (method: string, endpoint: string, payload: unknown) => {
+        const response = await connection.createSharedFetchHandler('/api').fetch(new Request(`http://127.0.0.1/api/${method}`, {
+          method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+            type: 'client-request', rpcId: endpoint, method, payload: { args: { endpoint, payload } },
+          }),
+        }))
+        expect(response.status).toBe(200)
+        return response.json()
+      }
+      const versions = await request('dshMnemon/read', 'versions', {})
+      expect(versions).toMatchObject({ result: { ok: true, value: { ok: true, value: {
+        components: [{ current: '0.5.21', latest: '0.5.22', updateSupported: false,
+          packages: [{ current: '0.5.21', latest: '0.5.22', updateSupported: false }] }],
+      } } } })
+      for (const method of ['dshMnemon/read', 'dshMnemon/write', 'dshMnemon/settings']) {
+        expect(await request(method, 'version-update', { component: 'dsh-mnemon' }))
+          .toMatchObject({ result: { ok: true, value: { ok: false } } })
+      }
+      expect(versionCheck).toHaveBeenCalledOnce()
+      expect(update).not.toHaveBeenCalled()
     } finally {
       await context.fiber.dispose()
+      versionCheck.mockRestore()
+      update.mockRestore()
       expect(routes).toEqual([])
       await rm(root, { recursive: true, force: true })
     }

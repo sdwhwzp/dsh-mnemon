@@ -20,6 +20,7 @@ import { reviewEvidenceModel, scopedOverviewPlugin } from './fixtures/review-evi
 import { openVikingWriteModel } from './fixtures/openviking-write-model.mjs'
 import { idleReviewModel } from './fixtures/idle-review-model.mjs'
 import { reviewLayersModel } from './fixtures/review-layers-model.mjs'
+import { strictTemplateModel } from './fixtures/strict-template-model.mjs'
 import { generalStrategyModel } from './fixtures/general-strategy-model.mjs'
 import { DOCS_DEMO_LANGUAGES, docsDemoAssistant, docsDemoModel, seedDocsDemo } from './fixtures/docs-demo.mjs'
 
@@ -44,6 +45,7 @@ for (const flag of flags) {
   if (flag === '--openviking-write') continue
   if (flag === '--idle-review') continue
   if (flag === '--review-layers') continue
+  if (flag === '--strict-template') continue
   if (flag === '--general-strategy') continue
   if (flag === '--without-mnemon-cli') continue
   if (flag === '--remote-management') continue
@@ -110,6 +112,7 @@ const scriptedModel = liveModel ? undefined : flags.has('--runtime-routing') ? r
   : flags.has('--openviking-write') ? openVikingWriteModel(event => console.log('OpenViking write: ' + JSON.stringify(event)))
   : flags.has('--idle-review') ? idleReviewModel(event => console.log('Idle review: ' + JSON.stringify(event)))
   : flags.has('--review-layers') ? reviewLayersModel(event => console.log('Review layers: ' + JSON.stringify(event)))
+  : flags.has('--strict-template') ? strictTemplateModel(event => console.log('Strict template: ' + JSON.stringify(event)))
   : flags.has('--general-strategy') ? generalStrategyModel(event => console.log('General strategy: ' + JSON.stringify(event)))
   : flags.has('--runtime-write-scope') ? runtimeWriteScopeModel(event => console.log('Runtime write scope: ' + JSON.stringify(event)))
   : flags.has('--result-tool-cache') ? resultToolCacheModel(event => console.log('Result tool cache: ' + JSON.stringify(event)))
@@ -161,8 +164,9 @@ const model = createServer(async (request, response) => {
     return
   }
   if (typeof reply === 'object' && reply.error !== undefined) {
-    response.writeHead(400, { 'content-type': 'application/json' })
-    response.end(JSON.stringify({ error: { message: reply.error } }))
+    response.writeHead(reply.status ?? 400, { 'content-type': 'application/json' })
+    // A server failure answers as Ollama's Messages endpoint does.
+    response.end(JSON.stringify(reply.status === undefined ? { error: { message: reply.error } } : { type: 'error', error: { type: 'api_error', message: reply.error } }))
     return
   }
   response.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' })
@@ -280,7 +284,7 @@ try {
   await writeFile(join(dshHome, 'profiles/web/cordis.patch.yml'), disabled.map(id => `- id: ${id}\n  disabled: true\n`).join('') + browsePicker
     + (protectionModel === undefined && reviewModel === undefined && !reviewFailure ? '' : '- id: mnemon\n  config:\n    idleReviewMs: 5000\n')
     + (runtimeArchive ? '- id: mnemon\n  config:\n    persistenceStrategy:\n      mode: manual\n    runtimeMemory:\n      memoryLimitBytes: 300\n' : '')
-    + (flags.has('--idle-review') || flags.has('--review-layers') ? '- id: mnemon\n  config:\n    idleReviewMs: 5000\n    idleReview:\n      minIntervalMs: 5000\n      maxPerSession: 1\n' : '')
+    + (flags.has('--idle-review') || flags.has('--review-layers') || flags.has('--strict-template') ? '- id: mnemon\n  config:\n    idleReviewMs: 5000\n    idleReview:\n      minIntervalMs: 5000\n      maxPerSession: 1\n' : '')
     + (flags.has('--runtime-routing') ? '- id: mnemon\n  config:\n    runtimeMemory:\n      memoryLimitBytes: 1600\n' : '')
     // An explicit cliPath is authoritative, so a missing file hides any installed Mnemon CLI.
     + (flags.has('--without-mnemon-cli') ? '- id: mnemon\n  config:\n    cliPath: ' + JSON.stringify(join(fixture, 'no-mnemon-cli', 'mnemon')) + '\n' : '')

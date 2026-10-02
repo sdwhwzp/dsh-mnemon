@@ -143,6 +143,13 @@ Runtime 写入范围回归使用 `MNEMON_CLI_PATH=/absolute/path/to/mnemon pnpm 
 
 `pnpm e2e:serve --idle-review --strategy-extensions` 通过确定性回环模型选择验证部分失败。连续发送两个至少 150 字符的合成用户回合，再等待五秒；真实 reviewer 创建一份档案和一条 Runtime 记忆后，夹具故意返回模型错误。刷新记忆系统状态核对两份已提交回执，再发送更多回合，确认每会话一次的上限阻止新增子 Agent。与生产默认值的差别只有防抖和最小尝试间隔（均为 5 秒）以及 1 次会话上限。该夹具不模拟真实 Agent Teams policy；该组合由上文的可选 Agent Teams 矩阵覆盖。不使用个人凭据或记忆。详见[双语复现与证据](../../pr-assets/idle-review-agent-team/README.zh-CN.md)。
 
+`pnpm e2e:serve --strict-template` 复现 [#327](https://github.com/omdsh-dev/dsh-mnemon/issues/327)。回环模型的行为与 Ollama 0.33 运行“要求用户查询的聊天模板”时一致：
+- 保留系统提示，以及其余消息中能放进窗口的最长后缀，并总是保留最后一条消息；
+- 截断后没有用户文本消息时返回 500 `no user query found in messages`；
+- 窗口在后台审查发出第 3 次请求时确定。
+
+连续发送两个至少 150 字符的用户回合，再等待五秒。修复后，第 4 次审查请求被拒一次，随即带着用户消息重试，审查会创建档案“Review checkpoint storage”，状态页没有审查失败；未修复的构建则在状态页显示后台审查失败，并列出已提交的档案回执。夹具以 `Strict template:` 行输出每次审查请求。与生产默认值的差别只有后台审查的时间设置（5 秒、每会话一次）。详见[双语复现与证据](../../pr-assets/issue-327-subagent-user-turn/README.zh-CN.md)。
+
 `pnpm e2e:serve --general-strategy` 启动时已选中通用策略，并停用分层策略。先发送 `general-strategy-check remember`，下一回合再发送 `general-strategy-check recall`。脚本模型检查系统提示中包含通用记忆协议，且 Runtime、项目档案和记忆空间三个 Source 均已接入；随后通过具名 Runtime 工具保存一条事实，并且只有当这条事实以常驻记忆投影出现时，第二回合才答出它。夹具以 `General strategy:` 行输出每项检查。只有模型决策是脚本化的；策略、其 View、Runtime 写入和浏览器均为真实运行。
 
 `pnpm e2e:serve --without-mnemon-cli` 把 `cliPath` 指向不存在的文件，即使 PATH 中有 Mnemon CLI，Host 也按未安装处理。用它确认：状态页不显示 Mnemon Native 卡片，版本对话框把 CLI 列为可选，插件页停用向量测试，新建记忆空间从已就绪的 Provider 开始。先连接一个 Provider，例如在“插件 → 可组合记忆”页面中连接 Provider Lab 的服务。

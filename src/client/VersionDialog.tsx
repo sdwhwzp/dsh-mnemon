@@ -4,6 +4,7 @@ import type { VersionComponentStatus, VersionInstallMode, VersionPackageStatus, 
 import { MnemonClient } from './api.ts'
 import type { MnemonTranslate } from './locales.ts'
 import { message, SidebarModal, useT } from './page-kit.tsx'
+import { clearStarterUpdate, recordStarterUpdate, type StarterUpdateRecord } from './starter-update.ts'
 import css from './MnemonView.module.css'
 
 function versionModeLabel(t: MnemonTranslate, mode: VersionInstallMode, cli = false): string {
@@ -24,6 +25,7 @@ function versionHint(t: MnemonTranslate, component: VersionComponentStatus): str
   if (component.updateHint === 'brew') return t('versions.hintHomebrew')
   if (component.updateHint === 'brew-missing') return t('versions.hintBrewMissing')
   if (component.updateHint === 'go') return t('versions.hintGo')
+  if (component.updateHint === 'dsh') return t('versions.hintDsh')
   if (component.updateHint === 'pnpm') return t('versions.hintPnpm')
   if (component.updateHint === 'pnpm-missing') return t('versions.hintPnpmMissing')
   if (component.updateHint === 'link') return t('versions.hintLink')
@@ -81,7 +83,14 @@ function dshInstallLabel(t: MnemonTranslate, component: VersionComponentStatus):
   return t('versions.packageLocation')
 }
 
-export function VersionDialog(props: { client: MnemonClient; writeEnabled: boolean; onClose: () => void; onRefreshStatus: () => void }): JSX.Element {
+export function VersionDialog(props: {
+  client: MnemonClient
+  writeEnabled: boolean
+  /** The Starter update this page started before DSH swapped in this client, which reopened the dialog. */
+  resumedUpdate?: StarterUpdateRecord | undefined
+  onClose: () => void
+  onRefreshStatus: () => void
+}): JSX.Element {
   const t = useT()
   const [snapshot, setSnapshot] = useState<VersionStatus | null>(null)
   const [checking, setChecking] = useState(true)
@@ -126,20 +135,39 @@ export function VersionDialog(props: { client: MnemonClient; writeEnabled: boole
     setUpdating(component.id)
     setError(null)
     setResult(null)
+    // DSH swaps in the new client once the Starter's files change; that client reopens this dialog from the record.
+    if (component.id === 'dsh-mnemon') recordStarterUpdate({ from: component.current, to: component.latest })
     try {
       const next = await props.client.updateVersion(component.id)
       setResult(next)
       await check()
       props.onRefreshStatus()
     } catch (reason) {
+      if (component.id === 'dsh-mnemon') clearStarterUpdate()
       setError(message(reason))
     } finally {
       setUpdating(null)
       updateInFlight.current = false
     }
   }
+  const close = () => {
+    clearStarterUpdate()
+    props.onClose()
+  }
   const updatingBusy = updating !== null
   const controlsBusy = checking || updatingBusy
+  // The update's own reply went to the client DSH replaced. The Host keeps how it ended; a Host
+  // from before it kept that leaves only its pending restart to go by.
+  const resumed = props.resumedUpdate
+  const starter = snapshot?.components.find(component => component.id === 'dsh-mnemon')
+  const outcome = result === null && error === null && resumed !== undefined && snapshot?.lastUpdate?.component === 'dsh-mnemon'
+    && Date.parse(snapshot.lastUpdate.at) >= resumed.at - 60_000 ? snapshot.lastUpdate : undefined
+  const resumedResult: VersionUpdateResult | null = outcome !== undefined ? outcome.result ?? null
+    : result === null && resumed !== undefined && snapshot?.lastUpdate === undefined && starter?.restartRequired === true && (resumed.to === undefined || starter.current === resumed.to)
+      ? { component: 'dsh-mnemon', updated: true, restartRequired: true, ...(resumed.from === undefined ? {} : { previousVersion: resumed.from }), ...(starter.current === undefined ? {} : { currentVersion: starter.current }) }
+      : null
+  const shownResult = result ?? resumedResult
+  const shownError = error ?? outcome?.error ?? null
   const updateButton = (component: VersionComponentStatus) => props.writeEnabled && component.outdated && component.updateSupported && component.checkError === undefined
     ? <button type="button" className={css.primaryButton} disabled={controlsBusy} onClick={() => void update(component)}>{updating === component.id ? t('versions.updating') : t('versions.update')}</button>
     : null
@@ -149,12 +177,12 @@ export function VersionDialog(props: { client: MnemonClient; writeEnabled: boole
     <div className={css.versionPackageNumbers}><span>{t('versions.installed')} <code>{component.current ?? '—'}</code></span><span>{t('versions.latest')} <code>{component.latest ?? '—'}</code></span>{component.expectedVersion !== undefined && <span>{t('versions.starterVersion')} <code>{component.expectedVersion}</code></span>}</div>
     <div className={css.versionPackageAction}><p>{versionHint(t, component)}{component.checkError !== undefined && <> {t('versions.latestUnavailable')}</>}</p>{updateButton(component)}</div>
   </li>
-  return <SidebarModal title={t('versions.title')} description={t('versions.description')} busy={updatingBusy} contentReady={!checking} onClose={props.onClose} footer={<><span className={css.modalFooterMeta}>{snapshot === null ? '' : t('versions.checkedAt', { time: new Date(snapshot.checkedAt).toLocaleTimeString() })}</span><div className={css.modalFooterActions}><button type="button" data-autofocus className={css.secondaryButton} disabled={controlsBusy} onClick={() => void check()}>{checking ? t('versions.checkingShort') : t('versions.recheck')}</button><button type="button" data-dialog-close className={css.secondaryButton} disabled={updatingBusy} onClick={props.onClose}>{t('common.close')}</button></div></>}>
+  return <SidebarModal title={t('versions.title')} description={t('versions.description')} busy={updatingBusy} contentReady={!checking} onClose={close} footer={<><span className={css.modalFooterMeta}>{snapshot === null ? '' : t('versions.checkedAt', { time: new Date(snapshot.checkedAt).toLocaleTimeString() })}</span><div className={css.modalFooterActions}><button type="button" data-autofocus className={css.secondaryButton} disabled={controlsBusy} onClick={() => void check()}>{checking ? t('versions.checkingShort') : t('versions.recheck')}</button><button type="button" data-dialog-close className={css.secondaryButton} disabled={updatingBusy} onClick={close}>{t('common.close')}</button></div></>}>
     <div className={css.versionDialogBody}>
       {checking && snapshot === null && <div className={css.versionChecking} role="status"><span />{t('versions.checking')}</div>}
-      {error !== null && <div className={css.versionError} role="alert"><strong>{t('versions.failed')}</strong><p>{error}</p></div>}
+      {shownError !== null && <div className={css.versionError} role="alert"><strong>{t('versions.failed')}</strong><p>{shownError}</p></div>}
       {!props.writeEnabled && <p className={css.versionNotice}>{t('versions.readOnly')}</p>}
-      {result !== null && <div className={css.versionResult} role="status"><strong>{result.updated ? t('versions.updated', { name: result.component === 'mnemon' ? 'Mnemon CLI' : result.component }) : t('versions.alreadyCurrent')}</strong>{result.restartRequired && <p>{t('versions.restartRequired')}</p>}</div>}
+      {shownResult !== null && <div className={css.versionResult} role="status"><strong>{shownResult.updated ? t('versions.updated', { name: shownResult.component === 'mnemon' ? 'Mnemon CLI' : shownResult.component }) : t('versions.alreadyCurrent')}</strong>{shownResult.restartRequired && <p>{t('versions.restartRequired')}</p>}</div>}
       {snapshot !== null && <div className={css.versionList}>{snapshot.components.map(component => {
         const state = versionState(component)
         const packages = component.packages ?? []

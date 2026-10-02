@@ -74,7 +74,7 @@ A notice with **Open configuration** appears only when memory needs attention:
 - **The selected main strategy is not running**: another strategy composes memory for now.
 - **The latest component change did not take effect**: the previous composition keeps serving.
 
-**Check versions** is read-only. It tells whether the Mnemon CLI is missing, current or out of date, with the npm command to copy, and lists each subpackage's installed, published and pinned version. Restart `dsh web` after updating packages.
+**Check versions** is read-only. It tells whether the Mnemon CLI is missing, current or out of date, with the npm command to copy, and lists each subpackage's installed, published and pinned version. When a newer dsh-mnemon exists, **Update** installs it through DSH's own plugin installer, in the desktop app too. Restart DSH after updating packages; until then, a notice above every page names the installed version.
 
 ### Runtime memory
 

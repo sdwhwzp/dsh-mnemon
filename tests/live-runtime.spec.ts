@@ -66,6 +66,44 @@ describe('default Host scope over the Composable Runtime', () => {
     expect(subagents.start).not.toHaveBeenCalled()
   })
 
+  it.each(['global', 'workspace', 'workspaces'] as const)('routes listed sessions whose Agents are not loaded through their workspaces in %s storage', async storageScope => {
+    vi.stubEnv('MNEMON_DATA_DIR', directory())
+    const roots = [directory(), directory()]
+    // DSH's registry lists each session under its workspace; neither session's Agent is loaded,
+    // as after opening a conversation from the list or switching to one.
+    const workspaces = roots.map((path, index) => ({ id: `workspace-${index + 1}`, title: `Workspace ${index + 1}`, path, sessionIds: [`session-${index + 1}`] }))
+    const agents = { get: (_id: string): HostAgent | undefined => undefined, roots: () => [] }
+    const value = await compositionFixture(resolveConfig({ displayMode: 'builtin', cliPath: '/fake/mnemon', storageScope }), {
+      agents, workspaceRegistry: { get: id => workspaces.find(workspace => workspace.id === id), list: () => workspaces },
+    })
+    fixtures.push(value)
+    const lifecycle = new MnemonLifecycle({ agents } as unknown as HostContextShape,
+      new MnemonSubagentCoordinator({ run: vi.fn(), start: vi.fn() } as unknown as HostSubagentsService, value.live), value.live.config, value.live)
+    const read = createReadHandler(value.live, lifecycle)
+    const write = createWriteHandler(value.live, lifecycle)
+    for (const [index, workspace] of workspaces.entries()) {
+      const sessionId = `session-${index + 1}`
+      const expected = createStorageRoot(value.config, workspace.path).effectiveDataDir()
+      expect(await value.live.route({ sessionId })).toMatchObject({
+        selectedWorkspace: { id: workspace.id }, effectiveWorkspace: { id: workspace.id }, selectedRoot: expected, effectiveRoot: expected, aligned: true,
+      })
+      // A manual write needs no conversation Agent: it goes to the Source in the session's workspace.
+      await expect(write('document', { sessionId, action: 'create', title: `Document from ${sessionId}`, content: `# ${sessionId}` })).resolves.toMatchObject({ ok: true })
+      const catalog = await read('source-management-catalog', { sessionId })
+      const documents = catalog.ok ? (catalog.value as { sources: Array<{ sourceTypeId: string; sourceInstanceKey: string; availability: string }> }).sources.find(source => source.sourceTypeId === 'documents') : undefined
+      expect(documents).toMatchObject({ availability: 'ready' })
+      // The conversation tab's Documents page reads this; it used to fail with no workspace.
+      await expect(read('source-management-read', { sessionId, sourceInstanceKey: documents!.sourceInstanceKey, operation: 'snapshot', input: null }))
+        .resolves.toMatchObject({ ok: true, value: { value: { workspaceRoot: workspace.path } } })
+      await expect(read('status-summary', { sessionId })).resolves.toMatchObject({ ok: true, value: { documents: { workspaceRoot: workspace.path } } })
+    }
+    // As with loaded Agents: a workspace storage keeps each workspace's Documents apart.
+    await expect(read('documents', { sessionId: 'session-2' })).resolves.toMatchObject({ ok: true, value: { activeCount: storageScope === 'global' ? 2 : 1 } })
+    expect((await value.live.route({ sessionId: 'session-1' })).liveSession).toBe(false)
+    // A session no workspace lists still has no workspace.
+    expect(await value.live.route({ sessionId: 'session-elsewhere' })).not.toHaveProperty('selectedWorkspace')
+  })
+
   it('has one composition and no duplicate controllers, catalog or kernel', async () => {
     const { graph } = await fixture()
     expect(graph.memoryComposition.inspect().evaluation.state).toBe('ready')

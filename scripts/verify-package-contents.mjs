@@ -43,8 +43,9 @@ const relativeReadmeImages = readmeFiles.flatMap((path) => {
     .map(source => `${path}: ${source}`)
 })
 
-// Host, shared page controls and account isolation ship together; Sources and Providers remain separate.
-const maximumUnpackedBytes = 1_540_000
+// Host, account isolation and plugin-update controls ship together; Sources and Providers remain separate.
+// The merged artifact measures 1,557,592 bytes, leaving less than 5 KB of headroom.
+const maximumUnpackedBytes = 1_562_000
 
 if (missing.length > 0 || unexpected.length > 0 || hostLeaks.length > 0 || relativeReadmeImages.length > 0 || pack.unpackedSize > maximumUnpackedBytes) {
   if (missing.length > 0) console.error(`Missing package files:\n${missing.map(path => `- ${path}`).join('\n')}`)
