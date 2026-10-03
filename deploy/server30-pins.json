@@ -416,7 +416,7 @@
   },
   "preservePackages": [],
   "handoff": "20260910-plugin-pinning-handoff.md",
-  "release": "20261002-fork-audit-1759",
+  "release": "20261003-fork-audit-0757",
   "status": "deployed-verified",
   "requiredEntries": [
     {
@@ -429,5 +429,5 @@
     "writableLinkParents": ".dsh-module-fallback/**",
     "privateCredentials": "/home/tzwl3/.dsh/dsh-passwords.env: owner tzwl3, mode 0600"
   },
-  "verifiedAt": "2026-10-02T22:37:52.254435+00:00"
+  "verifiedAt": "2026-10-03T01:02:17.702583+00:00"
 }
