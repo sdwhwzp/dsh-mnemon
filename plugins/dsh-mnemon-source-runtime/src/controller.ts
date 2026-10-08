@@ -293,12 +293,15 @@ function compactionCandidates(
   now: string,
 ): RuntimeMemoryEntry[] {
   const seen = new Set<string>()
+  const existingByContent = new Map<string, RuntimeMemoryEntry>()
+  // Preserve find()'s first match, including legacy duplicates with different scopes.
+  for (const entry of existing) if (!existingByContent.has(entry.content)) existingByContent.set(entry.content, entry)
   return compacted.map((entry): RuntimeMemoryEntry => {
     const content = normalizeContent(entry.content, 'compacted content')
     if (!isImportance(entry.importance)) throw new Error('compacted importance must be critical, normal, or low')
     if (seen.has(content)) throw new Error('compacted runtime memory contains duplicate entries')
     seen.add(content)
-    const unchanged = existing.find(current => current.content === content)
+    const unchanged = existingByContent.get(content)
     // A compactor that drops the scope inherits it from the identical committed entry, so branch
     // visibility can never be silently widened by maintenance.
     const inheritedBranches = entry.branches ?? unchanged?.branches
@@ -318,16 +321,21 @@ function packCompactionCandidates(
   target: RuntimeMemoryTarget,
   maxBytes: number,
 ): RuntimeMemoryEntry[] {
-  const priority: Record<RuntimeMemoryImportance, number> = { critical: 0, normal: 1, low: 2 }
-  const ranked = replacements.map((entry, index) => ({ entry, index })).sort((left, right) => (
-    priority[left.entry.importance] - priority[right.entry.importance] || left.index - right.index
-  ))
+  const ranked: Record<RuntimeMemoryImportance, number[]> = { critical: [], normal: [], low: [] }
+  replacements.forEach((entry, index) => ranked[entry.importance].push(index))
   const selected = new Set<number>()
-  const packed: RuntimeMemoryEntry[] = []
-  for (const candidate of ranked) {
-    if (byteCount([...packed, candidate.entry], target) > maxBytes) continue
-    packed.push(candidate.entry)
-    selected.add(candidate.index)
+  const delimiterBytes = Buffer.byteLength(RUNTIME_ENTRY_DELIMITER, 'utf8')
+  let used = 0
+  let count = 0
+  // Three stable buckets preserve priority and original order without sorting.
+  for (const importance of ['critical', 'normal', 'low'] as const) for (const index of ranked[importance]) {
+    const entry = replacements[index]!
+    const matchesTarget = entry.target === target
+    const added = matchesTarget ? Buffer.byteLength(entry.content, 'utf8') + (count === 0 ? 0 : delimiterBytes) : 0
+    if (used + added > maxBytes) continue
+    used += added
+    if (matchesTarget) count += 1
+    selected.add(index)
   }
   return replacements.filter((_, index) => selected.has(index))
 }

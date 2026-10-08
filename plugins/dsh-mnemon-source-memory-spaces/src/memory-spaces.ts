@@ -360,6 +360,8 @@ export class MemorySpaceRegistry {
     let normalizedService = this.providerCatalog.normalizeService(providerId, service)
     const seen = new Set<string>()
     const existing = this.spaces.filter(body => body.providerId === providerId)
+    const existingByExternalId = new Map<string | undefined, StoredMemorySpace>()
+    for (const body of existing) if (!existingByExternalId.has(body.externalId)) existingByExternalId.set(body.externalId, body)
     const reservedIds = new Set(this.spaces.filter(body => body.providerId !== providerId).map(body => body.id))
     const timestamp = this.now().toISOString()
     const projections = discovered.map(candidate => {
@@ -368,7 +370,7 @@ export class MemorySpaceRegistry {
       seen.add(externalId)
       const connection = this.providerCatalog.normalizeMemory(providerId, candidate.connection)
       this.providerCatalog.normalize(providerId, { ...normalizedService, ...connection })
-      const previous = existing.find(body => body.externalId === externalId)
+      const previous = existingByExternalId.get(externalId)
       let id = previous?.id ?? validateMemorySpaceId(`${providerId}-${createHash('sha256').update(externalId).digest('hex').slice(0, 24)}`)
       let suffix = 1
       while (reservedIds.has(id)) {
@@ -790,9 +792,10 @@ export class MemorySpaceRegistry {
     const timestamp = this.now().toISOString()
     const legacyActive = this.runner.effectiveStore()
     let changed = false
+    const knownIds = new Set(this.spaces.map(body => body.id))
     for (const entry of readdirSync(this.directory, { withFileTypes: true })) {
       if (!entry.isDirectory() || !ID_PATTERN.test(entry.name) || !existsSync(join(this.directory, entry.name, 'mnemon.db'))) continue
-      if (this.spaces.some(body => body.id === entry.name)) continue
+      if (knownIds.has(entry.name)) continue
       this.spaces.push({
         id: entry.name,
         name: entry.name,
@@ -802,6 +805,7 @@ export class MemorySpaceRegistry {
         createdAt: timestamp,
         updatedAt: timestamp,
       })
+      knownIds.add(entry.name)
       changed = true
     }
     if (changed) this.save()

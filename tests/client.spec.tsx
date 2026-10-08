@@ -318,6 +318,15 @@ describe('MnemonWorkbench', () => {
         const insights = selected === undefined ? [] : Array.from({ length: options.entityInsightCount ?? 1 }, (_, index) => ({ ...memory, id: `entity-memory-${index + 1}`, graphId: `${body.id}:entity-memory-${index + 1}`, content: `${selected} 关联记忆 ${index + 1}` }))
         return { ok: true, value: { items, ...(selected === undefined ? {} : { selected }), insights, ...(providerSources === undefined ? {} : { sources: providerSources.entities }) } }
       }
+      // The Entities page lists the memories that carry an entity, then related ones, in two reads.
+      if (endpoint === 'entity-memories') {
+        const selected = String(payload?.entity)
+        const all = Array.from({ length: options.entityInsightCount ?? 1 }, (_, index) => ({ ...memory, id: `entity-memory-${index + 1}`, graphId: `${body.id}:entity-memory-${index + 1}`, content: `${selected} 关联记忆 ${index + 1}` }))
+        const offset = Number(payload?.offset ?? 0)
+        const limit = Number(payload?.limit ?? 50)
+        return { ok: true, value: { entity: selected, total: all.length, offset, items: all.slice(offset, offset + limit), complete: true, sources: providerSources?.entities ?? [] } }
+      }
+      if (endpoint === 'entity-related') return { ok: true, value: { entity: String(payload?.entity), items: [], sources: [] } }
       if (endpoint === 'search') return {
         ok: true,
         value: {

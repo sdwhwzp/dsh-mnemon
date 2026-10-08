@@ -39,6 +39,6 @@ dsh-mnemon gives DeepSeek Harness three kinds of memory: **runtime memory** in e
 
 ## What is new
 
-[v0.5.22](./releases/v0.5.22.md) updates dsh-mnemon from Check versions through DSH's own installer, in the desktop app too, keeps the Memory System working in conversation tabs whose Agent is not loaded, and lets memory subagents recover when a chat template requires a user query. [v0.5.21](./releases/v0.5.21.md) let large Mnemon Native spaces list, draw and archive again, and held idle review to one layer. [All releases](./releases/README.md) · [Roadmap](./roadmap.md) · [Historical evidence](../pr-assets/README.md)
+[v0.5.24](./releases/v0.5.24.md) makes the Entities page count and list every memory that carries an entity, shows them as soon as one is selected, and finds related memories only when asked. [v0.5.23](./releases/v0.5.23.md) reduced repeated work in Runtime compaction, Document queries, space discovery, multi-space recall, batch preparation and Holographic ranking, preserving result order and storage formats. [All releases](./releases/README.md) · [Roadmap](./roadmap.md) · [Historical evidence](../pr-assets/README.md)
 
 Guides describe the current release. Screenshots and recordings come from the [v0.5.19 gallery](../assets/webui-v0.5.19/README.md), and the installation steps from the [installation gallery](../assets/install-v0.5.19/README.md); dated PR records establish only their named revisions and environments. Internal Host RPCs are not an external plugin SDK.

@@ -146,7 +146,7 @@ Each space declares what its Provider can really supply. Mnemon Native gives typ
 |---|---|
 | ![Content: the memory just saved appears in the list](../../assets/webui-v0.5.19/en/memory-content.jpg) | ![Entities: ClickHouse selected, with the memories that mention it](../../assets/webui-v0.5.19/en/memory-entities.jpg) |
 
-**Content** lists memories where the Provider can enumerate them; query-only Providers show content once you enter a query. **Entities** uses only real entity indexes, currently Mnemon Native, Hindsight and Holographic. Selecting an entity gathers the memories that mention it across spaces.
+**Content** lists memories where the Provider can enumerate them; query-only Providers show content once you enter a query. **Entities** uses only real entity indexes, currently Mnemon Native, Hindsight and Holographic. Each entity's count is the number of memories that carry it across the active spaces, and the list shows every entity. Selecting one lists exactly those memories, most important first, at once. Below them, **Find related memories** runs recall for the entity among memories that do not carry it. Recall takes longer, so it runs only when asked for: once opened, it stays open for the next entities until you hide it, for the rest of the browser session. When no memory carries a name you entered, related memories show by themselves.
 
 #### Save to memory
 

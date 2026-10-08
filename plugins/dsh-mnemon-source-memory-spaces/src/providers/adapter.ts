@@ -65,6 +65,14 @@ export type MemoryProviderScoreSemantics = 'normalized-relevance' | 'provider-na
 
 export const NORMALIZED_RELEVANCE_SCORE: ProviderScoreSemantics = Object.freeze({ kind: 'normalized-relevance' })
 
+/** The memories of one Memory Space that carry entities, as the Provider's own index has them. */
+export interface ProviderEntityIndex {
+  /** Each memory with at least one entity, listing its entities. */
+  memories: Insight[]
+  /** False when the Provider could not include every memory of the space. */
+  complete: boolean
+}
+
 /** One provider-owned namespace projected into DSH as a Memory Space. */
 export interface ProviderMemorySpace {
   /** Stable identifier owned by the provider, never a DSH-generated title. */
@@ -92,6 +100,12 @@ export interface MemoryProviderAdapter {
   remember(body: MemorySpace, request: RememberRequest, signal?: AbortSignal): Promise<JsonValue>
   /** Optional cheap bounded metadata sampling, without a graph projection. */
   metadataSample?(body: MemorySpace, limit: number, signal?: AbortSignal): Promise<Insight[]>
+  /**
+   * Optional entity index for the Entities page. Without it the Source builds
+   * the index from list(), so a Provider whose list() stops short of every
+   * memory, or that cannot list, implements this to keep entity counts whole.
+   */
+  entityIndex?(body: MemorySpace, signal?: AbortSignal): Promise<ProviderEntityIndex>
   /** Persist an ordered host-authorized batch and return one receipt per request. */
   rememberMany?(body: MemorySpace, requests: readonly RememberRequest[], signal?: AbortSignal): Promise<JsonValue[]>
   related?(body: MemorySpace, id: string, depth: number, edge?: EdgeType, signal?: AbortSignal): Promise<Insight[]>

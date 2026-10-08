@@ -29,7 +29,6 @@ const links = new Map([
   ['@deepseek-ai/dsh-client-ui-settings', 'packages/client/ui-settings'],
   ['@deepseek-ai/dsh-client-ui-slots', 'packages/client/ui-slots'],
   ['@deepseek-ai/dsh-client-ui-tool', 'packages/client/ui-tool'],
-  ['@deepseek-ai/dsh-invariants', 'packages/runtime-diagnostics/invariants'],
   ['@deepseek-ai/dsh-llm', 'packages/llm/llm'],
   ['@deepseek-ai/dsh-session', 'packages/core/session'],
   ['@deepseek-ai/dsh-session-persistence-jsonl', 'packages/session/session-persistence-jsonl'],

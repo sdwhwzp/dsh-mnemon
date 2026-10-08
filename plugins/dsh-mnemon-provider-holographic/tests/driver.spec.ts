@@ -9,6 +9,20 @@ const temporaryDirectories: string[] = []
 afterEach(() => { for (const directory of temporaryDirectories.splice(0)) rmSync(directory, { recursive: true, force: true }) })
 
 describe('standalone holographic data plane', () => {
+  it('preserves exact Jaccard scores for unequal token sets and Unicode', async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), 'dsh-mnemon-holographic-score-'))
+    temporaryDirectories.push(dataDir)
+    const { authority, body } = createMemorySpaceProviderFixture(descriptor, { defaultTrust: 1, minTrust: 0 }, { dataDir })
+    const provider = new HolographicProvider(authority)
+    await provider.remember(body, { content: 'alpha gamma delta' })
+    await provider.remember(body, { content: '存储 查询' })
+    expect((await provider.search(body, { query: 'alpha beta' })).results.map(row => row.score)).toEqual([1 / 4])
+    expect((await provider.search(body, { query: 'alpha beta gamma delta epsilon' })).results.map(row => row.score)).toEqual([3 / 5])
+    expect((await provider.search(body, { query: '存储 beta' })).results.map(row => row.score)).toEqual([3 / 7])
+    expect((await provider.search(body, { query: 'unknown terms' })).results).toEqual([])
+    expect((await provider.search(body, { query: '' })).results.map(row => row.score)).toEqual([0.9, 0.9])
+  })
+
   it('stores Holographic facts locally with trust, entities, graph projection, related recall, and hard forget', async () => {
     const dataDir = mkdtempSync(join(tmpdir(), 'dsh-mnemon-holographic-'))
     temporaryDirectories.push(dataDir)

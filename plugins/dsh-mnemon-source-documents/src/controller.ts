@@ -287,12 +287,12 @@ export class DocumentController {
             if (titleMatch || descriptionMatch || contentMatch) tokenMatches += 1
             score += titleMatch ? 4 : descriptionMatch ? 2 : contentMatch ? 1 : 0
           }
-          return { result: { ...view, score, excerpt: excerpt(view.content) }, tokenMatches }
+          return { result: { ...view, score }, tokenMatches }
         })
         .filter(candidate => normalized === '' || (candidate.result.score > 0 && candidate.tokenMatches >= requiredTokenMatches))
         .sort((left, right) => right.result.score - left.result.score || Date.parse(right.result.updatedAt) - Date.parse(left.result.updatedAt))
         .slice(0, limit)
-        .map(candidate => candidate.result)
+        .map(({ result }) => ({ ...result, excerpt: excerpt(result.content) }))
       if (ranked.length > 0) {
         const accessedAt = this.now().toISOString()
         const ids = new Set(ranked.map(result => result.id))

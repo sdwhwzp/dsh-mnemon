@@ -105,6 +105,8 @@ MNEMON_RUN_FLASH_QUALITY=1 MNEMON_FLASH_QUALITY_WAVES=24 MNEMON_FLASH_QUALITY_RE
 
 性能回归对 100 次三 Source View 组合约束 wall/CPU 时间；确定性构建比较所有生成文件 hash。二者不承诺生产网络延迟或 LLM 质量。
 
+`pnpm bench:algorithms` 在临时合成存储中测量 N=1/10/100/1000 的本地查询、存储、压缩与召回扩展性，默认写入 `.cache/algorithm-benchmark.json`；可用 `MNEMON_BENCH_OUTPUT` 指定输出，或用 `MNEMON_BENCH_SIZES=1,10,100` 运行小规模测试。运行时不要并行执行其他测试/构建。[算法审计报告](../../pr-assets/algorithm-performance-20261003/README.zh-CN.md)记录工作负载、前后对比、操作计数、复杂度和外部 Provider 边界。普通 CI 使用确定性的等价性/工作量上界测试，不使用该基准的延迟断言。
+
 默认组合和三插件组合均运行上述性能门槛。
 [2026-09-01 策略贡献验证](../../pr-assets/strategy-extensions-20260901/README.md)
 记录了共存、独立制品、真实 Headless 激活结果及其边界。

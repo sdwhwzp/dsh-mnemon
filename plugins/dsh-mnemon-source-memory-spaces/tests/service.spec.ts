@@ -827,14 +827,17 @@ describe('MemorySpacesService', () => {
     expect(provider.list).not.toHaveBeenCalled()
   })
 
-  it('exposes top entities and recalls one entity on demand', async () => {
+  it('counts entities from every memory and lists the memories that carry one', async () => {
     const { service, process } = fixture()
+    // The status top list says SQLite 2; the store has one memory that carries it.
     await expect(service.entities()).resolves.toMatchObject({
-      items: [{ entity: 'SQLite', count: 2 }],
+      items: [{ entity: 'Mnemon', count: 1 }, { entity: 'SQLite', count: 1 }],
       insights: [],
-      sources: [{ memoryBodyId: 'work', mode: 'entities', status: 'ready', itemCount: 1 }],
+      sources: [{ memoryBodyId: 'work', mode: 'entities', status: 'ready', itemCount: 2, memoryCount: 2, complete: true }],
     })
-    await expect(service.entities('SQLite', 5)).resolves.toMatchObject({ selected: 'SQLite', insights: [{ id: 'm1' }] })
+    await expect(service.entities('SQLite', 5)).resolves.toMatchObject({ selected: 'SQLite', insights: [{ id: 'm1', content: 'Use SQLite for local-first storage.' }] })
+    expect(process.mock.calls.filter(([, args]) => args.includes('recall')).every(([, args]) => args.includes('--readonly'))).toBe(true)
+    await expect(service.entityRelated('SQLite', 5)).resolves.toMatchObject({ entity: 'SQLite', items: [] })
     expect(process).toHaveBeenCalledWith(FAKE_CLI, expect.arrayContaining(['--intent', 'ENTITY', '--limit', '15']), expect.anything())
   })
 

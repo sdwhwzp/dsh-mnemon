@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
+import { topScored } from './top-scored.ts'
 import type { JsonValue } from 'dsh-mnemon-source-memory-spaces/provider-sdk'
 import type { MemorySpaceAuthority } from 'dsh-mnemon-source-memory-spaces/provider-sdk'
 import type {
@@ -53,8 +54,9 @@ function terms(value: string): Set<string> {
 function overlap(left: Set<string>, right: Set<string>): number {
   if (left.size === 0 || right.size === 0) return 0
   let shared = 0
-  for (const value of left) if (right.has(value)) shared += 1
-  return shared / new Set([...left, ...right]).size
+  const [smaller, larger] = left.size <= right.size ? [left, right] : [right, left]
+  for (const value of smaller) if (larger.has(value)) shared += 1
+  return shared / (left.size + right.size - shared)
 }
 
 function extractEntities(content: string, supplied: string[] = []): string[] {
@@ -116,14 +118,14 @@ export class HolographicProvider implements MemoryProviderAdapter {
     const queryTerms = terms(request.query)
     const query = request.query.toLocaleLowerCase()
     const limit = Math.min(Math.max(request.limit ?? 10, 1), 50)
-    const results = store.facts.flatMap(fact => {
+    const results = topScored(store.facts.flatMap(fact => {
       if (fact.trustScore < minTrust || (request.category !== undefined && fact.category !== request.category)) return []
       const lexical = overlap(queryTerms, terms(`${fact.content} ${fact.tags.join(' ')} ${fact.entities.join(' ')}`))
       const phrase = fact.content.toLocaleLowerCase().includes(query) ? 1 : 0
       const entity = fact.entities.some(value => query.includes(value.toLocaleLowerCase())) ? 1 : 0
       const relevance = Math.max(lexical, phrase * 0.9, entity * 0.8)
       return relevance <= 0 ? [] : [{ fact, score: relevance * fact.trustScore }]
-    }).sort((left, right) => right.score - left.score).slice(0, limit)
+    }), limit)
     return { results: results.map(result => insight(result.fact, result.score)) }
   }
 
@@ -169,12 +171,12 @@ export class HolographicProvider implements MemoryProviderAdapter {
     if (source === undefined) return []
     const sourceEntities = new Set(source.entities.map(value => value.toLocaleLowerCase()))
     const sourceTerms = terms(source.content)
-    return store.facts.flatMap(fact => {
+    return topScored(store.facts.flatMap(fact => {
       if (fact.id === id) return []
       const sharedEntities = fact.entities.filter(value => sourceEntities.has(value.toLocaleLowerCase())).length
       const score = Math.max(sharedEntities === 0 ? 0 : Math.min(1, 0.5 + sharedEntities * 0.2), overlap(sourceTerms, terms(fact.content))) * fact.trustScore
       return score <= 0 ? [] : [{ fact, score }]
-    }).sort((left, right) => right.score - left.score).slice(0, 20).map(result => insight(result.fact, result.score))
+    }), 20).map(result => insight(result.fact, result.score))
   }
 
   async remember(body: MemorySpace, request: RememberRequest): Promise<JsonValue> {

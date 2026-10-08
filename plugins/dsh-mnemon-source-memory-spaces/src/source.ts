@@ -159,6 +159,19 @@ async function manageMemorySpaces(service: MemorySpacesService, request: MemoryS
         input.limit === undefined ? undefined : integer(input.limit, 100, 1, 10_000),
         request.signal,
       ))
+      case 'entity-memories': return managementResult(service, await service.entityMemories(
+        text(input.entity, 'entity', 500)!,
+        input.offset === undefined ? undefined : integer(input.offset, 0, 0, 1_000_000),
+        input.limit === undefined ? undefined : integer(input.limit, 50, 1, 200),
+        request.signal,
+      ))
+      case 'entity-related': return managementResult(service, await service.entityRelated(
+        text(input.entity, 'entity', 500)!,
+        input.limit === undefined ? undefined : integer(input.limit, 20, 1, 50),
+        request.signal,
+        // A page view's id: its newer selection cancels the related read it is still waiting for.
+        text(input.view, 'view', 200, false),
+      ))
       case 'search': return managementResult(service, await service.search({
         query: text(input.query, 'query', 2_000)!,
         ...(text(input.mode, 'mode', 20, false) === undefined ? {} : { mode: text(input.mode, 'mode', 20, false)! as 'smart' | 'keyword' | 'basic' }),

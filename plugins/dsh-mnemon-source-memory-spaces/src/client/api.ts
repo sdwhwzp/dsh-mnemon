@@ -1,4 +1,4 @@
-import type { CreateMemorySpaceRequest, EntityView, Insight, MemorySpace, MemorySpaceView, MemorySpaceMetadataMaintenanceResult, MemorySpaceCatalog, MemoryGraphSnapshot, MemoryListRequest, MemoryListView, MemoryReadSource, RememberRequest, SearchRequest, UpdateMemorySpaceRequest } from '../contracts.ts'
+import type { CreateMemorySpaceRequest, EntityMemoriesView, EntityRelatedView, EntityView, Insight, MemorySpace, MemorySpaceView, MemorySpaceMetadataMaintenanceResult, MemorySpaceCatalog, MemoryGraphSnapshot, MemoryListRequest, MemoryListView, MemoryReadSource, RememberRequest, SearchRequest, UpdateMemorySpaceRequest } from '../contracts.ts'
 
 /**
  * Source-owned structural page API; the default bundle may supply agent-assisted callbacks.
@@ -11,6 +11,10 @@ export interface MemorySpacesPageClient {
   graph(memoryBodyIds?: string[]): Promise<MemoryGraphSnapshot>
   list(request?: MemoryListRequest): Promise<MemoryListView>
   entities(entity?: string, limit?: number): Promise<EntityView>
+  /** Optional for page clients written against an older Source; the Entities page then lists entities(entity) only. */
+  entityMemories?(entity: string, offset?: number, limit?: number): Promise<EntityMemoriesView>
+  /** view: one id per page view; its next selection cancels the related read it is still waiting for. */
+  entityRelated?(entity: string, limit?: number, view?: string): Promise<EntityRelatedView>
   search(request: SearchRequest): Promise<SearchResponse>
   agentSearch(request: SearchRequest): Promise<AgentSearchResponse>
   related(id: string, memoryBodyId?: string): Promise<Insight[]>

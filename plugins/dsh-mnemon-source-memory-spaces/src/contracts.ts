@@ -260,6 +260,14 @@ export const INTENTS = ['WHY', 'WHEN', 'ENTITY', 'GENERAL'] as const satisfies r
 
 export type RecallRelevanceTier = 'high' | 'medium' | 'low' | 'unknown'
 
+/**
+ * One spelling-insensitive key per entity. The Host's entity index and the Client's graph
+ * both count an entity's memories by it, so their numbers agree.
+ */
+export function normalizeEntityKey(entity: string): string {
+  return entity.normalize('NFKC').trim().toLocaleLowerCase()
+}
+
 export interface Insight {
   id: string
   content: string
@@ -386,7 +394,8 @@ export interface MemoryGraphSnapshot {
 }
 
 export type MemoryReadMode = 'search' | 'graph' | 'projection' | 'enumerable' | 'query-only' | 'entities' | 'unsupported'
-export type MemoryReadStatus = 'ready' | 'empty' | 'query-required' | 'unsupported' | 'unavailable'
+/** 'loading' is client-only: a page shows its spaces from the directory while the read runs. */
+export type MemoryReadStatus = 'ready' | 'empty' | 'query-required' | 'unsupported' | 'unavailable' | 'loading'
 
 /**
  * One provider-backed Memory Space participating in a read surface.
@@ -405,6 +414,10 @@ export interface MemoryReadSource {
   status: MemoryReadStatus
   itemCount: number
   edgeCount?: number
+  /** Entity reads: the memories the entity index covers in this space. */
+  memoryCount?: number
+  /** Entity reads: false when the Provider could not index every memory of this space. */
+  complete?: boolean
   hint?: string
   quality?: RecallQualityStats
 }
@@ -558,12 +571,39 @@ export interface MemorySpacesStatus {
   stats?: MemorySpaceStats & { dbPath?: string }
 }
 
+/**
+ * The entities of the active spaces. Each count is the number of memories that
+ * carry the entity, the same set entity-memories lists.
+ */
 export interface EntityView {
   items: Array<{ entity: string; count: number }>
+  /** With a selected entity: the first page of entity-memories, kept for existing callers. */
   insights: Insight[]
   selected?: string
   /** Omitted only when talking to a pre-provider-aware Host. */
   sources?: MemoryReadSource[]
+  /** Distinct entities across the active spaces; items may be capped below it. Omitted by older Hosts. */
+  total?: number
+  /** False when a space's Provider could not index every memory. Omitted by older Hosts. */
+  complete?: boolean
+}
+
+/** One page of the memories that carry an entity, by importance and then recency. */
+export interface EntityMemoriesView {
+  /** The entity's most common spelling, or the requested name when no memory carries it. */
+  entity: string
+  total: number
+  offset: number
+  items: Insight[]
+  complete: boolean
+  sources: MemoryReadSource[]
+}
+
+/** Memories recall relates to an entity that do not carry it themselves. */
+export interface EntityRelatedView {
+  entity: string
+  items: Insight[]
+  sources: MemoryReadSource[]
 }
 
 // Published type spellings retained for independently installed v0.5.x consumers.

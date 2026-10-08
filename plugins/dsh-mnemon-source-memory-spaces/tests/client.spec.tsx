@@ -101,7 +101,8 @@ describe('independent Memory Spaces Source client', () => {
     expect(await screen.findByText(t('search.noRelated'))).not.toBeNull()
     fireEvent.click(screen.getByRole('button', { name: t('search.closeRelated') }))
     expect(screen.queryByRole('heading', { name: t('search.related') })).toBeNull()
-  })
+    // CI's packed-plugin job runs this in four parallel standalone installs, where it has taken 5-5.5 s.
+  }, 15_000)
 
   it('runs the query it opens with, as a conversation turn sends it', async () => {
     const read = vi.fn(async (operation: string, input?: unknown) => ({ revision: 'r1', value: operation === 'status-summary'

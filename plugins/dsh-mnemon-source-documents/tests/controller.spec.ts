@@ -17,6 +17,25 @@ afterEach(() => {
 })
 
 describe('Mnemon Documents control plane', () => {
+  it('preserves tied search order, excerpts, live reads and selected-only access updates', async () => {
+    let now = new Date('2026-10-01T00:00:00.000Z')
+    const controller = new DocumentController(workspace(), 1024 * 1024, () => now)
+    for (let i = 0; i < 100; i++) await controller.mutate({ action: 'create', title: `storage ${i}`, description: 'schema', content: `# storage **schema** ${i}` })
+    const original = controller.catalog().documents
+    now = new Date('2026-10-03T00:00:00.000Z')
+    const result = await controller.search('storage schema', { limit: 10 })
+    expect(result.results.map(row => [row.id, row.score, row.excerpt])).toEqual(original.slice(0, 10).map((row, i) => [row.id, 6, `storage schema ${i}`]))
+    expect(controller.catalog().documents.map(row => row.lastAccessedAt)).toEqual(original.map((row, i) => i < 10 ? now.toISOString() : row.lastAccessedAt))
+    const last = original[99]!
+    writeFileSync(join(controller.workspaceRoot, last.relativePath), 'External changed content live-sentinel')
+    expect((await controller.search('live-sentinel', { allowedIds: [last.id] })).results[0]?.content).toBe('External changed content live-sentinel')
+    expect((await controller.search('storage schema', { allowedIds: [] })).results).toEqual([])
+    rmSync(join(controller.workspaceRoot, last.relativePath))
+    // A broken eligible file must still fail even if it would rank below the limit.
+    await expect(controller.search('storage schema', { limit: 1 })).rejects.toThrow()
+    expect((await controller.search('storage schema', { allowedIds: [original[0]!.id] })).results[0]?.id).toBe(original[0]!.id)
+  })
+
   it('reads no bodies for revision/catalog, one for a single read, and reuses verified UI excerpts', async () => {
     const controller = new DocumentController(workspace())
     for (let index = 0; index < 24; index++) await controller.mutate({ action: 'create', title: `Record ${index}`, content: `Original ${index}` })

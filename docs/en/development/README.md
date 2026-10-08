@@ -105,6 +105,8 @@ Keep generated live-run output outside the repository, as the commands above do.
 
 The performance regression composes 100 three-Source Views under wall/CPU budgets. Deterministic builds compare all generated hashes. Neither check promises production network latency or LLM quality.
 
+`pnpm bench:algorithms` measures local query, storage, compaction and recall scaling at N=1/10/100/1000 in temporary synthetic stores. It writes `.cache/algorithm-benchmark.json`; use `MNEMON_BENCH_OUTPUT` for another destination or `MNEMON_BENCH_SIZES=1,10,100` for smaller cases. Run it without concurrent tests/builds. The [algorithm audit](../../pr-assets/algorithm-performance-20261003/README.md) records the workload definitions, before/after results, operation counters, complexity bounds and external-Provider limitations. Normal CI uses deterministic equivalence/work-bound tests, not latency assertions from this benchmark.
+
 Both the default and three-extension profiles run that performance fence. The
 [2026-09-01 Strategy contribution verification](../../pr-assets/strategy-extensions-20260901/README.md)
 records coexistence, independent artifacts, real Headless activation and limits.
