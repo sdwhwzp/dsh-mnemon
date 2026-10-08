@@ -361,10 +361,10 @@
     },
     {
       "name": "dsh-passwords",
-      "version": "2.7.6-dsh.20261003.1",
-      "file": "dsh-passwords-2.7.6-dsh.20261003.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261002-fork-audit-1759/artifacts/dsh-passwords-2.7.6-dsh.20261003.1.tgz",
-      "sha256": "df9c5b68d7de1abe08a22f1c5ad7ab7c7da8da21adcafb69aeac96d35acfab46"
+      "version": "2.7.6-dsh.20261008.1",
+      "file": "dsh-passwords-2.7.6-dsh.20261008.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261008-terminal-grouping/artifacts/dsh-passwords-2.7.6-dsh.20261008.1.tgz",
+      "sha256": "734f4c88ae8a390c23c061c29e638d354b25006e34efc310e35ef3a332e7346b"
     },
     {
       "name": "dsh-plugin-mobile-gateway",
@@ -416,7 +416,7 @@
   },
   "preservePackages": [],
   "handoff": "20260910-plugin-pinning-handoff.md",
-  "release": "20261003-fork-audit-0757",
+  "release": "20261008-terminal-grouping",
   "status": "deployed-verified",
   "requiredEntries": [
     {
@@ -429,5 +429,5 @@
     "writableLinkParents": ".dsh-module-fallback/**",
     "privateCredentials": "/home/tzwl3/.dsh/dsh-passwords.env: owner tzwl3, mode 0600"
   },
-  "verifiedAt": "2026-10-03T01:02:17.702583+00:00"
+  "verifiedAt": "2026-10-08T01:36:23.606470+00:00"
 }
