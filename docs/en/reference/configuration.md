@@ -1,6 +1,6 @@
 # Configuration Reference
 
-[简体中文](../../zh-CN/reference/configuration.md) | **English** | [Documentation Center](../README.md)
+[简体中文](../../zh-CN/reference/configuration.md) | **English** | [Documentation](../README.md)
 
 ## Configuration Location and Activation
 
@@ -10,18 +10,21 @@ The configuration is the `mnemon` entry of the DSH profile. DSH's settings servi
 $DSH_HOME/profiles/<profile>/cordis.patch.yml
 ```
 
-The Web profile's patch is commonly `~/.dsh/profiles/web/cordis.patch.yml`. A `settings.yaml` left by an older host is imported into the profile once and kept as `settings.yaml.imported`; see [DSH 0.1.7 settings recovery](./compatibility.md#dsh-017-settings-recovery). All current settings are marked `live`; after a change is applied, the Host initializes a candidate runtime graph and then switches to it atomically.
+The Web profile's patch is commonly `~/.dsh/profiles/web/cordis.patch.yml`. A `settings.yaml` left by an older host is imported into the profile once and kept as `settings.yaml.imported`; see [Settings from older hosts](./compatibility.md#settings-from-older-hosts). All current settings are marked `live`; after a change is applied, the Host initializes a candidate runtime graph and then switches to it atomically.
 
-As DSH 0.1.7 does for every plugin that carries its own configuration, the Web interface edits Mnemon's settings on its page under **Plugins**, not in Settings. The [UI guide](../guides/ui-guide.md#on-the-plugins-page) shows each part.
+A turn in progress keeps the runtime graph it started with. A subagent already dispatched keeps its delegated graph until its activation is disposed, even after the parent turn ends; later parent turns and newly delegated activations use the new generation. Saving settings never silently widens the Recall authority of a task already running.
+
+As DSH does for every plugin that carries its own configuration, the Web interface edits Mnemon's settings on its page under **Plugins**, not in Settings. The [UI guide](../guides/ui-guide.md#on-the-plugins-page) shows each part.
 
 | Where in the UI | Settings | Saved as |
 |---|---|---|
 | Memory composition | Main strategy; one switch per memory source and enhancement; each component's declared options | `memoryView.strategyTypeId` and `memoryView.entries.<entry>.config`; each component's on/off is its Entry's `disabled` row, written by DSH's plugin manager |
-| Storage | Storage scope, data directory, backup and migration | `storageScope`, `dataDir` |
+| Storage | Storage scope, data directory, backup and migration; the Git sync switch | `storageScope`, `dataDir`, `syncEnabled` |
 | Interface | Memory System opens in, turn memory bar, save to memory | `displayMode`, `conversationInteraction.turnBar`, `conversationInteraction.saveAction` |
 | Runtime memory's page | User profile scope | `runtimeUserScope` |
 | Memory Spaces' page | Memory providers; Mnemon Native embedding (auto, Ollama or OpenAI-compatible) | The Provider registry in `state/memory-providers.json`; `embedding` |
 | Layered strategy's page | Task Agent model; idle review | `taskAgentModel`; `idleReview` |
+| Skills' page | Self-evolution, backtest drafts, review parameters, the conversation line, the sidebar entry | `skills`; see [Skills settings](#skills-settings) |
 
 Switches and selectors apply at once; typed values such as the storage directory, the embedding connection, review limits and component options wait for **Apply**. A Provider's reusable service fields (endpoints, credentials, executables) live in the Provider registry, not in Mnemon's YAML; enabling or saving a Provider discovers its namespaces into **Memory Spaces → Overview**, and turning it off removes only those local mappings. Other advanced settings are edited in YAML.
 
@@ -77,6 +80,7 @@ mnemon:
   writeEnabled: true
   taskAgentModel:
     mode: inherit # inherit | fixed
+    # followConversation: true # with inherit: Follow the conversation
     # provider: deepseek # required for fixed
     # model: deepseek-chat # required for fixed
   remoteAccess: read-only # remote management: read-only | trusted-host
@@ -109,15 +113,15 @@ mnemon:
 | `recallQuality.maxMediumResults` | `4` | 0–50 | Maximum medium-relevance rows admitted by `strict-v1` after all high-relevance rows |
 | `recallQuality.maxUnknownResults` | `2` | 0–50 | Maximum unscored or unknown-scale rows admitted by `strict-v1` after scored evidence |
 | `routingGuidance` | `true` | boolean | Whether to register an additional tiered-routing system section |
-| `lifecycleEnabled` | `true` | boolean | Whether to enable the pre-step cue and score-based background review |
+| `lifecycleEnabled` | `true` | boolean | Whether to enable the pre-step cue and score-based idle review |
 | `recallMode` | `guided` | `guided` / `off` | Whether to inject one durable on-demand recall cue per session; does not remove explicit recall |
-| `writebackMode` | `guided` | `guided` / `off` | Whether to inject one durable hot-memory cue per session and enable scored, dirty-admitted background review; does not remove explicit writes |
+| `writebackMode` | `guided` | `guided` / `off` | Whether to inject one durable runtime-memory cue per session and enable scored, dirty-admitted idle review; does not remove explicit writes |
 | `idleReviewMs` | `30000` | 5000–600000 ms | Required continuous idle time after the threshold is reached |
 | `idleReview.enabled` | `true` | boolean | Independent automatic-review switch |
 | `idleReview.runtimeMemory` | `true` | boolean | Lets review change runtime memory (USER.md and MEMORY.md); `false` limits it to creating Documents |
 | `idleReview.provider` | `spawn` | `spawn` / `fork` | Bounded checkpoint or inherited parent context |
 | `idleReview.fallback` | `spawn` | `spawn` / `skip` | Missing/incompatible fork handling before startup only |
-| `idleReview.agentTeams` | `pause` | `pause` / `scoped` | Pause while Team tools are installed or explicitly allow guarded review; verified with DSH/Teams 0.1.7-rc.2 |
+| `idleReview.agentTeams` | `pause` | `pause` / `scoped` | Pause while Team tools are installed or explicitly allow guarded review; verified with each supported DSH and its official Teams |
 | `idleReview.minIntervalMs` | `300000` | 5000–86400000 ms | Minimum interval between attempts |
 | `idleReview.maxPerSession` | `20` | 0–200 | Attempt cap per loaded parent Agent; includes failures/cancellations |
 | `idleReview.maxContextChars` | `24000` | 1000–1000000 | Spawn checkpoint character limit |
@@ -125,16 +129,18 @@ mnemon:
 | `displayMode` | `sidebar` | `sidebar` / `builtin`; legacy `buildin` accepted | Where the Memory System opens: standalone Sidebar or a conversation tab using the same workspace UI; legacy spelling is migrated to `builtin` |
 | `tabEnabled` | `true` | boolean | Whether to mount the selected entry and workbench; Host RPC, commands, and Agent tools remain registered when off |
 | `writeEnabled` | `true` | boolean | Whether to expose semantic write tools, write RPC, and write commands |
-| `taskAgentModel` | `{ mode: inherit }` | `inherit` / `fixed` | Model route for independent task Agents used by Tidy names and descriptions, Ask Agent, Save to memory, and Document archiving, plus the idle-review worker; `fixed` requires both `provider` and `model` and also pins their bounded workers for write, answer, provider placement, migration, compaction, archive, and metadata maintenance. Conversation Recall and Related are direct Host reads and do not use this route |
+| `syncEnabled` | `false` | boolean | Whether this installation syncs to a Git repository at all. Off by default, and off is silent: the Storage row is a title and a switch, no status is read and no Git command runs. Repository, branch, directory, commit identity, token and automatic sync interval (`autoBackupMinutes`) stay in `state/sync-git.json`, never here |
+| `taskAgentModel` | `{ mode: inherit }` | `inherit` / `fixed`; `followConversation`: boolean | Model route for independent task Agents and the idle review worker: `inherit` (**Follow global**), `inherit` with `followConversation: true` (**Follow the conversation**), or `fixed` (**Custom**) with both `provider` and `model`. See [Background Task Agent Model Route](#background-task-agent-model-route) |
 | `remoteAccess` | `read-only` | `read-only` / `trusted-host` | Startup-only grant for non-loopback Mnemon management, enforced by the API Gateway projection |
 | `conversationInteraction.turnBar` | `true` | boolean | The turn memory bar under replies; applies at once |
 | `conversationInteraction.saveAction` | `true` | boolean | The **Save to memory** action and confirmation on finished replies; applies at once |
+| `skills` | see [Skills settings](#skills-settings) | the keys listed there | Skills' self-evolution, its review parameters, the conversation line and the sidebar entry; applies at once without rebuilding the memory runtime |
 
-Every value is saved under the `mnemon` entry and applies live. The UI's `mnemon-ui` settings scope is stored as `conversationInteraction`, and its `mnemon-view` scope as `memoryView`. The storage root switches atomically only after the new runtime graph initializes successfully.
+Every value is saved under the `mnemon` entry and applies live. The UI's `mnemon-ui` settings scope is stored as `conversationInteraction`, its `mnemon-view` scope as `memoryView`, and its `mnemon-skills` scope as `skills`. The storage root switches atomically only after the new runtime graph initializes successfully.
 
 ### Runtime Memory budgets
 
-Long conversations can raise the two hot-memory byte limits and the bounded migration/compaction worker budget without patching generated package files:
+Long conversations can raise the two runtime memory byte limits and the bounded migration/compaction worker budget without patching generated package files:
 
 ```yaml
 mnemon:
@@ -150,7 +156,7 @@ Storage byte limits count entry content and delimiters. The model snapshot's imp
 
 The Runtime memory page shows each file's size against its limit.
 
-![Runtime memory with USER.md and MEMORY.md against their default limits](../../assets/webui-v0.5.19/en/memory-runtime.jpg)
+![Runtime memory with USER.md and MEMORY.md against their default limits](../../assets/webui-v0.5.32/en/memory-runtime-limits.jpg)
 
 ### Mnemon Native embeddings
 
@@ -184,7 +190,7 @@ The endpoint must be an absolute HTTP(S) URL without credentials, query paramete
 
 Each memory Source has one switch in **Memory composition**. It turns the Source's DSH Entry on or off through DSH's plugin manager, which saves the choice as the Entry's `disabled` row in the profile patch. On permits the main strategy to use the Source when needed; it does not force recall or writes on every turn. Off stops that Source's context injection, tools, background work and data-plane Web and RPC operations together.
 
-![Memory composition with one switch per memory Source and enhancement](../../assets/webui-v0.5.19/en/plugin-composition.jpg)
+![Memory composition with one switch per memory Source and enhancement](../../assets/webui-v0.5.32/en/plugin-composition.jpg)
 
 Turning a Source off is reversible routing state, not deletion. Its Memory System page stays, marked **Not running**, and does not read the data plane; Status and the management directories stay observable. Turning it on again uses the original directories and data. The last running Source cannot be turned off. The legacy `memoryTopology.layers.<id>.enabled` flag is turned back on with the Source and is used only when the components cannot be read.
 
@@ -308,9 +314,15 @@ After the Memory Space directory has been established, long-term semantic operat
 
 ## Background Task Agent Model Route
 
-Tidy names and descriptions, Ask Agent, Save to memory in the Memory System and in conversations, and document archiving create a clean independent top-level task Agent. It uses the selected workspace as its cwd, works even when no main Agent session is selected, and is disposed after the task finishes.
+Tidy names and descriptions, Ask Agent, Save to memory in the Memory System and in conversations, and document archiving create a clean independent top-level task Agent. It uses the selected workspace as its cwd, works even when no main Agent session is selected, and is disposed after the task finishes. DSH keeps its session with the origin it gives its own subagents, so neither the sidebar nor the ACP session list shows it as a conversation ([#435](https://github.com/omdsh-dev/dsh-mnemon/issues/435)).
 
-The default `inherit` mode first uses the DSH Provider / Model selected for new sessions, then falls back to a complete route from the current available main Agent. Choosing **Choose a model** under **Background tasks → Task Agent model** on the Layered strategy's page stores a complete Provider + Model and overrides only Mnemon background tasks; it does not change the conversation Agent. When semantic judgment requires a bounded worker inside that task Agent, the worker inherits the task Agent route.
+**Background tasks → Task Agent model** on the Layered strategy's page offers three choices for these task Agents and the idle review worker:
+
+- **Follow global** (`mode: inherit`, the default) gives the task Agents the DSH Provider / Model selected for new sessions, which DSH sets to the model last picked in any conversation, then falls back to a complete route from the current available main Agent. The idle review worker and the other workers a conversation delegates take that conversation's route.
+- **Follow the conversation** (`mode: inherit` with `followConversation: true`) uses the route DSH gives the conversation that asked for the work to its own delegated work, idle review included: the provider, model and reasoning effort of its last request, or the route it was created with before the first. While that conversation is not open, it follows global. `followConversation` is a key of its own, so a release without it reads the route as **Follow global**.
+- **Custom** (`mode: fixed`) stores a complete Provider + Model, both required, and overrides only Mnemon background tasks; it does not change the conversation Agent. It also pins the idle review worker and the bounded workers for write, answer, provider placement, migration, compaction, archive and metadata maintenance.
+
+When semantic judgment requires a bounded worker inside that task Agent, such as the smart selection of a Provider for a new space, the worker inherits the task Agent route. Conversation Recall and Related are direct Host reads and use no model route.
 
 ```yaml
 mnemon:
@@ -322,17 +334,43 @@ mnemon:
 
 DSH's live catalog reports each model's input modalities, and the picker labels image-capable models **Image input**. Choosing one does not make Mnemon background jobs ingest images: Tidy names and descriptions, Ask Agent, Save to memory, smart selection and document archiving still submit text and bounded evidence. In the main conversation, DSH-owned image blocks keep their attachment references when dsh-mnemon adds lifecycle guidance, while activity thresholds count text blocks only. Raw image bytes are never copied into runtime memory, documents or memory spaces.
 
-## Provider Requirements
+## Skills settings
 
-Regular workers prefer `spawn`. If no provider has that name, another provider with all of the following capabilities can be selected:
+Skills keeps its settings under `skills` in the `mnemon` entry, edited on its own page under **Plugins → dsh-mnemon** through the `mnemon-skills` settings scope. Each key applies at once: a change reaches the running self-evolution and the client without rebuilding the memory runtime. The [Skills guide](../guides/skills.md#self-evolution) explains what each does.
 
-```text
-toolFilter   = true
-persona      = true
-depthLimit   = true
+| Key | Default | Range | Meaning |
+|---|---:|---|---|
+| `skills.evolution` | `false` | boolean | **Self-evolution**: review finished conversations in the background and suggest new or better skills |
+| `skills.autoBacktest` | `true` | boolean | **Backtest drafts**: compare each new draft with the current version on its test cases |
+| `skills.hints` | `true` | boolean | **In the conversation**: the **Turn skills** line under each turn |
+| `skills.sidebar` | `false` | boolean | **Sidebar entry**: Skills as its own sidebar entry, out of the Memory System |
+| `skills.reviewThreshold` | `5` | 1–50 | **Review threshold**: the activity score a conversation's window must reach before a review |
+| `skills.idleSeconds` | `20` | 0–3600 s | **Idle wait**: how long the conversation must be idle before the review runs |
+| `skills.cooldownSeconds` | `150` | 0–86400 s | **Review interval**: the least time between two reviews of one conversation |
+| `skills.minConfidence` | `0.6` | 0–1 | **Minimum confidence**: suggestions below it are dropped |
+| `skills.expiryDays` | `7` | 1–90 days | **Suggestion expiry**: an untouched suggestion expires after this long |
+| `skills.maxPendingPerSession` | `5` | 1–20 | **Pending per conversation**: past this, the least confident pending suggestions of a conversation expire |
+| `skills.casesPerRun` | `8` | 1–20 | **Cases per backtest**: the most cases one automatic backtest runs |
+
+```yaml
+mnemon:
+  skills:
+    evolution: true
+    idleSeconds: 30
 ```
 
-Background review defaults to a non-inheriting `spawn` provider and an explicit, bounded checkpoint from the parent's current public surface. It includes whole visible text messages and successful tool results; omitted or unavailable context is not reconstructed. `idleReview.provider: fork` retains full-parent-context review and requires `inheritsParentContext=true`. If fork is missing or incompatible, `idleReview.fallback` chooses `spawn` or `skip` before startup. A started run is never retried through another provider.
+The Skills Source's own data (suggestions, cases, recorded conversations, versions, market sources) is not configuration; it lives in the storage root's `skills/` folder, see the [storage model](./storage-model.md#skills).
+
+## Provider Requirements
+
+Regular workers prefer `spawn`. If no provider has that name, another provider that does not inherit the parent's context can be selected when it limits depth (`depthLimit`) and gives the child its own instructions and tools:
+
+- on DSH 0.2.0, the provider takes both in the start request (`toolFilter` and `persona`);
+- on DSH 0.2.1, where no provider takes either, it must be one whose children DSH creates in this process, as its spawn and fork are, so that Mnemon composes the child itself; see [DSH 0.2.0 and 0.2.1](./compatibility.md#dsh-020-and-021).
+
+Every child reports through one stable `mnemon_subagent_result` tool, with a revocable `requestId` issued for that child: it returns `{ requestId, result }`, and the Host validates `result` against that operation's schema and rejects stale or foreign submissions.
+
+Idle review defaults to a non-inheriting `spawn` provider and an explicit, bounded checkpoint from the parent's current public surface. It includes whole visible text messages and successful tool results; omitted or unavailable context is not reconstructed. `idleReview.provider: fork` retains full-parent-context review and requires `inheritsParentContext=true`. If fork is missing or incompatible, `idleReview.fallback` chooses `spawn` or `skip` before startup. A started run is never retried through another provider.
 
 Review requires local child publication, `agents.isOwnedBy`, and `agent.ctx.tools.guard`; the guard also blocks unrelated own-scope plugin tools and Code Mode subcalls. `maxContextChars` bounds the spawn checkpoint, while `maxTokens` limits each model response, not the inherited fork input or total multi-step usage.
 
@@ -342,7 +380,7 @@ Review requires local child publication, `agents.isOwnedBy`, and `agent.ctx.tool
 
 **Agent Teams compatibility:** `idleReview.agentTeams: pause` remains the default for existing profiles. It pauses before child creation when both the public `agentTeams` service and parent-scoped `spawn_teammate` tool are present. TeamService alone does not pause review.
 
-With DSH and all official Agent Teams components at **0.1.7-rc.2**, select **Scoped child review** under Idle review on the Layered strategy's page (**Plugins → dsh-mnemon**), or set `idleReview.agentTeams: scoped`. That published Team policy supports both bounded spawn and explicit fork. The opt-in retains parent ownership checks, local child publication, `maxDepth: 1`, and the monotonic review-tool allowlist, including Code Mode dispatch. Team tools and further delegation stay denied to the reviewer; the parent keeps Teams. No package-version guess or other plugin policy removal is used. Missing guard/ownership support or a policy error fails the run without fallback replay. Keep `pause` to leave review off while Team tools are installed, or use `idleReview.enabled: false` to disable only review while keeping Teams, recall and explicit writes.
+With the official Agent Teams components of either supported DSH release, select **Scoped task Agent review** under Idle review on the Layered strategy's page (**Plugins → dsh-mnemon**), or set `idleReview.agentTeams: scoped`. That published Team policy supports both bounded spawn and explicit fork. The opt-in retains parent ownership checks, local child publication, `maxDepth: 1`, and the monotonic review-tool allowlist, including Code Mode dispatch. Team tools and further delegation stay denied to the reviewer; the parent keeps Teams. No package-version guess or other plugin policy removal is used. Missing guard/ownership support or a policy error fails the run without fallback replay. Keep `pause` to leave review off while Team tools are installed, or use `idleReview.enabled: false` to disable only review while keeping Teams, recall and explicit writes.
 
 Bounded spawn reads live-user evidence from the public flat `user/message` event payload. It includes only whole visible messages before the completed checkpoint; injected recall, summaries and messages without a live-user source are not promoted to user assertions. This preserves explicit decisions and no-write instructions within the configured character budget.
 

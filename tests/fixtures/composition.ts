@@ -2,25 +2,30 @@ import { mkdtempSync, mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import * as runtimePlugin from 'dsh-mnemon-source-runtime'
+import * as skillsPlugin from 'dsh-mnemon-source-skills'
 import * as documentsPlugin from 'dsh-mnemon-source-documents'
 import * as spacesPlugin from 'dsh-mnemon-source-memory-spaces'
 import * as strategyPlugin from 'dsh-mnemon-strategy-default-three-tier'
 import native from 'dsh-mnemon-provider-mnemon-native'
 import holographic from 'dsh-mnemon-provider-holographic'
 import { Context, type Plugin } from '@deepseek-ai/cordis'
-import type { MemoryBodyView as MemorySpaceView, MemoryBodyCatalog as MemorySpaceCatalog } from 'dsh-mnemon-source-memory-spaces/contracts'
+import type { MemorySpaceView, MemorySpaceCatalog } from 'dsh-mnemon-source-memory-spaces/contracts'
 import type { MemorySpaceProviderEntry } from 'dsh-mnemon-source-memory-spaces/provider-sdk'
 import { resolveConfig, type Config } from '../../src/host/config.ts'
 import { createRuntimeGraph, LiveMnemonRuntime } from '../../src/host/runtime.ts'
 import type { HostWorkspaceRegistry, HostAgentsService } from '../../src/host/dsh.ts'
 import { provideMemoryRuntime } from '../../src/core/runtime.ts'
+import type { MnemonGitHubAuth } from '../../src/host/github-auth.ts'
 
 /** Compose real, public Cordis modules. No Source controller or Host business binding. */
 export async function compositionFixture(options: Config = {}, host: {
   workspaceRegistry?: HostWorkspaceRegistry; agents?: Pick<HostAgentsService, 'get'>; providers?: MemorySpaceProviderEntry[]
   entryPrefix?: string
+  skills?: boolean
   nativeOnly?: boolean
   sourceDataDir?: string
+  githubAuth?: MnemonGitHubAuth
+  documentsLimitBytes?: number
 } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'mnemon-composition-'))
   const workspace = join(root, 'workspace')
@@ -46,7 +51,7 @@ export async function compositionFixture(options: Config = {}, host: {
   const entryId = (id: string) => (host.entryPrefix ? host.entryPrefix + ':' : '') + id
   const releases = [
     await mount(runtimePlugin, { instanceId: entryId('mnemon-source-runtime'), ...(host.sourceDataDir === undefined ? {} : { config: { dataDir: host.sourceDataDir, userDataDir: host.sourceDataDir } }) }),
-    await mount(documentsPlugin, { instanceId: entryId('mnemon-source-documents'), ...(host.sourceDataDir === undefined ? {} : { config: { dataDir: host.sourceDataDir } }) }),
+    await mount(documentsPlugin, { instanceId: entryId('mnemon-source-documents'), config: { ...(host.sourceDataDir === undefined ? {} : { dataDir: host.sourceDataDir }), ...(host.documentsLimitBytes === undefined ? {} : { limitBytes: host.documentsLimitBytes }) } }),
     await mount({ inject: ['mnemonMemory'], async apply(ctx: Context) {
       await spacesPlugin.installMemorySpaces(ctx, [
         { instanceId: native.id, module: native, config: undefined },
@@ -54,6 +59,7 @@ export async function compositionFixture(options: Config = {}, host: {
         ...(host.providers ?? []),
       ], host.sourceDataDir === undefined ? {} : { config: { dataDir: host.sourceDataDir } })
     } }, { instanceId: entryId('mnemon-source-memory-spaces') }),
+    ...(host.skills ? [await mount(skillsPlugin, { instanceId: entryId('mnemon-source-skills'), config: host.sourceDataDir === undefined ? {} : { dataDir: host.sourceDataDir, dshHome: host.sourceDataDir, agentsHome: host.sourceDataDir } })] : []),
     await mount(strategyPlugin, { instanceId: entryId('mnemon-strategy-default-three-tier') }),
   ]
   const graph = createRuntimeGraph(config, workspace, extensions)
@@ -62,6 +68,9 @@ export async function compositionFixture(options: Config = {}, host: {
     get: (id: string) => id === 'workspace' ? { id, title: 'Fixture', path: workspace } : undefined,
   }
   const live = new LiveMnemonRuntime(graph, workspaceRegistry, host.agents, extensions)
+  // A Host that mounts a credentials store hands the graph its sign-in seam; one
+  // that mounts none leaves the channel reporting the login as unavailable.
+  if (host.githubAuth !== undefined) live.useGitHubAuth(host.githubAuth)
   async function memorySpace() {
     const source = graph.source('memory-spaces')
     await source.mutate('provider-service-update', {

@@ -43,6 +43,17 @@ describe('independent Memory Spaces Source client', () => {
     expect(mutate).toHaveBeenCalledOnce()
   })
 
+  it('makes its own searches inspections and leaves Ask Agent a use (issue 338)', async () => {
+    const read = vi.fn(async () => ({ revision: 'r2', value: {} }))
+    const execute = vi.fn(async () => ({ revision: 'r3', value: {} }))
+    const client = memorySpacesPageClient({ sourceInstanceKey: 'source:spaces', revision: 'r1', read, mutate: vi.fn(),
+      assistance: { operations: ['agent-search'], execute } })
+    await client.search({ query: 'release gate' })
+    expect(read).toHaveBeenLastCalledWith('search', expect.objectContaining({ query: 'release gate', inspect: true }))
+    await client.agentSearch({ query: 'release gate' })
+    expect(execute).toHaveBeenLastCalledWith('agent-search', expect.not.objectContaining({ inspect: expect.anything() }), expect.anything())
+  })
+
   it('does not retry a rejected assisted activation as a general mutation', async () => {
     const mutate = vi.fn()
     const execute = vi.fn(async () => { throw new Error('activation denied') })
@@ -99,6 +110,8 @@ describe('independent Memory Spaces Source client', () => {
     fireEvent.click(screen.getByRole('button', { name: t('search.action') }))
     fireEvent.click(await screen.findByRole('button', { name: t('card.related') }))
     expect(await screen.findByText(t('search.noRelated'))).not.toBeNull()
+    // The page looks at memory: its searches do not count as uses (#338).
+    expect(read).toHaveBeenCalledWith('search', expect.objectContaining({ query: 'compatibility', inspect: true }))
     fireEvent.click(screen.getByRole('button', { name: t('search.closeRelated') }))
     expect(screen.queryByRole('heading', { name: t('search.related') })).toBeNull()
     // CI's packed-plugin job runs this in four parallel standalone installs, where it has taken 5-5.5 s.
@@ -114,6 +127,53 @@ describe('independent Memory Spaces Source client', () => {
     expect((screen.getByRole('textbox', { name: t('search.queryAria') }) as HTMLInputElement).value).toBe('Consumers dedupe by event_id.')
     expect(read).toHaveBeenCalledWith('search', expect.objectContaining({ query: 'Consumers dedupe by event_id.', limit: 12 }))
   })
+
+  // The status says whether DSH manages Mnemon Native's embedding settings; at their default no embedding service is set
+  // up, so a memory without a vector gets a neutral note. A status from before the field keeps the caution.
+  it.each([
+    [false, 'receipt.unembeddedNoService', 'neutral'],
+    [true, 'receipt.unembedded', 'caution'],
+    [undefined, 'receipt.unembedded', 'caution'],
+  ] as const)('words a memory saved without a vector by its status, through the task Agent and with constraints (managed: %s)', async (managed, key, tone) => {
+    const space = { id: 'project', name: 'Project', active: true, provider: { id: 'mnemon-native', label: 'Mnemon Native', capabilities: { remember: true } } }
+    const read = vi.fn(async (operation: string) => ({ revision: 'r1', value: operation === 'status-summary'
+      ? { writeEnabled: true, memoryBodies: [space], defaultRecallLimit: 12, ...(managed === undefined ? {} : { embeddingManaged: managed }) }
+      : [] }))
+    let embedded = false
+    const mutate = vi.fn(async () => ({ revision: 'r2', value: { action: 'added', id: 'm2', memoryBodyId: 'project', embedded } }))
+    const execute = vi.fn(async () => ({ revision: 'r3', value: { delegated: true, summary: 'Saved to Project.', action: 'added', memoryBodyIds: ['project'], unembedded: [{ memoryBodyId: 'project', id: 'm1' }] } }))
+    // Opened from the Recall page's header, which reads nothing else on its own.
+    render(<MemorySpacesSourcePage page="explore" sourceTypeId="memory-spaces" sourceInstanceKey="source:remember" sourceInstances={[]} locale="en" writable
+      management={{ sourceInstanceKey: 'source:remember', revision: 'r1', read, mutate, assistance: { operations: ['supervise'], execute } }} />)
+    const open = await screen.findByRole('button', { name: 'Save to memory' }) as HTMLButtonElement
+    await waitFor(() => expect(open.disabled).toBe(false))
+    fireEvent.click(open)
+    const note = () => screen.queryByText(t(key))
+    const other = () => screen.queryByText(t(key === 'receipt.unembedded' ? 'receipt.unembeddedNoService' : 'receipt.unembedded'))
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Candidate' }), { target: { value: 'Grafana on staging listens on port 3300.' } })
+    const send = await screen.findByRole('button', { name: 'Send to task Agent' }) as HTMLButtonElement
+    await waitFor(() => expect(send.disabled).toBe(false))
+    fireEvent.click(send)
+    await screen.findByText('Saved to Project.')
+    expect(note()?.getAttribute('data-tone')).toBe(tone)
+    expect(other()).toBeNull()
+    // With constraints, Mnemon Native's own receipt says embedded: false.
+    fireEvent.change(screen.getByRole('textbox', { name: 'Candidate' }), { target: { value: 'Prometheus on staging listens on port 9090.' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Send with constraints' }))
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith('remember', expect.objectContaining({ content: 'Prometheus on staging listens on port 9090.', memoryBodyId: 'project' }), expect.anything()))
+    await waitFor(() => expect(note()?.getAttribute('data-tone')).toBe(tone))
+    expect(screen.queryByText('Saved to Project.')).toBeNull()
+    expect(other()).toBeNull()
+    // A memory saved with its vector says nothing about one.
+    embedded = true
+    fireEvent.change(screen.getByRole('textbox', { name: 'Candidate' }), { target: { value: 'Loki on staging listens on port 3100.' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Send with constraints' }))
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(2))
+    await screen.findByText(t('receipt.written'))
+    expect(note()).toBeNull()
+    expect(other()).toBeNull()
+    // Three saves through the page: CI's packed-plugin job has taken more than 5 s for them, as for the case above.
+  }, 15_000)
 
   it('owns five pages with one rollback/disposal boundary', () => {
     const entries = new Set<string>()

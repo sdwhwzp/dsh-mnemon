@@ -1,7 +1,7 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { RUNTIME_ENTRY_DELIMITER } from '../src/contracts.ts'
 import {
   RuntimeMemoryCapacityError,
@@ -145,6 +145,33 @@ describe('RuntimeMemoryController', () => {
     await expect(controller.mutate({ action, target: 'memory', oldText: 'SQLite', content: 'Updated database' })).rejects.toThrow('Multiple memory entries')
     await expect(controller.mutate({ action, target: 'memory', oldText: 'missing', content: 'Updated database' })).rejects.toThrow('No memory entry')
     expect(paths.map(path => readFileSync(path, 'utf8'))).toEqual(before)
+  })
+
+  it('reads a malformed stored branch scope or origin as absent instead of breaking the projection', async () => {
+    const { directory, controller } = fixture()
+    const at = '2026-08-13T08:00:00.000Z'
+    const entry = (content: string, extra: Record<string, unknown>) => ({ content, target: 'memory', importance: 'normal', created_at: at, updated_at: at, ...extra })
+    mkdirSync(join(directory, 'runtime'), { recursive: true })
+    writeFileSync(join(directory, 'runtime', 'memories.json'), JSON.stringify({ version: 1, entries: [
+      entry('Scoped by a number', { branches: 5 }),
+      entry('Scoped by an object', { branches: { main: true } }),
+      entry('Scoped by a string', { branches: 'release-main' }),
+      entry('Scoped with a bad name', { branches: ['main', 3] }),
+      entry('Scoped to main', { branches: ['main'], origin: { machine: 'machine-a', label: 'desk', at } }),
+      entry('Odd provenance', { origin: { machine: 1 }, extra: 'not an entry field' }),
+    ] }))
+    const visible = (branch: string) => controller.contextProjection(branch).entries.map(item => item.content).sort()
+    const unscoped = ['Odd provenance', 'Scoped by a number', 'Scoped by a string', 'Scoped by an object', 'Scoped with a bad name']
+    expect(visible('main')).toEqual([...unscoped, 'Scoped to main'].sort())
+    expect(visible('dev')).toEqual(unscoped)
+
+    await controller.mutate({ action: 'add', target: 'memory', content: 'Fresh entry', importance: 'low' })
+    const stored = (JSON.parse(readFileSync(join(directory, 'runtime', 'memories.json'), 'utf8')) as { entries: Array<Record<string, unknown>> }).entries
+    const find = (content: string) => stored.find(item => item['content'] === content)
+    expect(find('Scoped to main')).toMatchObject({ branches: ['main'], origin: { machine: 'machine-a', label: 'desk', at } })
+    for (const content of ['Scoped by a number', 'Scoped by an object', 'Scoped by a string', 'Scoped with a bad name']) expect(find(content)).not.toHaveProperty('branches')
+    expect(find('Odd provenance')).not.toHaveProperty('origin')
+    expect(find('Odd provenance')).not.toHaveProperty('extra')
   })
 
   it('serializes concurrent callers, including independent controller instances', async () => {
@@ -301,7 +328,7 @@ describe('RuntimeMemoryController', () => {
     expect(readFileSync(controller.memoryPath, 'utf8')).toBe('source-owned value\n')
   })
 
-  it('renders a bounded QoderWork-style runtime context from the committed source', async () => {
+  it('renders a bounded runtime context from the committed source', async () => {
     const { controller } = fixture()
     await controller.mutate({ action: 'add', target: 'user', content: 'User prefers concise Chinese replies', importance: 'critical' })
     const context = controller.contextProjection().text
@@ -506,6 +533,96 @@ describe('RuntimeMemoryController', () => {
       'Archived workspace history.',
       request.content.trim(),
     ])
+  })
+
+  it('moves the entries compaction leaves out to the local archive when asked to (issue 336)', async () => {
+    const { directory, controller } = fixture()
+    const first = 'Release gates close at 18:00 on release days.'
+    const second = 'a'.repeat(5_050)
+    const third = 'b'.repeat(5_050)
+    for (const content of [first, second, third]) await controller.mutate({ action: 'add', target: 'memory', content, importance: 'normal' })
+    await controller.mutate({ action: 'add', target: 'user', content: 'Prefers short answers.' })
+    const request = { action: 'add', target: 'memory', content: 'Canary deploys run for one hour before the full rollout, and the release owner approves it.' } as const
+    await expect(controller.mutate(request)).rejects.toBeInstanceOf(RuntimeMemoryCapacityError)
+    const plan = await controller.planMaintenance(request)
+
+    // Exact entries, as the Host passes them when no Memory Space can take an archive.
+    const result = await controller.compactAndMutate(plan.revision, request,
+      plan.entries.map(({ content, importance }) => ({ content, importance })), 6_000, { archive: 'local' })
+
+    expect(controller.snapshot().entries.filter(entry => entry.target === 'memory').map(entry => entry.content)).toEqual([first, second, request.content])
+    expect(result).toMatchObject({ added: request.content, archived: { entries: 1, path: join(directory, 'runtime', 'archived', 'MEMORY.md') } })
+    const archivedLines = readFileSync(join(directory, 'runtime', 'archived', 'memories.jsonl'), 'utf8').trim().split('\n').map(line => JSON.parse(line) as Record<string, unknown>)
+    expect(archivedLines).toEqual([expect.objectContaining({ content: third, target: 'memory', importance: 'normal', fromRevision: plan.revision })])
+    const archivedMarkdown = readFileSync(join(directory, 'runtime', 'archived', 'MEMORY.md'), 'utf8')
+    expect(archivedMarkdown).toContain('# MEMORY.md archive')
+    expect(archivedMarkdown).toContain(third)
+    expect(readFileSync(controller.memoryPath, 'utf8')).not.toContain(third)
+
+    // A later archive appends below the first, with one header.
+    const next = { action: 'add', target: 'memory', content: 'c'.repeat(4_000) } as const
+    const nextPlan = await controller.planMaintenance(next)
+    await controller.compactAndMutate(nextPlan.revision, next, nextPlan.entries.map(({ content, importance }) => ({ content, importance })), 1_000, { archive: 'local' })
+    const appended = readFileSync(join(directory, 'runtime', 'archived', 'MEMORY.md'), 'utf8')
+    expect(appended.match(/# MEMORY\.md archive/g)).toHaveLength(1)
+    expect(appended.indexOf(third)).toBeLessThan(appended.lastIndexOf('## '))
+    expect(readFileSync(join(directory, 'runtime', 'archived', 'memories.jsonl'), 'utf8').trim().split('\n').length).toBeGreaterThan(1)
+  })
+
+  it('keeps an entry in both places, never in neither, when the commit after the local archive fails (issue 336)', async () => {
+    const { directory, controller } = fixture()
+    for (const content of ['a'.repeat(5_050), 'b'.repeat(5_050)]) await controller.mutate({ action: 'add', target: 'memory', content, importance: 'normal' })
+    const request = { action: 'add', target: 'memory', content: 'c'.repeat(4_000) } as const
+    const plan = await controller.planMaintenance(request)
+    const before = controller.snapshot()
+    const persist = vi.spyOn(controller as unknown as { persist(file: unknown): void }, 'persist').mockImplementationOnce(() => { throw new Error('disk full') })
+    await expect(controller.compactAndMutate(plan.revision, request, plan.entries.map(({ content, importance }) => ({ content, importance })), 1_000, { archive: 'local' }))
+      .rejects.toThrow('disk full')
+    persist.mockRestore()
+    expect(controller.snapshot().entries).toEqual(before.entries)
+    expect(readFileSync(join(directory, 'runtime', 'archived', 'MEMORY.md'), 'utf8')).toContain('b'.repeat(5_050))
+  })
+
+  it('never follows a link at the local archive (issue 336)', async () => {
+    const { directory, controller } = fixture()
+    for (const content of ['a'.repeat(5_050), 'b'.repeat(5_050)]) await controller.mutate({ action: 'add', target: 'memory', content, importance: 'normal' })
+    const outside = mkdtempSync(join(tmpdir(), 'dsh-mnemon-outside-'))
+    directories.push(outside)
+    writeFileSync(join(outside, 'profile'), 'export PATH=/usr/bin\n')
+    const archive = join(directory, 'runtime', 'archived')
+    mkdirSync(archive, { recursive: true })
+    symlinkSync(join(outside, 'profile'), join(archive, 'memories.jsonl'))
+    const request = { action: 'add', target: 'memory', content: 'c'.repeat(4_000) } as const
+    const plan = await controller.planMaintenance(request)
+    const before = controller.snapshot()
+    const compact = () => controller.compactAndMutate(plan.revision, request, plan.entries.map(({ content, importance }) => ({ content, importance })), 1_000, { archive: 'local' })
+    await expect(compact()).rejects.toThrow()
+    expect(readFileSync(join(outside, 'profile'), 'utf8')).toBe('export PATH=/usr/bin\n')
+    expect(controller.snapshot().entries).toEqual(before.entries)
+    // A linked archive directory is refused the same way.
+    rmSync(archive, { recursive: true })
+    symlinkSync(outside, archive)
+    await expect(compact()).rejects.toThrow('Runtime Memory archive is not a directory')
+    expect(readdirSync(outside)).toEqual(['profile'])
+    expect(controller.snapshot().entries).toEqual(before.entries)
+    // So is a directory at either file, before the other file is written.
+    rmSync(archive)
+    mkdirSync(join(archive, 'MEMORY.md'), { recursive: true })
+    await expect(compact()).rejects.toThrow('Runtime Memory archive file is not a regular file')
+    expect(existsSync(join(archive, 'memories.jsonl'))).toBe(false)
+    expect(controller.snapshot().entries).toEqual(before.entries)
+    expect(plan.localArchive).toBe(true)
+  })
+
+  it('archives nothing locally unless asked, and never for USER.md', async () => {
+    const { directory, controller } = fixture()
+    await controller.mutate({ action: 'add', target: 'memory', content: 'a'.repeat(5_000) })
+    await controller.mutate({ action: 'add', target: 'memory', content: 'b'.repeat(5_000) })
+    const request = { action: 'add', target: 'memory', content: 'new durable fact' } as const
+    const plan = await controller.planMaintenance(request)
+    const result = await controller.compactAndMutate(plan.revision, request, [{ content: 'Archived workspace history.', importance: 'normal' }], 6_000)
+    expect(result).not.toHaveProperty('archived')
+    expect(existsSync(join(directory, 'runtime', 'archived'))).toBe(false)
   })
 
   it('never archives or preserves a removed entry while recovering an already-over-capacity file', async () => {

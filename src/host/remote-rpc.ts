@@ -1,13 +1,15 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import type { HostRpcHandler, RpcResult } from './dsh.ts'
-import { MNEMON_REMOTE_NAMESPACE } from './protocol.ts'
+import { MNEMON_REMOTE_NAMESPACE, type MNEMON_SETTINGS_CHANNEL, type MnemonRpcEndpoint } from './protocol.ts'
 
 export interface MnemonRemoteHandlers {
   readonly read: HostRpcHandler
   readonly activation: HostRpcHandler
   readonly write: HostRpcHandler
   readonly pack: HostRpcHandler
+  readonly sync: HostRpcHandler
+  readonly review: HostRpcHandler
   readonly settings: HostRpcHandler
   readonly view: HostRpcHandler
   readonly viewWrite: HostRpcHandler
@@ -24,6 +26,12 @@ function denied(): RpcResult<unknown> {
     },
   }
 }
+
+/**
+ * What a remote page needs to reach each settings endpoint. An endpoint added to the settings
+ * channel does not compile here until it is given one, so none becomes remote without a decision.
+ */
+const REMOTE_SETTINGS: Readonly<Record<MnemonRpcEndpoint<typeof MNEMON_SETTINGS_CHANNEL>, 'read' | 'management'>> = { get: 'read', mutate: 'management' }
 
 function unknownSettingsEndpoint(endpoint: string): RpcResult<unknown> {
   return {
@@ -68,10 +76,24 @@ export class MnemonRemoteService extends TypertRemoteService {
     return this.handlers.pack(endpoint, payload, signal)
   }
 
+  @Remote('sync')
+  sync(endpoint: string, payload: unknown, signal: AbortSignal): Promise<RpcResult<unknown>> {
+    if (!this.handlers.management) return Promise.resolve(denied())
+    return this.handlers.sync(endpoint, payload, signal)
+  }
+
+  @Remote('review')
+  review(endpoint: string, payload: unknown, signal: AbortSignal): Promise<RpcResult<unknown>> {
+    if (!this.handlers.management) return Promise.resolve(denied())
+    return this.handlers.review(endpoint, payload, signal)
+  }
+
   @Remote('settings')
   async settings(endpoint: string, payload: unknown, signal: AbortSignal): Promise<RpcResult<unknown>> {
-    if (endpoint === 'mutate' && !this.handlers.management) return denied()
-    if (endpoint !== 'get' && endpoint !== 'mutate') return unknownSettingsEndpoint(endpoint)
+    // Object.hasOwn would read a non-string name, such as ["get"], as its text.
+    const access = typeof endpoint === 'string' && Object.hasOwn(REMOTE_SETTINGS, endpoint) ? REMOTE_SETTINGS[endpoint as keyof typeof REMOTE_SETTINGS] : undefined
+    if (access === 'management' && !this.handlers.management) return denied()
+    if (access === undefined) return unknownSettingsEndpoint(endpoint)
     const response = await this.handlers.settings(endpoint, payload, signal)
     if (endpoint !== 'get' || this.handlers.management || !response.ok || typeof response.value !== 'object' || response.value === null || Array.isArray(response.value)) return response
     return { ...response, value: { ...(response.value as Record<string, unknown>), writable: false } }

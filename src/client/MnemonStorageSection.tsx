@@ -8,8 +8,10 @@ import { GlobalLocationSetting } from './GlobalLocationSetting.tsx'
 import type { MnemonTranslate } from './locales.ts'
 import css from './MnemonSettingsCard.module.css'
 import { MnemonPackSection, type PackTarget } from './MnemonPackSection.tsx'
+import { MnemonReviewSection } from './MnemonReviewSection.tsx'
+import { MnemonSyncSection } from './MnemonSyncSection.tsx'
 import { SelectRow, SettingRow } from './settings-controls.tsx'
-import { PanelActions, useStaged } from './settings-panel.tsx'
+import { PanelActions, useLive, WriteFailure, useStaged } from './settings-panel.tsx'
 
 type StorageChoice = 'global' | 'workspace' | 'workspaces'
 /** Whether a shared or central directory is Mnemon's default one or one the user chose. */
@@ -90,13 +92,15 @@ export interface MnemonStorageSectionProps {
   t: MnemonTranslate
   onOpen: (entry: MemoryPluginEntryView) => void
   onSaved: () => void
+  /** A sync, a merge, an import or an applied plan may have changed memory, which views elsewhere show. */
+  onDataChanged?: () => void
 }
 
 /**
  * Where memory lives: the scope and directory, applied together because a
- * change moves where every component below reads and writes, and the ZIP
- * backup that carries the data from one place to another. The components
- * that keep their data here are named at the top, each opening its page.
+ * change moves where every component below reads and writes, the ZIP backup
+ * that carries the data from one place to another, and the git sync that
+ * carries it between machines.
  *
  * The directory is Mnemon's default one or one the user types, chosen
  * outright rather than implied by an empty field, and the row shows the one
@@ -124,6 +128,13 @@ export function MnemonStorageSection(props: MnemonStorageSectionProps): JSX.Elem
     if (Object.hasOwn(props.user, 'customPacks')) operations.push({ op: 'unset', path: ['customPacks'] })
     await props.scope.mutate(operations)
     props.onSaved()
+  })
+  // Git sync is one choice with no half-typed state: it saves the moment it is
+  // made, and the switch that made it shows the saved value again if the Host
+  // refuses the write. The choice lives in the profile rather than in the storage
+  // root, so a reader who has not switched it on has no Git run for them at all.
+  const sync = useLive(props.value?.syncEnabled === true, async value => {
+    await props.scope.mutate([{ op: 'set', path: ['syncEnabled'], value }])
   })
   const { draft } = storage
   const problem = storageProblem(t, draft)
@@ -174,7 +185,17 @@ export function MnemonStorageSection(props: MnemonStorageSectionProps): JSX.Elem
       <PanelActions dirty={storage.dirty} saving={storage.saving} invalid={problem} failed={storage.failed} applied={storage.applied} disabled={props.disabled || storageMissing(draft)}
         note={t('storage.moveNote')} t={t} onDiscard={storage.discard} onApply={() => { void storage.apply() }} />
       <MnemonPackSection {...(props.connection === undefined ? {} : { connection: props.connection })} {...(props.sessionId === undefined ? {} : { sessionId: props.sessionId })}
-        {...(props.workspaceId === undefined ? {} : { workspaceId: props.workspaceId })} target={props.target} t={t} />
+        {...(props.workspaceId === undefined ? {} : { workspaceId: props.workspaceId })} target={props.target}
+        {...(props.onDataChanged === undefined ? {} : { onImported: props.onDataChanged })} t={t} />
+      <MnemonSyncSection {...(props.connection === undefined ? {} : { connection: props.connection })} {...(props.sessionId === undefined ? {} : { sessionId: props.sessionId })}
+        {...(props.workspaceId === undefined ? {} : { workspaceId: props.workspaceId })} disabled={props.disabled} enabled={sync.value} onEnabled={sync.set}
+        {...(props.onDataChanged === undefined ? {} : { onMerged: props.onDataChanged })} t={t} />
+      <WriteFailure error={sync.failed} t={t} />
+      {/* The reconciliation is the other half of one channel: it reads the branch the
+          switch above publishes to, so it only exists once that switch is on. */}
+      {sync.value && <MnemonReviewSection {...(props.connection === undefined ? {} : { connection: props.connection })} {...(props.sessionId === undefined ? {} : { sessionId: props.sessionId })}
+        {...(props.workspaceId === undefined ? {} : { workspaceId: props.workspaceId })} disabled={props.disabled}
+        {...(props.onDataChanged === undefined ? {} : { onApplied: props.onDataChanged })} t={t} />}
     </div>
   </section>
 }

@@ -12,7 +12,7 @@ type NativeDescriptor = ReturnType<HostSettingsService['describe']>[number]
 type SettingsListener = (namespace: string, value: unknown) => void
 type Registration = {
   namespace: string
-  field?: 'conversationInteraction' | 'memoryView' | 'accountPreferences'
+  field?: 'conversationInteraction' | 'memoryView' | 'accountPreferences' | 'skills'
   accountKey?: string
   legacy: boolean
   schema: (value: unknown) => unknown
@@ -116,7 +116,7 @@ export class ProfileMnemonSettings implements HostSettingsService {
         const changed = paths.some(path => registration.accountKey !== undefined
           ? path.length === 0 || path[0] === 'accountPreferences' && (path.length === 1 || path[1] === registration.accountKey)
           : registration.field === undefined
-            ? path.length === 0 || !['memoryView', 'legacySettingsImported', 'accountPreferences'].includes(path[0]!)
+            ? path.length === 0 || !['memoryView', 'legacySettingsImported', 'accountPreferences', 'skills'].includes(path[0]!)
             : path.length === 0 || path[0] === registration.field)
         if (!changed) continue
         const value = this.resolve(registration)
@@ -155,8 +155,9 @@ export class ProfileMnemonSettings implements HostSettingsService {
   register<T>(namespace: string, schema: unknown, options: { base?: Partial<T>; applies: 'live' | 'restart'; validate?: (value: T) => void }): HostSettingsScope<T> {
     if (this.registrations.has(namespace)) throw new Error(`Mnemon settings already registered: ${namespace}`)
     if (typeof schema !== 'function') throw new Error('Mnemon settings require a schema')
-    const accountKey = /^mnemon-account-(?:ui-)?[a-f0-9]{64}$/u.test(namespace) ? namespace : undefined
+    const accountKey = /^mnemon-account-(?:(?:ui|skills)-)?[a-f0-9]{64}$/u.test(namespace) ? namespace : undefined
     const field = accountKey !== undefined ? 'accountPreferences' : namespace === 'mnemon-ui' ? 'conversationInteraction'
+      : namespace === 'mnemon-skills' ? 'skills'
       : /^mnemon-view(?:-[a-f0-9]{16})?$/u.test(namespace) ? 'memoryView' : undefined
     const legacy = /^mnemon-plugins(?:-[a-f0-9]{16})?$/u.test(namespace)
     if (namespace !== 'mnemon' && field === undefined && !legacy) throw new Error('Unsupported Mnemon settings namespace')
@@ -183,7 +184,7 @@ export class ProfileMnemonSettings implements HostSettingsService {
   private unchanged(previous: NativeDescriptor, current: NativeDescriptor, registration: Registration, operations: SettingsOperation[]): boolean {
     const project = (value: unknown): unknown => {
       if (registration.field !== undefined) return projectRegistration(registration, value)
-      const { memoryView: _view, legacySettingsImported: _imported, accountPreferences: _accounts, conversationInteraction, ...core } = object(value)
+      const { memoryView: _view, legacySettingsImported: _imported, accountPreferences: _accounts, skills: _skills, conversationInteraction, ...core } = object(value)
       return operations.some(operation => operation.path[0] === 'conversationInteraction')
         ? { ...core, conversationInteraction } : core
     }
@@ -255,7 +256,7 @@ export class ProfileMnemonSettings implements HostSettingsService {
     const profile = this.ctx.get('profileContext') as { home?: string } | undefined
     const entry = this.owner?.entry
     if (!this.writable || profile?.home === undefined || entry === undefined) return
-    // DSH 0.1.7 exposes no completion event for its asynchronous legacy import.
+    // DSH exposes no completion event for its asynchronous import of the removed settings.yaml.
     // Never race that writer: recover its retained backup on the next startup.
     if (this.nativeImportPending) {
       console.warn('dsh-mnemon: DSH is importing settings.yaml; restart once to recover retained Mnemon UI and plugin preferences')

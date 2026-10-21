@@ -6,11 +6,13 @@ import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import LlmRuntime, { LlmAdapter, createUserMessage, type GenerateOptions, type StreamChunk } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
+import * as JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SessionQueryEngine from '@deepseek-ai/dsh-session-query'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
+import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
+import WorkingDirectory from '@deepseek-ai/dsh-working-directory'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { expect, it } from 'vitest'
@@ -21,6 +23,7 @@ import { LiveMnemonRuntime } from '../src/host/runtime.ts'
 import { MnemonSubagentCoordinator } from '../src/host/subagent.ts'
 import { registerTools } from '../src/host/tools.ts'
 import { createWriteHandler } from '../src/host/rpc.ts'
+import { startSubagent } from '../src/host/subagent-start.ts'
 import { compositionFixture } from './fixtures/composition.ts'
 import { memorySettings } from './helpers/account-settings.ts'
 
@@ -70,6 +73,8 @@ it('logs and projects each account memory through the real Harness Agent loop an
     await ctx.plugin(ToolRuntime)
     await ctx.plugin(AgentRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
+    await ctx.plugin(LocalFileSystem, { cwd: memory.workspace })
+    await ctx.plugin(WorkingDirectory, { defaultDirectory: memory.workspace })
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
     const accountSettings = memorySettings()
@@ -116,7 +121,7 @@ it('logs and projects each account memory through the real Harness Agent loop an
       await agent.whenIdle()
     }))
     await Promise.all(agents.map(agent => accounts.execute(agent as unknown as HostAgent, async () => {
-      const run = await scoped.subagents.start('spawn', { parent: scoped.agents.get(agent.id)!, prompt: [{ type: 'text', text: 'Search my private-token document.' }], signal: new AbortController().signal })
+      const run = await startSubagent(scoped.subagents, scoped.agents, 'spawn', { label: 'Account child', parent: scoped.agents.get(agent.id)!, prompt: [{ type: 'text', text: 'Search my private-token document.' }], signal: new AbortController().signal }, scoped)
       try { expect(await run.result).toMatchObject({ stopReason: 'completed' }) } finally { await run.dispose() }
     })))
     expect(children).toHaveLength(2)

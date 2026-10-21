@@ -3,6 +3,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { memorySettings } from './helpers/account-settings.ts'
+import { MnemonAccountSync } from '../src/host/account-sync.ts'
+import { MnemonGitHubAuth } from '../src/host/github-auth.ts'
+import { MnemonAutoBackupScheduler } from '../src/host/auto-backup.ts'
 import { MnemonAccounts } from '../src/host/account-access.ts'
 import type { HostAgent, HostContextShape, HostPrincipal, HostRpcHandler, HostSession, HostSessionEvent, ToolDefinition, ToolExecution } from '../src/host/dsh.ts'
 import { createReadHandler, createWriteHandler } from '../src/host/rpc.ts'
@@ -26,10 +29,10 @@ function agent(id: string, principal: HostPrincipal, cwd: string): HostAgent & {
     ctx: { on: vi.fn(), effect: vi.fn() }, followup: vi.fn(), steer: vi.fn(), inject: vi.fn() }
 }
 
-async function fixture() {
+async function fixture(skills = false) {
   const root = mkdtempSync(join(tmpdir(), 'mnemon-accounts-'))
   cleanups.push(() => rmSync(root, { recursive: true, force: true }))
-  const composition = await compositionFixture({ dataDir: join(root, 'control') }, { nativeOnly: true, sourceDataDir: join(root, 'shared-source-override') })
+  const composition = await compositionFixture({ dataDir: join(root, 'control') }, { skills, nativeOnly: true, sourceDataDir: join(root, 'shared-source-override') })
   cleanups.push(composition.dispose)
   const sessions = [agent('alice-session', alice, composition.workspace), agent('bob-session', bob, composition.workspace)]
   const workspaces = [{ id: 'shared', title: 'Shared project', path: composition.workspace }, { id: 'bob-only', title: 'Private', path: root }]
@@ -49,7 +52,7 @@ async function fixture() {
       }),
     },
     tools: { register: (tool: ToolDefinition) => tools.push(tool) },
-    subagents: { start: vi.fn(async () => ({})), list: () => [] },
+    subagents: { start: vi.fn(async () => ({})), startActivation: vi.fn(async () => ({})), list: () => [] },
     commands: { register: vi.fn() },
     get: (name: string) => name === 'principalAccess' ? { assertAuthenticated: (principal: HostPrincipal) => { if (!active.has(principal.id)) throw new Error('account disabled') }, modelAllowed: (_principal: HostPrincipal, provider: string, model: string) => provider !== 'codex' || model !== 'gpt-5.5', resolve: async (principal: HostPrincipal, input: { sessionIds: string[]; workspaceIds: string[] }) => ({
       readableSessionIds: new Set(input.sessionIds.filter(id => id === (principal.id === '1' ? 'alice-session' : 'bob-session'))),
@@ -249,9 +252,14 @@ describe('authenticated Mnemon account memory', () => {
     f.sessions.push(child)
     await f.accounts.execute(child, async () => {
       expect(f.live.forAgent(child).directory).toBe(f.live.forAgent(f.sessions[1]!).directory)
-      await f.scoped.subagents.start('spawn', { parent: child, prompt: [], signal: new AbortController().signal })
+      await f.scoped.subagents.start!('spawn', { parent: child, prompt: [], signal: new AbortController().signal })
     })
     expect(f.ctx.subagents.start).toHaveBeenCalledWith('spawn', expect.objectContaining({ principal: bob }))
+    await f.accounts.execute(child, async () => {
+      const parent = f.scoped.agents.get(child.id)!
+      await f.scoped.subagents.startActivation!({ provider: 'spawn', label: 'Account activation', request: { parent, prompt: [], principal: alice }, signal: new AbortController().signal, delivery: 'caller' })
+    })
+    expect(f.ctx.subagents.startActivation).toHaveBeenCalledWith(expect.objectContaining({ request: expect.objectContaining({ parent: child, principal: bob }) }))
     child.session.events = [{ type: 'turn/start', data: { turn: 2, principal: alice } }]
     await expect(f.accounts.execute(child, async () => {})).rejects.toThrow('parent account mismatch')
   })
@@ -301,4 +309,91 @@ describe('authenticated Mnemon account memory', () => {
     expect(await handler('state', 'increment', undefined, alice)).toMatchObject({ ok: true, value: { count: 1 } })
     expect(await handler('state', {}, undefined, bob)).toEqual({ ok: true, value: { count: 0 } })
   })
+})
+
+
+describe('account skills and backup ownership', () => {
+  it('isolates skill files and preferences despite a shared plugin directory override', async () => {
+    const f = await fixture(true)
+    const graphs = f.sessions.map(session => f.live.forAgent(session))
+    await graphs[0]!.source('skills').mutate('skill-create', { name: 'alice-private', description: 'Private fixture', root: 'user-dsh' })
+    const first = await graphs[0]!.source('skills').read('catalog')
+    const second = await graphs[1]!.source('skills').read('catalog')
+    expect(JSON.stringify(first)).toContain('alice-private')
+    expect(JSON.stringify(second)).not.toContain('alice-private')
+    expect(JSON.stringify(first)).not.toContain('shared-source-override')
+    expect(await f.settings('mutate', { namespace: 'mnemon-skills', ops: [{ op: 'set', path: ['evolution'], value: true }] }, undefined, alice)).toMatchObject({ ok: true })
+    expect(await f.settings('get', { namespace: 'mnemon-skills' }, undefined, bob)).toMatchObject({ ok: true, value: { value: { evolution: false } } })
+  })
+
+  it('keeps GitHub grants and timer reads bound to one account across reloads', async () => {
+    const f = await fixture()
+    const keys: string[] = []
+    const schedules = new Map<MnemonAutoBackupScheduler, number>()
+    const start = vi.spyOn(MnemonAutoBackupScheduler.prototype, 'start').mockImplementation(function (this: MnemonAutoBackupScheduler) {
+      schedules.set(this, (schedules.get(this) ?? 0) + 1)
+      return () => { schedules.delete(this) }
+    })
+    const refresh = vi.spyOn(MnemonAutoBackupScheduler.prototype, 'refresh').mockImplementation(() => {})
+    const services = new MnemonAccountSync(f.live, f.accounts, key => {
+      keys.push(key)
+      return new MnemonGitHubAuth({ available: () => true, describe: async () => ({ configured: true, writable: true }),
+        read: async () => ({ version: 1, accessToken: 'fixture-' + key, savedAt: '2026-10-21T00:00:00Z' }),
+        write: async () => {}, clear: async () => {},
+      })
+    })
+    const stop = services.start()
+    try {
+      const first = f.live.forAgent(f.sessions[0]!), second = f.live.forAgent(f.sessions[1]!)
+      expect(await first.sync.github()!.grant()).toMatchObject({ accessToken: 'fixture-' + f.accounts.key(alice) })
+      expect(await second.sync.github()!.grant()).toMatchObject({ accessToken: 'fixture-' + f.accounts.key(bob) })
+      await first.sync.configure({ autoBackupMinutes: 1 })
+      await second.sync.configure({ autoBackupMinutes: 2 })
+      expect([...schedules.keys()].map(scheduler => scheduler.snapshot().nextAt)).toEqual([undefined, undefined])
+      expect(keys).toEqual([f.accounts.key(alice), f.accounts.key(bob)])
+      f.live.reloadAccount(alice)
+      expect(f.live.forAgent(f.sessions[0]!).sync.github()).toBe(first.sync.github())
+      expect(start).toHaveBeenCalledTimes(2)
+      expect(refresh).toHaveBeenCalledTimes(1)
+      expect(keys).toHaveLength(2)
+    } finally { stop(); start.mockRestore(); refresh.mockRestore() }
+    expect(schedules.size).toBe(0)
+  })
+  it('runs only the due account backup and replaces its graph after settings reload', async () => {
+    const f = await fixture()
+    const services = new MnemonAccountSync(f.live, f.accounts, key => new MnemonGitHubAuth({
+      available: () => true, describe: async () => ({ configured: true, writable: true }),
+      read: async () => ({ version: 1, accessToken: 'fixture-' + key, savedAt: '2026-10-21T00:00:00Z' }),
+      write: async () => {}, clear: async () => {},
+    }))
+    for (const principal of [alice, bob]) {
+      expect(await f.settings('mutate', { namespace: 'mnemon', ops: [{ op: 'set', path: ['syncEnabled'], value: true }] }, undefined, principal)).toMatchObject({ ok: true })
+    }
+    const first = f.live.forAgent(f.sessions[0]!), second = f.live.forAgent(f.sessions[1]!)
+    await first.sync.configure({ repoUrl: 'https://example.test/alice.git', autoBackupMinutes: 1 })
+    await second.sync.configure({ repoUrl: 'https://example.test/bob.git', autoBackupMinutes: 2 })
+    const result = { repoUrl: 'https://example.test/fixture.git', branch: 'main', subdir: 'mnemon',
+      message: 'Fixture backup', files: 0, bytes: 0, summary: [], commit: 'fixture', committed: true, pushed: true }
+    const a = vi.spyOn(first.sync, 'push').mockResolvedValue(result)
+    const b = vi.spyOn(second.sync, 'push').mockResolvedValue(result)
+    vi.useFakeTimers()
+    const stop = services.start()
+    try {
+      await vi.advanceTimersByTimeAsync(60_000)
+      expect(a).toHaveBeenCalledTimes(1)
+      expect(b).not.toHaveBeenCalled()
+      f.live.reloadAccount(alice)
+      const updated = f.live.forAgent(f.sessions[0]!)
+      const next = vi.spyOn(updated.sync, 'push').mockResolvedValue(result)
+      await vi.advanceTimersByTimeAsync(60_000)
+      expect(next).toHaveBeenCalledTimes(1)
+      expect(a).toHaveBeenCalledTimes(1)
+      expect(b).toHaveBeenCalledTimes(1)
+      stop()
+      await vi.advanceTimersByTimeAsync(120_000)
+      expect(next).toHaveBeenCalledTimes(1)
+      expect(b).toHaveBeenCalledTimes(1)
+    } finally { stop(); vi.useRealTimers(); vi.restoreAllMocks() }
+  })
+
 })

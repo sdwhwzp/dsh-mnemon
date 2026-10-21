@@ -80,11 +80,17 @@ describe('released and source DSH Connection compatibility', () => {
         Mnemon.apply(ctx, value)
       } }, config)
       for (const runtime of context.registry.values()) for (const fiber of runtime.fibers) await fiber.await()
+      const accountConnection = connection as HostConnectionService & {
+        admitRequest?: (request: Parameters<HostConnectionService['admit']>[0]) => Promise<ReturnType<HostConnectionService['admit']>>
+      }
+      if (accountConnection.admitRequest === undefined) throw new Error('Account RPC requires the deployed Harness account admission implementation')
+      const admission = await accountConnection.admitRequest({ headers: { host: '127.0.0.1' } })
+      if ('rejection' in admission) throw new Error('Account fixture was refused')
       const response = await connection.createSharedFetchHandler('/api').fetch(new Request('http://127.0.0.1/api/dshMnemon/settings', {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
           type: 'client-request', rpcId: 'account-settings', method: 'dshMnemon/settings', payload: { args: { endpoint: 'get', payload: {} } },
         }),
-      }))
+      }), admission.peer)
       expect(response.status).toBe(200)
       const reply = await response.json()
       expect(reply, JSON.stringify(reply)).toMatchObject({ result: { ok: true, value: { ok: true, value: { value: { accountDataDir: root, defaultRecallLimit: 10 } } } } })
@@ -94,7 +100,7 @@ describe('released and source DSH Connection compatibility', () => {
           method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
             type: 'client-request', rpcId: endpoint, method, payload: { args: { endpoint, payload } },
           }),
-        }))
+        }), admission.peer)
         expect(response.status).toBe(200)
         return response.json()
       }
@@ -160,6 +166,8 @@ describe('released and source DSH Connection compatibility', () => {
       activation: unavailable,
       write: unavailable,
       pack: unavailable,
+      sync: unavailable,
+      review: unavailable,
       settings: unavailable,
       view: unavailable,
       viewWrite: unavailable,
@@ -170,14 +178,17 @@ describe('released and source DSH Connection compatibility', () => {
     }
 
     const endpoint = 'dshMnemon/read'
-    const response = await connection.createSharedFetchHandler('/api').fetch(new Request(`http://127.0.0.1/api/${endpoint}`, {
+    // DSH 0.2.1 dispatches a call for the Peer it speaks for, as the browser's owner Peer; DSH 0.2.0 takes none.
+    const peer = (connection as unknown as { createPeer?(options: object): unknown }).createPeer?.({ principal: { kind: 'owner' }, interactions: 'none' })
+    const handler = connection.createSharedFetchHandler('/api') as unknown as { fetch(request: Request, peer?: unknown): Promise<Response> }
+    const response = await handler.fetch(new Request(`http://127.0.0.1/api/${endpoint}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         type: 'client-request', rpcId: 'compat-rpc', method: endpoint,
         payload: { args: { endpoint: 'status-summary', payload: {} } },
       }),
-    }))
+    }), peer)
 
     expect(response.status).toBe(200)
     const body = await response.json()

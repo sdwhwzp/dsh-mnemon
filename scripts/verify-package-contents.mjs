@@ -1,3 +1,4 @@
+// Dry-run pack the root package and check its files, client bundle, README images and size ceiling.
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -30,7 +31,8 @@ const allowedRootFiles = new Set(['package.json', 'cordis.patch.yml', 'LICENSE',
 const missing = required.filter(path => !paths.includes(path))
 const unexpected = paths.filter(path => !allowedRootFiles.has(path) && !executables.includes(path) && !locales.includes(path) && !(/^lib\/.+\.(?:js|d\.ts)$/.test(path)))
 const clientBundle = readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8')
-const hostLeaks = ['require("node:', "require('node:", '#region src/host/version-updates.ts', '#region src/host/rpc.ts']
+const hostLeaks = ['require("node:', "require('node:", '#region src/host/version-updates.ts', '#region src/host/rpc.ts',
+  'login/device/code', 'login/oauth/access_token', 'api.github.com', 'Ov23liq4i7n8UsylGRfb']
   .filter(pattern => clientBundle.includes(pattern))
 const readmeFiles = ['README.md', 'README.zh-CN.md']
 const relativeReadmeImages = readmeFiles.flatMap((path) => {
@@ -43,9 +45,17 @@ const relativeReadmeImages = readmeFiles.flatMap((path) => {
     .map(source => `${path}: ${source}`)
 })
 
-// Host, account isolation and plugin-update controls ship together; Sources and Providers remain separate.
-// The merged artifact measures 1,557,592 bytes, leaving less than 5 KB of headroom.
-const maximumUnpackedBytes = 1_562_000
+// The Starter ships Core/Host, the client bundle and the shared page kit.
+// Component implementations ship in their own packages: the Host build never
+// bundles dependencies, and tests/plugin-repository-boundary.spec.ts limits
+// the client bundle to presentation assets and types from component packages,
+// besides the Memory Spaces settings fallback and Provider marks it takes
+// through one module.
+// This ceiling only catches an accident, such as a dependency bundled into
+// lib/client.js. Pull requests leave it alone; a release raises it once the
+// measured package comes within about 10% of it. The release branch measured
+// 1,851,881 bytes at v0.5.26.
+const maximumUnpackedBytes = 2_500_000
 
 if (missing.length > 0 || unexpected.length > 0 || hostLeaks.length > 0 || relativeReadmeImages.length > 0 || pack.unpackedSize > maximumUnpackedBytes) {
   if (missing.length > 0) console.error(`Missing package files:\n${missing.map(path => `- ${path}`).join('\n')}`)

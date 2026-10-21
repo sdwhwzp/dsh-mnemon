@@ -120,6 +120,27 @@ describe('Mnemon settings bridge', () => {
     ], undefined)
   })
 
+  it('lets the settings page switch Git sync on, and reads the switch back', async () => {
+    const mutate = vi.fn(async () => {})
+    const settings = {
+      writable: true,
+      register: vi.fn(),
+      mutate,
+      describe: () => [{ ns: 'mnemon', value: { syncEnabled: false }, revision: 0, applies: 'live' as const }],
+    } as unknown as HostSettingsService
+    const handler = createSettingsHandler(settings)
+    const on = { op: 'set', path: ['syncEnabled'], value: true }
+
+    // The switch is the whole gate for the Git channel, so the one profile write it
+    // makes has to be accepted here; a rejected write would leave the block open with
+    // nothing behind it.
+    await expect(handler('mutate', { ops: [on] })).resolves.toMatchObject({ ok: true })
+    expect(mutate).toHaveBeenCalledWith('mnemon', [on], undefined)
+    // Switching it back off is the same write, so a reader can close the block again.
+    const off = { op: 'set', path: ['syncEnabled'], value: false }
+    await expect(handler('mutate', { ops: [off] })).resolves.toMatchObject({ ok: true })
+    expect(mutate).toHaveBeenLastCalledWith('mnemon', [off], undefined)
+  })
   it('keeps the startup-only remote access setting immutable from the Web bridge', async () => {
     const settings = {
       writable: true,
@@ -160,5 +181,50 @@ describe('Mnemon settings bridge', () => {
     expect(mutate).toHaveBeenCalledWith('mnemon-ui', ops, 4)
 
     await expect(handler('mutate', { namespace: 'mnemon-ui', ops: [{ op: 'set', path: ['toolviews'], value: true }] })).resolves.toMatchObject({ ok: false })
+  })
+
+  it('exposes 技能管理 settings through their own namespace, one known field at a time', async () => {
+    const mutate = vi.fn(async () => {})
+    const settings = {
+      writable: true,
+      register: vi.fn(),
+      mutate,
+      describe: () => [
+        { ns: 'mnemon', value: {}, revision: 2, applies: 'live' as const },
+        { ns: 'mnemon-skills', value: { evolution: false }, revision: 2, applies: 'live' as const },
+      ],
+    } as unknown as HostSettingsService
+    const handler = createSettingsHandler(settings)
+    await expect(handler('get', { namespace: 'mnemon-skills' })).resolves.toMatchObject({ ok: true, value: { applies: 'live', revision: 2 } })
+    const ops = [{ op: 'set', path: ['evolution'], value: true }, { op: 'set', path: ['idleSeconds'], value: 30 }]
+    await expect(handler('mutate', { namespace: 'mnemon-skills', expectedRevision: 2, ops })).resolves.toMatchObject({ ok: true })
+    expect(mutate).toHaveBeenCalledWith('mnemon-skills', ops, 2)
+    await expect(handler('mutate', { namespace: 'mnemon-skills', ops: [{ op: 'set', path: ['dataDir'], value: '/elsewhere' }] })).resolves.toMatchObject({ ok: false })
+    expect(mutate).toHaveBeenCalledTimes(1)
+  })
+
+  it('refuses every write to the retired toolviews preference while legacy clients keep their interaction paths', async () => {
+    const mutate = vi.fn(async () => {})
+    const settings = {
+      writable: true,
+      register: vi.fn(),
+      mutate,
+      describe: () => [
+        { ns: 'mnemon', value: {}, revision: 0, applies: 'live' as const },
+        { ns: 'mnemon-ui', value: {}, revision: 0, applies: 'live' as const },
+      ],
+    } as unknown as HostSettingsService
+    const handler = createSettingsHandler(settings)
+    for (const request of [
+      { ops: [{ op: 'set', path: ['conversationInteraction', 'toolviews'], value: true }] },
+      { ops: [{ op: 'unset', path: ['conversationInteraction', 'toolviews'] }] },
+      { namespace: 'mnemon-ui', ops: [{ op: 'unset', path: ['toolviews'] }] },
+    ]) {
+      await expect(handler('mutate', request)).resolves.toMatchObject({ ok: false, error: { code: 'settings-rejected' } })
+    }
+    expect(mutate).not.toHaveBeenCalled()
+    const legacy = { op: 'set', path: ['conversationInteraction', 'turnBar'], value: false }
+    await expect(handler('mutate', { ops: [legacy] })).resolves.toMatchObject({ ok: true })
+    expect(mutate).toHaveBeenCalledWith('mnemon', [legacy], undefined)
   })
 })

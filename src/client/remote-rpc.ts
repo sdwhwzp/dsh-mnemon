@@ -6,15 +6,21 @@ import {
   MNEMON_REMOTE_CHANNEL,
   MNEMON_REMOTE_PACK_ENDPOINT,
   MNEMON_REMOTE_READ_ENDPOINT,
+  MNEMON_REMOTE_REVIEW_ENDPOINT,
   MNEMON_REMOTE_SETTINGS_ENDPOINT,
+  MNEMON_REMOTE_SYNC_ENDPOINT,
   MNEMON_REMOTE_VIEW_ENDPOINT,
   MNEMON_REMOTE_VIEW_WRITE_ENDPOINT,
   MNEMON_REMOTE_WRITE_ENDPOINT,
+  MNEMON_REVIEW_CHANNEL,
   MNEMON_SETTINGS_CHANNEL,
+  MNEMON_SYNC_CHANNEL,
   MNEMON_VIEW_CHANNEL,
   MNEMON_VIEW_WRITE_CHANNEL,
   MNEMON_WRITE_CHANNEL,
   type ClientConnectionHandle,
+  type MnemonRpcChannel,
+  type MnemonRpcEndpoint,
 } from '../host/protocol.ts'
 
 type ClientRpcResult = Awaited<ReturnType<ClientConnectionHandle['rpc']['call']>>
@@ -24,6 +30,8 @@ const REMOTE_ENDPOINT = new Map<string, string>([
   [MNEMON_ACTIVATION_CHANNEL, MNEMON_REMOTE_ACTIVATION_ENDPOINT],
   [MNEMON_WRITE_CHANNEL, MNEMON_REMOTE_WRITE_ENDPOINT],
   [MNEMON_PACK_CHANNEL, MNEMON_REMOTE_PACK_ENDPOINT],
+  [MNEMON_SYNC_CHANNEL, MNEMON_REMOTE_SYNC_ENDPOINT],
+  [MNEMON_REVIEW_CHANNEL, MNEMON_REMOTE_REVIEW_ENDPOINT],
   [MNEMON_SETTINGS_CHANNEL, MNEMON_REMOTE_SETTINGS_ENDPOINT],
   [MNEMON_VIEW_CHANNEL, MNEMON_REMOTE_VIEW_ENDPOINT],
   [MNEMON_VIEW_WRITE_CHANNEL, MNEMON_REMOTE_VIEW_WRITE_ENDPOINT],
@@ -71,10 +79,10 @@ export function isRemoteConnection(connection: ClientConnectionHandle): boolean 
 }
 
 /** Route only paired remote pages through API Gateway; local clients retain legacy channels. */
-export async function callMnemonRpc(
+export async function callMnemonRpc<Channel extends MnemonRpcChannel>(
   connection: ClientConnectionHandle,
-  channel: string,
-  endpoint: string,
+  channel: Channel,
+  endpoint: MnemonRpcEndpoint<Channel>,
   payload: unknown,
   signal?: AbortSignal,
 ): Promise<ClientRpcResult> {

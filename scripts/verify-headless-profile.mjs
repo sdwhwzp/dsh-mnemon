@@ -1,3 +1,4 @@
+// Install the Starter into an isolated Headless profile of real DSH and verify its tools, settings and disabled state.
 import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
 import { existsSync, realpathSync } from 'node:fs'
@@ -6,10 +7,12 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { STARTER_ENHANCEMENT_PACKAGES } from '../src/host/starter-components.ts'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const dshBin = join(root, 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js')
-const requireDsh = createRequire(realpathSync(join(root, 'node_modules/@deepseek-ai/dsh/package.json')))
+// Set MNEMON_E2E_DSH to another DSH installation's lib/bin.js to verify Headless on that release.
+const dshBin = process.env.MNEMON_E2E_DSH ? resolve(process.env.MNEMON_E2E_DSH) : join(root, 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js')
+const requireDsh = createRequire(realpathSync(dshBin))
 const baseManifest = JSON.parse(await readFile(requireDsh.resolve('@deepseek-ai/dsh-base/package.json'), 'utf8'))
 const separatePtcRuntime = Object.hasOwn(baseManifest.dependencies ?? {}, '@deepseek-ai/dsh-ptc-runtime-node')
 const marker = 'HEADLESS_MNEMON_READY'
@@ -23,7 +26,7 @@ if (options.has('--package') !== options.has('--registry')) throw new Error('--p
 if (options.has('--upgrade-from') !== options.has('--upgrade-registry')) throw new Error('--upgrade-from and --upgrade-registry must be supplied together')
 if (options.has('--upgrade-from') && !options.has('--package')) throw new Error('--upgrade-from requires a target --package')
 if (options.has('--strategy-extensions') && options.get('--strategy-extensions') !== 'true') throw new Error('--strategy-extensions expects true')
-const extensionNames = ['dsh-mnemon-strategy-scoped', 'dsh-mnemon-strategy-light-context', 'dsh-mnemon-strategy-auto-capture']
+const extensionNames = STARTER_ENHANCEMENT_PACKAGES
 const extensionNameSet = new Set(extensionNames)
 const extensionsEnabled = options.has('--strategy-extensions')
 
@@ -177,6 +180,16 @@ try {
     `- id: ${name.slice(4)}\n  disabled: false\n`,
   ).join(''))
   await writeFile(profilePatchPath, profileOverrides)
+
+  if (extensionsEnabled) {
+    // Active capture records through Memory Spaces' remember Action, which a View
+    // offers only while a Provider can take writes. Without a Mnemon CLI, as on CI,
+    // connect the bundled local Holographic Provider so the contribution has a target.
+    await mkdir(join(storageRoot, 'state'), { recursive: true })
+    await writeFile(join(storageRoot, 'state', 'memory-providers.json'), `${JSON.stringify({
+      version: 4, services: { holographic: { dataPath: join(storageRoot, 'holographic-facts.json') } }, enabled: { holographic: true }, bodies: [],
+    })}\n`, { mode: 0o600 })
+  }
 
   const execution = await run(['--profile', 'headless', 'Verify that the Mnemon tool surface is available.'], {
     cwd: workspaceRoot,

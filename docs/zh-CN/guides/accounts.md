@@ -1,6 +1,6 @@
 # 按登录账号部署 Mnemon
 
-Harness 0.1.7 将账号偏好保存在 Host 管理的 profile 字段 `accountPreferences`，按账号命名空间哈希分开存储。账号界面只读写当前认证账号的偏好；从 `settings.yaml.imported` 恢复旧命名空间时保留 profile 中已明确设置的值。Mnemon 上下文消息在会话日志中保留认证账号身份。
+Harness 0.2.1-rc.2 将账号偏好保存在 Host 管理的 profile 字段 `accountPreferences`，按账号命名空间哈希分开存储。账号界面只读写当前认证账号的偏好；从 `settings.yaml.imported` 恢复旧命名空间时保留 profile 中已明确设置的值。Mnemon 上下文消息在会话日志中保留认证账号身份。
 
 本 fork 的 `accountDataDir` 为每个已登录的 dsh-passwords 账号创建独立记忆目录。Runtime 的 USER/MEMORY、Documents、Native 数据库、索引、修订、备份与记忆偏好都属于该账号。同一账号跨会话使用自己的记忆；两个账号即使使用相同工作区，也不共享记忆。管理员通过这些记忆接口也读取自己的数据。
 
@@ -8,11 +8,13 @@ Harness 0.1.7 将账号偏好保存在 Host 管理的 profile 字段 `accountPre
 
 ## 服务器配置
 
-使用带 principal 扩展的 Harness `0.1.5-rc.2` 和 `dsh-passwords 2.7.0-dsh.20260911.1`。安装本 fork 的全部 17 个同版包，再应用仓库的 `deploy/server30-account.patch.yml`；通用部署需要修改其中两个绝对路径。Native CLI 单独安装并固定为 `0.2.5`，账号目录放在用户工作区之外。
+使用带 principal 扩展的 Harness `0.2.1-rc.2` 和匹配的账号网关。安装本 fork 的全部 19 个同版包，再应用仓库的 `deploy/server30-account.patch.yml`；通用部署需要修改其中两个绝对路径。Native CLI 单独安装并固定为 `0.2.5`，账号目录放在用户工作区之外。
 
-此账号模式只启用 bundled Runtime、Documents、Memory Spaces 和 Native provider。外部 Source、多实例 Source 和其他 provider 会被拒绝，避免第三方共享目录、远端 namespace 或连接配置绕过账号划分。Source 的旧目录配置不能覆盖 Host 分配的账号目录。插件安装、升级、存储位置、嵌入密钥与连接由服务器管理员管理；网页中可编辑该账号的记忆、召回限制、记忆层开关、任务模型与显示偏好。
+此账号模式只启用 bundled Runtime、Documents、Memory Spaces、Skills 和 Native provider。外部 Source、多实例 Source 和其他 provider 会被拒绝，避免第三方共享目录、远端 namespace 或连接配置绕过账号划分。Source 的旧目录配置不能覆盖 Host 分配的账号目录。插件安装、升级、存储位置、嵌入密钥与连接由服务器管理员管理；网页中可编辑该账号的记忆、召回限制、记忆层开关、任务模型与显示偏好。
 
 未设置 `accountDataDir` 时仍是原版单用户模式。启用后不会自动导入旧的全局记忆，也不会把工作区记忆归给最先登录的人；需要迁移时由拥有该数据的账号显式导入备份。记忆接口的账号隔离不替代服务器文件系统与命令执行的沙箱策略，管理员维护的数据目录也不开放为普通用户工作区。
+
+技能使用账号独立的 DSH 与 agent 主目录、版本、评审记录和偏好。项目技能只在已授权工作区内查找。GitHub 凭据与自动备份定时器按不可变账号 id 分开；重载偏好后仍使用本账号的授权和计划。账号备份只接受 URL 中不含凭据的 HTTPS 仓库，不继承 Host 的 Git 凭据或 `MNEMON_SYNC_TOKEN`。
 
 ## 共享记忆层
 

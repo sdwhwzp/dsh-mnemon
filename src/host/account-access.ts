@@ -2,7 +2,9 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import type { HostAgent, HostContextShape, HostPrincipal, HostPreStepDecision, HostRpcHandler, HostSettingsService, ToolExecution } from './dsh.ts'
-import { Config, InteractionConfig, resolveConfig, type ResolvedConfig } from './config.ts'
+import { Config, InteractionConfig, SkillsConfig, resolveConfig, type ResolvedConfig } from './config.ts'
+
+import { DEFAULT_SKILLS_CONFIG, type ResolvedSkillsConfig } from './protocol.ts'
 
 interface AccountContext { principal: HostPrincipal; sessions: ReadonlySet<string>; workspaces: ReadonlySet<string> }
 interface AccessProvider {
@@ -15,7 +17,7 @@ interface AccessProvider {
 export class MnemonAccounts {
   private readonly context = new AsyncLocalStorage<AccountContext>()
   private readonly agents = new WeakMap<HostAgent, AccountContext>()
-  private readonly settings = new Map<string, { memory: { get(): Config }; ui: { get(): unknown } }>()
+  private readonly settings = new Map<string, { memory: { get(): Config }; ui: { get(): unknown }; skills: { get(): ResolvedSkillsConfig } }>()
   private readonly proxies = new WeakMap<HostAgent, HostAgent>()
   private readonly originals = new WeakMap<HostAgent, HostAgent>()
   private readonly executions = new WeakMap<ToolExecution, ToolExecution>()
@@ -89,6 +91,9 @@ export class MnemonAccounts {
     return resolveConfig(this.scopes(principal).memory.get())
   }
 
+  /** Skill review preferences belong to the authenticated account. */
+  skillSettings(): ResolvedSkillsConfig { return this.scopes(this.require()).skills.get() }
+
   private scopes(principal: HostPrincipal) {
     const key = this.key(principal)
     let scopes = this.settings.get(key)
@@ -113,7 +118,8 @@ export class MnemonAccounts {
       },
     })
     const ui = this.accountSettings.register('mnemon-account-ui-' + key, InteractionConfig, { base: { turnBar: true, saveAction: true }, applies: 'live' })
-    scopes = { memory, ui }
+    const skills = this.accountSettings.register<ResolvedSkillsConfig>('mnemon-account-skills-' + key, SkillsConfig, { base: { ...DEFAULT_SKILLS_CONFIG }, applies: 'live' })
+    scopes = { memory, ui, skills }
     this.settings.set(key, scopes)
     return scopes
   }
@@ -123,6 +129,7 @@ export class MnemonAccounts {
     const names = (principal: HostPrincipal) => new Map([
       ['mnemon', 'mnemon-account-' + this.key(principal)],
       ['mnemon-ui', 'mnemon-account-ui-' + this.key(principal)],
+      ['mnemon-skills', 'mnemon-account-skills-' + this.key(principal)],
     ])
     const redact = (value: unknown) => {
       if (value === null || typeof value !== 'object') return value
@@ -363,8 +370,15 @@ export class MnemonAccounts {
       if (property === 'commands') return { register: (definition: Parameters<typeof target.commands.register>[0]) => target.commands.register({ ...definition,
         handler: invocation => this.execute(invocation.agent, async () => definition.handler({ ...invocation, agent: this.wrapAgent(invocation.agent) }), invocation.signal),
       }) }
-      if (property === 'subagents') return new Proxy(target.subagents, { get: (service, key) => {
-        if (key === 'start') return (provider: string, request: Parameters<typeof service.start>[1]) => service.start(provider, { ...request, parent: this.originals.get(request.parent) ?? request.parent, principal: this.principal(request.parent) ?? this.require() })
+      if (property === 'subagents') return target.subagents === undefined ? undefined : new Proxy(target.subagents, { get: (service, key) => {
+        if (key === 'start' && service.start !== undefined) { const start = service.start.bind(service); return (provider: string, request: Parameters<typeof start>[1]) => start(provider, { ...request, parent: this.originals.get(request.parent) ?? request.parent, principal: this.principal(request.parent) ?? this.require() }) }
+        if (key === 'startActivation' && service.startActivation !== undefined) {
+          const start = service.startActivation.bind(service)
+          return (spec: Parameters<typeof start>[0]) => start({ ...spec, request: { ...spec.request,
+            parent: this.originals.get(spec.request.parent) ?? spec.request.parent,
+            principal: this.principal(spec.request.parent) ?? this.require(),
+          } })
+        }
         const value = Reflect.get(service, key, service) as unknown
         return typeof value === 'function' ? value.bind(service) : value
       } })
