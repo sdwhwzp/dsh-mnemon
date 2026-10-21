@@ -4,10 +4,2495 @@
   "artifacts": [
     {
       "name": "@changfenhuang/dsh-genui",
-      "version": "0.11.3-dsh.20261008.2",
-      "file": "changfenhuang-dsh-genui-0.11.3-dsh.20261008.2.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/changfenhuang-dsh-genui-0.11.3-dsh.20261008.2.tgz",
-      "sha256": "5e115dc11c160108562d54fb0211ac055be9c2140b98b6575049fa1d469e34ef"
+      "version": "0.13.0-dsh.20261021.3",
+      "file": "changfenhuang-dsh-genui-0.13.0-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/changfenhuang-dsh-genui-0.13.0-dsh.20261021.3.tgz",
+      "sha256": "dcc9b3936a34d457b0fc8bbe510d30186509263889d0afed055b71637e8e53bd"
+    },
+    {
+      "name": "@deepseek-ai/cordis",
+      "version": "4.0.5",
+      "file": "deepseek-ai-cordis-4.0.5.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-cordis-4.0.5.tgz",
+      "sha256": "659def45362d35e89bc7e8373dca4b9a492076e05b61140d9849332fb4c2149b"
+    },
+    {
+      "name": "@deepseek-ai/cordis-plugin-group",
+      "version": "1.0.5",
+      "file": "deepseek-ai-cordis-plugin-group-1.0.5.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-cordis-plugin-group-1.0.5.tgz",
+      "sha256": "79ea31633cbf83508a986c615257a3623182f9925d8894cd7aff6b4fc2539142"
+    },
+    {
+      "name": "@deepseek-ai/cordis-plugin-hmr",
+      "version": "1.0.20",
+      "file": "deepseek-ai-cordis-plugin-hmr-1.0.20.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-cordis-plugin-hmr-1.0.20.tgz",
+      "sha256": "48187b6b6c1366a0ac6d190e54490e97a9d161f237960ca0a0d22cec39978e3c"
+    },
+    {
+      "name": "@deepseek-ai/cordis-plugin-include",
+      "version": "1.0.10",
+      "file": "deepseek-ai-cordis-plugin-include-1.0.10.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-cordis-plugin-include-1.0.10.tgz",
+      "sha256": "704a437be381b10665f7218b00e4c4502f3d5cbd57312942191ab0edeeab8b88"
+    },
+    {
+      "name": "@deepseek-ai/cordis-plugin-loader",
+      "version": "1.0.6",
+      "file": "deepseek-ai-cordis-plugin-loader-1.0.6.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-cordis-plugin-loader-1.0.6.tgz",
+      "sha256": "37a2dbdb8327c09c266d56cda42b1be791fece649adce3e3796e67123a76e4e3"
+    },
+    {
+      "name": "@deepseek-ai/cordis-plugin-logger-console",
+      "version": "1.0.5",
+      "file": "deepseek-ai-cordis-plugin-logger-console-1.0.5.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-cordis-plugin-logger-console-1.0.5.tgz",
+      "sha256": "bf0995083020d083c654112fc327419534c7b48a20784cf2eb75f1f8c5d4a150"
+    },
+    {
+      "name": "@deepseek-ai/cordis-plugin-timer",
+      "version": "1.1.7",
+      "file": "deepseek-ai-cordis-plugin-timer-1.1.7.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-cordis-plugin-timer-1.1.7.tgz",
+      "sha256": "be08fe9b0aca6766114e0c0d147a6c119d551a6ef21c171eb7c5a4e6236b88df"
+    },
+    {
+      "name": "@deepseek-ai/cosmokit",
+      "version": "1.8.6",
+      "file": "deepseek-ai-cosmokit-1.8.6.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-cosmokit-1.8.6.tgz",
+      "sha256": "d476990b15582849f137817c85b5d3032a161286750d4fb6b0e523bdc11f763d"
+    },
+    {
+      "name": "@deepseek-ai/dsh",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-0.2.1-rc.2.tgz",
+      "sha256": "21488c79149d4b5098a8dcf6528b9ade55a1e752090fa2bb4848175802e0da65"
+    },
+    {
+      "name": "@deepseek-ai/dsh-acp",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-acp-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-acp-0.2.1-rc.2.tgz",
+      "sha256": "a22606a18471808bb488d5454d15c4a7c4ead223b2322f46f479dcc446a8ac55"
+    },
+    {
+      "name": "@deepseek-ai/dsh-acp-app",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-acp-app-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-acp-app-0.2.1-rc.2.tgz",
+      "sha256": "9a24dea2a526b2f54f0cac7ac781bdc7872265f8e3ee6977b263cec0fb0f5e48"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-agent-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-agent-0.2.1-rc.2.tgz",
+      "sha256": "d153d907d003b15be7c1da89d8783d4440a112809afb4a44975aec6acf7a8a49"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-default-model",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-agent-default-model-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-agent-default-model-0.2.1-rc.2.tgz",
+      "sha256": "4210a85501d00f0ace611bcf313006d0c9884b39b364dd24555aae5496fb0c93"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-instructions",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-agent-instructions-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-agent-instructions-0.2.1-rc.2.tgz",
+      "sha256": "e64939caaa971cceadc6d4817aaeadd21a84be0194f9a37f454508636cd20e6d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-loop",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-agent-loop-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-agent-loop-0.2.1-rc.2.tgz",
+      "sha256": "0b6411223c09d9a404455070a7f69cb4d3bb876d9438f9c3fa9f2abcb4fcf2d5"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-loop-testkit",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-agent-loop-testkit-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-agent-loop-testkit-0.2.1-rc.2.tgz",
+      "sha256": "5ff435a9fc586b7ca079e4ac0335b9b369ab0951d0f3266b7265eb203a2d06a1"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-preset",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-agent-preset-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-agent-preset-0.2.1-rc.2.tgz",
+      "sha256": "531d8c86ca38ffded122c31a0414d2f3e6338d612cfcca0fd9a831976507dde2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-preset-registry",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-agent-preset-registry-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-agent-preset-registry-0.2.1-rc.2.tgz",
+      "sha256": "340a044d697a5f7960262e5eb874b72307b5714ad8a3b82f2da7d8d2bdee6cb1"
+    },
+    {
+      "name": "@deepseek-ai/dsh-agent-tool-presentation",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-agent-tool-presentation-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-agent-tool-presentation-0.2.1-rc.2.tgz",
+      "sha256": "2cf2d113aeafa865894b654d332482566e254f28c2abe99451c4bd3544c92090"
+    },
+    {
+      "name": "@deepseek-ai/dsh-anonymous-user-id",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-anonymous-user-id-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-anonymous-user-id-0.2.1-rc.2.tgz",
+      "sha256": "9dbd775b7e873fb65fb0e8a8feb20f24b706f901f6128d52e03c7b5125cd7f8a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-account-controller",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-api-account-controller-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-api-account-controller-0.2.1-rc.2.tgz",
+      "sha256": "ac85619eb45be22edfb888b1cbab2f9734a2fd0e5e923f816206ccfd258c86f4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-gateway",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-api-gateway-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-api-gateway-0.2.1-rc.2.tgz",
+      "sha256": "81cb75ff332ce3f14a83aff16f934d0020ec8a594fe4085b56ae21efab2dd011"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-job-controller",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-api-job-controller-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-api-job-controller-0.2.1-rc.2.tgz",
+      "sha256": "0c24fc609817da4850921421da7ea4fb9426a3724d16710ba9645c923a65af84"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-remote-access",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-api-remote-access-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-api-remote-access-0.2.1-rc.2.tgz",
+      "sha256": "22c04eda42fa97d0116940e7111a37d6d70b40ba1c735145ba505c14f317debc"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-remotes",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-api-remotes-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-api-remotes-0.2.1-rc.2.tgz",
+      "sha256": "789950aab0e76e0ec16cad70fd1cde529dfaca49e6ba4dea877b285a585ac9c6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-session-controller",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-api-session-controller-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-api-session-controller-0.2.1-rc.2.tgz",
+      "sha256": "ef14b9e8b7ebec79ff310df686ccfb39769379b2e767c04872e5f50e124a92f4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-settings-controller",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-api-settings-controller-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-api-settings-controller-0.2.1-rc.2.tgz",
+      "sha256": "a5b5f443ec8ef4706139786ba7a4ef26e4439c81aadb5c70adca42325d61191a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-terminal-controller",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-api-terminal-controller-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-api-terminal-controller-0.2.1-rc.2.tgz",
+      "sha256": "6045e184a7195a347b5275446c6710157c480115be4d62f008afd2d4bfa4f88a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-workspace-controller",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-api-workspace-controller-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-api-workspace-controller-0.2.1-rc.2.tgz",
+      "sha256": "150e6dd9fe21dae61f70a94c513ae1f7295da21b5074c5826ede71fa61335506"
+    },
+    {
+      "name": "@deepseek-ai/dsh-api-workspace-files",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-api-workspace-files-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-api-workspace-files-0.2.1-rc.2.tgz",
+      "sha256": "7d71e4efbbe4b722ca6834a628f496b25e7c4afaa94a84af5f6ae9205a8dbabe"
+    },
+    {
+      "name": "@deepseek-ai/dsh-app-boot",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-app-boot-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-app-boot-0.2.1-rc.2.tgz",
+      "sha256": "5127a20f522efa675329b16bd72c05dde8db81919d0a14c621b6eeba1d39d154"
+    },
+    {
+      "name": "@deepseek-ai/dsh-atomic-write",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-atomic-write-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-atomic-write-0.2.1-rc.2.tgz",
+      "sha256": "6de6b067c45c6d0f7bea06e0697830d1ff6fb9d39bc3cd33b64443f1d3854a18"
+    },
+    {
+      "name": "@deepseek-ai/dsh-attachment",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-attachment-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-attachment-0.2.1-rc.2.tgz",
+      "sha256": "499238c21f08c2dc915ebb3d451f94699c48f731bd82864bb517dc1d19080349"
+    },
+    {
+      "name": "@deepseek-ai/dsh-attachment-local",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-attachment-local-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-attachment-local-0.2.1-rc.2.tgz",
+      "sha256": "2024481732570b924718a4a3e17968c0dbe591fedfc9fcdc0e740326d2a8d1a2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-authorization",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-authorization-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-authorization-0.2.1-rc.2.tgz",
+      "sha256": "792bc8201981dd42154696875148f74c0c98eef726f300041429030ba8189369"
+    },
+    {
+      "name": "@deepseek-ai/dsh-base",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-base-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-base-0.2.1-rc.2.tgz",
+      "sha256": "fdcfc3fe11e4104693707602b6508ba21d706ce51be76aeb3033b23ba52b5ced"
+    },
+    {
+      "name": "@deepseek-ai/dsh-bash-local",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-bash-local-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-bash-local-0.2.1-rc.2.tgz",
+      "sha256": "26a5918f58e9579e2b9b70ab08ca92503231ae3ecd57b2b7e99a5fd20a2b59e3"
+    },
+    {
+      "name": "@deepseek-ai/dsh-bash-sandbox",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-bash-sandbox-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-bash-sandbox-0.2.1-rc.2.tgz",
+      "sha256": "fdecf6da4483ba58e5d87e3727ba9678f111370eeb08ebaf8a4a9d9d5303ef23"
+    },
+    {
+      "name": "@deepseek-ai/dsh-brand",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-brand-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-brand-0.2.1-rc.2.tgz",
+      "sha256": "33e3491076c6399422d39430bdc9272b02a957ce4e9199c9eb887d6f39898879"
+    },
+    {
+      "name": "@deepseek-ai/dsh-browser-use",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-browser-use-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-browser-use-0.2.1-rc.2.tgz",
+      "sha256": "2fd2e6729ad3b4c44f20d085ed3c358240a85fee3161b42b3e96ee8e5dd3efaa"
+    },
+    {
+      "name": "@deepseek-ai/dsh-chunked-list",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-chunked-list-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-chunked-list-0.2.1-rc.2.tgz",
+      "sha256": "e87d55811b6d80b4a49d5d3ed342a6256cd7d422361339124c13dd95ccfd787d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-connection",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-connection-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-connection-0.2.1-rc.2.tgz",
+      "sha256": "0b94b38d9a999ea418726d0c1d26764929d4cfdfefa4d0bcc383850e6046da3d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-file-upload",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-file-upload-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-file-upload-0.2.1-rc.2.tgz",
+      "sha256": "f7ee41ceac996c860969734101535bb2923978e7f0927144093cb145cd2cbdab"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-hmr",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-hmr-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-hmr-0.2.1-rc.2.tgz",
+      "sha256": "3bf8d9330b3f3886bf06a03d7985d6ed870f5c00b3499208fca3187b4c91afa4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-locale",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-locale-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-locale-0.2.1-rc.2.tgz",
+      "sha256": "339e441d265f6ee02c75e175259d5fb32ad7285284354444f15c13d1405330ad"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-modules",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-modules-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-modules-0.2.1-rc.2.tgz",
+      "sha256": "3a7f7742221a98d9ee217b4f6bc989473b07a56001ba2bffdb047e2d1be959f8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-product-analytics",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-product-analytics-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-product-analytics-0.2.1-rc.2.tgz",
+      "sha256": "7d60889a27d3fce9ad48681f9f7bc53cb666fccdeaacd37861b74dc3b552b0d5"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-resources",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-resources-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-resources-0.2.1-rc.2.tgz",
+      "sha256": "2d3d475515e4f43042c91d79cf71735386fc20860c907271ea6e5e5b31567d79"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-shortcuts",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-shortcuts-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-shortcuts-0.2.1-rc.2.tgz",
+      "sha256": "aca1629e62ab63b53831369696088943a348cae4e49a0ffe6e28928c0782fed3"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-store",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-store-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-store-0.2.1-rc.2.tgz",
+      "sha256": "9ab730b8259bb5dcb750c7adffa977aa32d39889c329de4fc3cc8929a73ab141"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-test-runtime",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-test-runtime-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-test-runtime-0.2.1-rc.2.tgz",
+      "sha256": "3e2e7201e3ad255c72cfb6decf48f4c854d06a65f3eaf9c9d3fe1d85b69023cf"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-agent-preset",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-agent-preset-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-agent-preset-0.2.1-rc.2.tgz",
+      "sha256": "7551ed25203cd49596df1f34da0022f3162442ddd15f1e70b3cdee63d8307bbd"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-approval",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-approval-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-approval-0.2.1-rc.2.tgz",
+      "sha256": "7284f2d012c48524dce43c79a2bd10462f1786cd8e9173ea18ced0dae480bb15"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-attachment",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-attachment-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-attachment-0.2.1-rc.2.tgz",
+      "sha256": "174f3f3d94684b79d88753b658ff9e129a5e7abea64c85020899f8ff2e50ba5d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-brand-official",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-brand-official-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-brand-official-0.2.1-rc.2.tgz",
+      "sha256": "20d1da1d865d6ee8adc0757b1444537b9b1d51a4dfb64fe0d943bcdc3f9c0011"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-chat",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-chat-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-chat-0.2.1-rc.2.tgz",
+      "sha256": "c3e5ad5271996f377f23134c55b38d2938e37f9a0a84c957e23603e3e2c48d1e"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-commands",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-commands-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-commands-0.2.1-rc.2.tgz",
+      "sha256": "61df4bb6fd8584bf53c24e3401ffd61120e8d1fe5d34d5768efaf69ae18c90c8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-conversation",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-conversation-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-conversation-0.2.1-rc.2.tgz",
+      "sha256": "24e746374cc8a5e82e106a53ef9749f12adb21798c4f575f6acf26a24ca44172"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-cordis",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-cordis-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-cordis-0.2.1-rc.2.tgz",
+      "sha256": "31f47ea744374a56735af62f16f6c593056e054c61c865e56f7159e4b27ab89b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-deepseek-model-label-1017",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-deepseek-model-label-1017-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-deepseek-model-label-1017-0.2.1-rc.2.tgz",
+      "sha256": "7160bb064defbe8b1220af068b17050de3d7eb1d40e9e4517bc6472e3936183b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-deliverables",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-deliverables-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-deliverables-0.2.1-rc.2.tgz",
+      "sha256": "2e37e8932aa6d32e6765c6aee9fb6db2026f25bee2bfd42f8ee862c6aa855874"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-directory-picker-browse",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-directory-picker-browse-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-directory-picker-browse-0.2.1-rc.2.tgz",
+      "sha256": "ecc1fe9d6922b44b768c406bcb0472140b804dcf28f89394ff68afe1a280c62c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-directory-picker-native",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-directory-picker-native-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-directory-picker-native-0.2.1-rc.2.tgz",
+      "sha256": "4b5199b3ef4c331a202b834f4c5c78813a6483fc57d3b6d24974a87347024161"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-dockkit",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-dockkit-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-dockkit-0.2.1-rc.2.tgz",
+      "sha256": "a6442827e2e99d668d516cedce2ec9384419f462a270f64ba34daba3dd472aca"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-goal",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-goal-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-goal-0.2.1-rc.2.tgz",
+      "sha256": "51925dce4640fd0b99bfa06d646dcb3fa25c650d766b7c955ee6f17ff5042cc4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-input-trigger",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-input-trigger-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-input-trigger-0.2.1-rc.2.tgz",
+      "sha256": "a0a5eb8f159c6aeb68243c2e3b2cc6b197cb80c84a13bd7493d36118e4a259cc"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-jobs",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-jobs-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-jobs-0.2.1-rc.2.tgz",
+      "sha256": "939c31532bd7bad0d01544b9f9270ff09b4f63e2a2a3fd12560c36248d4ce834"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-layout",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-layout-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-layout-0.2.1-rc.2.tgz",
+      "sha256": "97bd8818288afd7a9289ee230b82b6a62b13a02c4a4cc3ac17009a48f75eae54"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-message-feedback",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-message-feedback-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-message-feedback-0.2.1-rc.2.tgz",
+      "sha256": "11293ff3ff8e6ebe36039ac0fb787731ace3d4ae4e4bea5f83402faabdc283a7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-model-selection",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-model-selection-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-model-selection-0.2.1-rc.2.tgz",
+      "sha256": "938d78bfe38838a6bd758ecaee4838351d0df10f1574eb37a41d4278938c75e8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-open-in-app",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-open-in-app-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-open-in-app-0.2.1-rc.2.tgz",
+      "sha256": "c5b5ace687ab4f4a4632f3383359c7b805af4ea93065c6ab9a1f13d5f97729e2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-permission-presets",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-permission-presets-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-permission-presets-0.2.1-rc.2.tgz",
+      "sha256": "3f52810da76a6ac12e1d93fb469f2cc96ea90f9b932f91c582b5b5664ad27332"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-plan",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-plan-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-plan-0.2.1-rc.2.tgz",
+      "sha256": "71625c0b6c1c2a580b3d51cc6d3ab5164cc4e16b79fd3291f15eb671a7a519e9"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-plugin-manager",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-plugin-manager-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-plugin-manager-0.2.1-rc.2.tgz",
+      "sha256": "fd268edededde903001fb9ef4a52e3b3d074e2cba3002d241b21c31ffba073c5"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-plugin-market",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-plugin-market-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-plugin-market-0.2.1-rc.2.tgz",
+      "sha256": "547e8e6121237745dc8fe374fe97d6d42fb23b1c52fef29b8329ab53710d5b80"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-primitives",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-primitives-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-primitives-0.2.1-rc.2.tgz",
+      "sha256": "0972808e88cbcc65047396d8f6dbc89fc405257fb5a1256f6832f2c5d8c1ea28"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-reference",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-reference-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-reference-0.2.1-rc.2.tgz",
+      "sha256": "602f7a58e917a4ced2febbcd0cdf9e86ec79b3e9fb509472749dc73b0991c6b3"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-renderer",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-renderer-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-renderer-0.2.1-rc.2.tgz",
+      "sha256": "ce92aac5408f44e233d3bcd05e9eb7ec170369a402410024e34957e40e8b2b04"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-schedule",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-schedule-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-schedule-0.2.1-rc.2.tgz",
+      "sha256": "58f748686bd8ee77c6b26e70cd2df51eb64fd27c8a1fb30c95e36b85aca01247"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-secret-mask",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-secret-mask-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-secret-mask-0.2.1-rc.2.tgz",
+      "sha256": "e5c0bb123be30597ae37ff6dba8d56ace3c34a313a65d793f3f83eb9cc30c99d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-session",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-session-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-session-0.2.1-rc.2.tgz",
+      "sha256": "1d85f0c97229f6e892ff610a29f8ae34af97a696e3af374c764aa5ab44f77ce6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-0.2.1-rc.2.tgz",
+      "sha256": "690305999efb2df0df3e4c8196771d4742ce7fa49d93323ebfb7fe121046deb9"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-account",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-account-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-account-0.2.1-rc.2.tgz",
+      "sha256": "8a6163f2d926cbfeb29f042881cf928f266b3c254f038ef897dc04f5f6cd21be"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-agent-loop",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-agent-loop-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-agent-loop-0.2.1-rc.2.tgz",
+      "sha256": "51fc7e3b4a125dbaa66bdb5efdebd1a76f8eadbbb771eaedc8310773c80cec94"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-general",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-general-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-general-0.2.1-rc.2.tgz",
+      "sha256": "41eb8c5c87ef92d47b27c08215ce727f8d5d1b9d30724306b134c88a9ea896c2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-models",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-models-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-models-0.2.1-rc.2.tgz",
+      "sha256": "e86390ba6f5f12a4cffcd16b85b12fd20bdab0dd19975659b165183cbc3582ce"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-plugin-inventory",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-plugin-inventory-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-plugin-inventory-0.2.1-rc.2.tgz",
+      "sha256": "911dc0be27846546b916d59b28e002a8f5ce33311bd6a1c40e0d994ce45c7346"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-plugins",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-plugins-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-plugins-0.2.1-rc.2.tgz",
+      "sha256": "4cd47afc9b801f2176ab1c2a072e56c6c4edb08ee666629da3fc3d375f7bb072"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-session-log",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-session-log-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-session-log-0.2.1-rc.2.tgz",
+      "sha256": "714745ea81663cf0f8e3ee2024ceebc5ff94e700699792da40a712980e754bc2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-shell",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-shell-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-shell-0.2.1-rc.2.tgz",
+      "sha256": "dece0e173b7b1f16fcb80e368f3988ae970388b4dec50359b8d1e22d4d001d7c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-subagent",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-subagent-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-subagent-0.2.1-rc.2.tgz",
+      "sha256": "26bf6e24b3580952e5a7d2d08603eaf2ee8d5ef0975c763256a53f0c71b4b4a2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-settings-web-search",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-settings-web-search-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-settings-web-search-0.2.1-rc.2.tgz",
+      "sha256": "9ebafe4d3048ff68c0841b5d2379bca5f404c5298a446ca95b74d3e7689b5c4e"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-shortcuts",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-shortcuts-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-shortcuts-0.2.1-rc.2.tgz",
+      "sha256": "323696b01e746a1fd08f0539c142b052ebf51f523ecdddbead42caa975cd4d5c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-sidebar",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-sidebar-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-sidebar-0.2.1-rc.2.tgz",
+      "sha256": "9b1564cbbdcd46f27d54dc623cc92d3a092ff037726dd1cfacf9b4652803e396"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-sidebar-browser",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-sidebar-browser-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-sidebar-browser-0.2.1-rc.2.tgz",
+      "sha256": "c26755cca408bf1b99ff95a859088a4e2787f17694bb6653681b27047d48d505"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-sidebar-documentpreview",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-sidebar-documentpreview-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-sidebar-documentpreview-0.2.1-rc.2.tgz",
+      "sha256": "fc4065e04824f610d198908354a5bf918c94a7d9ac29f50a9613d47a0233afd0"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-sidebar-files",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-sidebar-files-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-sidebar-files-0.2.1-rc.2.tgz",
+      "sha256": "aba6093c35e2c41a165ae99a2723beb1a39f96dbcfd80d6da16df5452fa4f70d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-sidebar-right",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-sidebar-right-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-sidebar-right-0.2.1-rc.2.tgz",
+      "sha256": "4de2bda63d9d87e0ec326fff04643779eabd4f50ab4e966636fb053fb0eb34d2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-sidebar-terminal",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-sidebar-terminal-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-sidebar-terminal-0.2.1-rc.2.tgz",
+      "sha256": "77eab26941258e0e43c2a0aed5c0c188927be752406ce92234c59042839b5c83"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-skill",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-skill-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-skill-0.2.1-rc.2.tgz",
+      "sha256": "ea7e6d0ce7a576d5233baf0a4d97c2bb543e71eb16ade2b0cd5e2df95c94a540"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-slots",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-slots-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-slots-0.2.1-rc.2.tgz",
+      "sha256": "c6345c76fb3be79985655f8e93f7ff4d4d35f2bed16dd7b4c6bfaa526e84c6a3"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-subagent",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-subagent-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-subagent-0.2.1-rc.2.tgz",
+      "sha256": "129baadf937d0ca7928849df8d6f2e1dfc8e02f70d275ee9f2480abc391a2610"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-theme",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-theme-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-theme-0.2.1-rc.2.tgz",
+      "sha256": "51b9d3fbfb80c90a31dfb692a1e44cf0b05d9475ad8d0519c2a688dd35e5179e"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-tool",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-tool-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-tool-0.2.1-rc.2.tgz",
+      "sha256": "6626d7278eedd398c859c7bbb09608b43ecca60d2e4a5e12b3837c29c2b88a58"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-trajectory",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-trajectory-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-trajectory-0.2.1-rc.2.tgz",
+      "sha256": "0bf8c989f65f65280d3b981f421a0d2d9fafcc6f1a408fa14b6f6a2c4482cd67"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-user-questions",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-user-questions-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-user-questions-0.2.1-rc.2.tgz",
+      "sha256": "9fe8668895399ecfa35241167d94275357209414521c894ba66468e7611b9a61"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-workflow-run",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-workflow-run-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-workflow-run-0.2.1-rc.2.tgz",
+      "sha256": "c371ffe06e51cd65fb940951348a6a8a1d9e5b4858c0fa76a122af87305f4a14"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-ui-workspace",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-ui-workspace-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-ui-workspace-0.2.1-rc.2.tgz",
+      "sha256": "8369490f51350a14ab998e903a93cf5aed3d2b0c6d30a54719ba3e121d27df23"
+    },
+    {
+      "name": "@deepseek-ai/dsh-client-web",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-client-web-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-client-web-0.2.1-rc.2.tgz",
+      "sha256": "ac726324f9847723cced8296884af581883f3632eb8448cd3d5ccc9cc9554568"
+    },
+    {
+      "name": "@deepseek-ai/dsh-cmdline",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-cmdline-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-cmdline-0.2.1-rc.2.tgz",
+      "sha256": "3089ce22ef9dd016e4e21f62db67de8597c0e8e3864e2425c04f890c89da1af6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-command-compact",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-command-compact-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-command-compact-0.2.1-rc.2.tgz",
+      "sha256": "37403b6c8aef497edb681f316b3e050ac71898fdcb74e4a1e840dd70e55b32bc"
+    },
+    {
+      "name": "@deepseek-ai/dsh-command-feedback",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-command-feedback-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-command-feedback-0.2.1-rc.2.tgz",
+      "sha256": "29c6d4d91ef212a2fc64c72655e9760f22e1fe32558d50b53909c0bc812c4b1c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-command-goal",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-command-goal-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-command-goal-0.2.1-rc.2.tgz",
+      "sha256": "022359370bceea348b99adddae8723eea0e6baafbe5285c7c3a8f287b48259e7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-commands",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-commands-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-commands-0.2.1-rc.2.tgz",
+      "sha256": "534db02ea9c3ffcfe88a9091ed91c0da54eed224806bfcd42807fb398873664a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-compaction",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-compaction-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-compaction-0.2.1-rc.2.tgz",
+      "sha256": "74840bbdab4f815956a8d94321fc2c8ed148fc92e577611e2cbcd13a5d74b145"
+    },
+    {
+      "name": "@deepseek-ai/dsh-compaction-basic",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-compaction-basic-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-compaction-basic-0.2.1-rc.2.tgz",
+      "sha256": "6a47c9e6b41035d70d84d62fbf4fd0f5d608f9500704d54e01b0f66439da09ad"
+    },
+    {
+      "name": "@deepseek-ai/dsh-compaction-image-offload",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-compaction-image-offload-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-compaction-image-offload-0.2.1-rc.2.tgz",
+      "sha256": "6abe22739797787d2fe7d8311d82ba9790d22fe93cec517618e36cbac7b46a28"
+    },
+    {
+      "name": "@deepseek-ai/dsh-compaction-tool-result-pruner",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-compaction-tool-result-pruner-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-compaction-tool-result-pruner-0.2.1-rc.2.tgz",
+      "sha256": "56f2760314433ac183cb05994d5080152a51d02380fde80a07dd4700df77b951"
+    },
+    {
+      "name": "@deepseek-ai/dsh-computer-use",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-computer-use-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-computer-use-0.2.1-rc.2.tgz",
+      "sha256": "f2ccfe744687fc752b2e23cb4891f4b98bbe7adca207f42f59b70505dd336db6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-config-editor",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-config-editor-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-config-editor-0.2.1-rc.2.tgz",
+      "sha256": "43f587357d457b805a3e9453733cca06ad482fc6d3d3cc47f71040c4ad5a2480"
+    },
+    {
+      "name": "@deepseek-ai/dsh-cordis-client-runner",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-cordis-client-runner-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-cordis-client-runner-0.2.1-rc.2.tgz",
+      "sha256": "e6e31ff0a4c4c86eb24fbdfa6ab3ea93858db4acf525c04725254b467249c82f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-cordis-host-runner",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-cordis-host-runner-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-cordis-host-runner-0.2.1-rc.2.tgz",
+      "sha256": "0c9a50cd317115946c9a2298dcf88115dde205d217dc640069e9a6ed5f1ad37d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-credentials",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-credentials-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-credentials-0.2.1-rc.2.tgz",
+      "sha256": "6e160647ec13abf4bce2494f9f8b465680f631641cba5a00dfe2db1ef1c28fbc"
+    },
+    {
+      "name": "@deepseek-ai/dsh-credentials-local",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-credentials-local-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-credentials-local-0.2.1-rc.2.tgz",
+      "sha256": "674a653c3163199212f313acca8c7370d11afa6efb95863669bbda10d0ff5767"
+    },
+    {
+      "name": "@deepseek-ai/dsh-cua",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-cua-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-cua-0.2.1-rc.2.tgz",
+      "sha256": "a1a0daf99de4692efd562af7b7fc5ae7528df8ff0bb45d55125b64d5ce287f05"
+    },
+    {
+      "name": "@deepseek-ai/dsh-deepseek-account",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-deepseek-account-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-deepseek-account-0.2.1-rc.2.tgz",
+      "sha256": "d4bcfba232bcd18c9cf3845d8c0b0af2050b9938a70965c6a22e9122e504c5fb"
+    },
+    {
+      "name": "@deepseek-ai/dsh-deepseek-account-platform",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-deepseek-account-platform-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-deepseek-account-platform-0.2.1-rc.2.tgz",
+      "sha256": "8173966d4278b78062484ce975e7f0a9358f577916b51482c90ee50ff480e236"
+    },
+    {
+      "name": "@deepseek-ai/dsh-deepseek-llm-api-extensions",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-deepseek-llm-api-extensions-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-deepseek-llm-api-extensions-0.2.1-rc.2.tgz",
+      "sha256": "2de8d1ad45b7e13d74cdaf541d24ec55a46693729a7db0af4bff144a3f0bc489"
+    },
+    {
+      "name": "@deepseek-ai/dsh-deque",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-deque-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-deque-0.2.1-rc.2.tgz",
+      "sha256": "259d7a0fa2358419925865833afd01220c181877ae1656389f05d7c0d5b1158a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-agent-team",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-agent-team-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-agent-team-0.2.1-rc.2.tgz",
+      "sha256": "410929bb580676821c7a4245e908f314848a755c9e61f54964dd986fa3709ec1"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-agent-team-profile",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-agent-team-profile-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-agent-team-profile-0.2.1-rc.2.tgz",
+      "sha256": "bc821ea01037db2a510dd42c298c38cb486c478b120492f7adc31d0d986c99a7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-api-speech-to-text",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-api-speech-to-text-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-api-speech-to-text-0.2.1-rc.2.tgz",
+      "sha256": "0de7875e6a9801ad38a235033aacabfc176cfb2326ad7fb45e6da1c510ab2dd8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-auto-review",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-auto-review-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-auto-review-0.2.1-rc.2.tgz",
+      "sha256": "c3ed7be5bc21401c7c2c2a79f0c97f5dfe5c3e457af2ff984aba80c45d64b97c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-badge-skill-bundle",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-badge-skill-bundle-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-badge-skill-bundle-0.2.1-rc.2.tgz",
+      "sha256": "9d82fb9e8ee9581699535b59c820feb1140fe4b08264bd4f0852a2d7e7c1bbd6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-browser-use-chrome-devtools-mcp",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-browser-use-chrome-devtools-mcp-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-browser-use-chrome-devtools-mcp-0.2.1-rc.2.tgz",
+      "sha256": "a42b8611532958e81807d36a15a1b027c2b615101b535d921363d3b6eab10a08"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-browser-use-playwright-mcp",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-browser-use-playwright-mcp-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-browser-use-playwright-mcp-0.2.1-rc.2.tgz",
+      "sha256": "7814d10b5851e66451bfc3096cdeeb93ae235d973227bcd151d5160e0f2c3aaa"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-browser-use-runtime",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-browser-use-runtime-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-browser-use-runtime-0.2.1-rc.2.tgz",
+      "sha256": "ca0b8ceb444e4d0f28129d8f234d7019655ee3daae271550538aba1f70eb86e8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-browser-use-stagehand-native",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-browser-use-stagehand-native-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-browser-use-stagehand-native-0.2.1-rc.2.tgz",
+      "sha256": "b715a8617e8e2df3e78e9d7d49a8b5007d1da8bbcba7cdb9df601266ff87c89e"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-claude-code-mods",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-claude-code-mods-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-claude-code-mods-0.2.1-rc.2.tgz",
+      "sha256": "7ba949b29e8c70840f78f0a20e0db7601ed6ec259c74459c177e5be34e64d771"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-client-ui-agent-team",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-client-ui-agent-team-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-client-ui-agent-team-0.2.1-rc.2.tgz",
+      "sha256": "2366dcdd42b09d5525046c0727c208e5264c1d0c5ba4b7956890673d319ee6f2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-client-ui-claude-code-mods",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-client-ui-claude-code-mods-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-client-ui-claude-code-mods-0.2.1-rc.2.tgz",
+      "sha256": "beb2692a6de7c02746e05bbc830e2e9d823d75d51662d59a96f61b770134197c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-client-ui-cot-translation",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-client-ui-cot-translation-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-client-ui-cot-translation-0.2.1-rc.2.tgz",
+      "sha256": "5e13dec81362ba0de32ca2cad2fbd66fcb07a4cfb05cbfd7fa5bfdd2ac5e4643"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-client-ui-voice-input",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-client-ui-voice-input-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-client-ui-voice-input-0.2.1-rc.2.tgz",
+      "sha256": "6237883cf67a96aff358c53b254e2ce4723d0e0da9f6df4f5d97563a8bffc65f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-computer-use-cua-driver-mcp",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-computer-use-cua-driver-mcp-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-computer-use-cua-driver-mcp-0.2.1-rc.2.tgz",
+      "sha256": "968a85adfe7db9bc272beb8420c50c8042588714729f8855dc54c1a20da0a784"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-computer-use-cua-driver-native",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-computer-use-cua-driver-native-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-computer-use-cua-driver-native-0.2.1-rc.2.tgz",
+      "sha256": "ea3773a383eff9dad1206238ec667e3643f8b31f38aecc9a48f211ccb908b900"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-cot-translation-bundle",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-cot-translation-bundle-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-cot-translation-bundle-0.2.1-rc.2.tgz",
+      "sha256": "df19c02a0fbbf7785c82f2bf5e090b4429a1ba4cb5c540d2d3fcea1f7bbfb6ac"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-cua-macos",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-cua-macos-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-cua-macos-0.2.1-rc.2.tgz",
+      "sha256": "f70f31e7dbe99155ae8464f970295f7034cb89d018b709ff0d4ef95c73408713"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-inspector",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-inspector-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-inspector-0.2.1-rc.2.tgz",
+      "sha256": "4ca2f45959cdb95d1a1d9278428c76b78bad9fe4fae98aa107142b3a5bb8e142"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-inspector-profile",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-inspector-profile-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-inspector-profile-0.2.1-rc.2.tgz",
+      "sha256": "1877bbc9ab3e9ef04ca4c2ddd81bf35eb152a1801be3e85a07fe88633f6d895d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-plugin-market-bundle",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-plugin-market-bundle-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-plugin-market-bundle-0.2.1-rc.2.tgz",
+      "sha256": "f0b952312934db73c9cb2ca256f1480de3205e161f25097295c89d099784795b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-ptc-runtime-python",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-ptc-runtime-python-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-ptc-runtime-python-0.2.1-rc.2.tgz",
+      "sha256": "ea063a5a3aaa5d533087f5169495cfa2e51203e7ef2063fd82849d99cc2b1014"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-ralph-bundle",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-ralph-bundle-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-ralph-bundle-0.2.1-rc.2.tgz",
+      "sha256": "249a7d460119da4459edf936bb7dfccef1eb25a91a40c364ec323f5b45e38350"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-session-inspector",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-session-inspector-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-session-inspector-0.2.1-rc.2.tgz",
+      "sha256": "be4566e7eec711e98489bbf6112df68924cf38703627a5e4879a7814caffbc06"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-session-search",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-session-search-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-session-search-0.2.1-rc.2.tgz",
+      "sha256": "fc51830bb69d0bbf9f0c54dd0fbb3952a532e252ea7972b1d699d44c19048b51"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-session-titles-bundle",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-session-titles-bundle-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-session-titles-bundle-0.2.1-rc.2.tgz",
+      "sha256": "cf09fa252381caffb91257223ccac387315c03d8832e703f58bb0ac001fc58b6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-speech-to-text",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-speech-to-text-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-speech-to-text-0.2.1-rc.2.tgz",
+      "sha256": "53a73ce2559e9dbbef32919d673a06de2a27ed662eefcb8631ffe597b7941dee"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-speech-to-text-sensevoice",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-speech-to-text-sensevoice-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-speech-to-text-sensevoice-0.2.1-rc.2.tgz",
+      "sha256": "b88fa1ff154a793a7975a166eb1c1389f45c7607809ff1b42ec20727f3dadf5d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-terminal-bundle",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-terminal-bundle-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-terminal-bundle-0.2.1-rc.2.tgz",
+      "sha256": "18955ffde07a484a048195efb30365b064f3805ba7c11628820cb71733598e39"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-tool-agent-team",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-tool-agent-team-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-tool-agent-team-0.2.1-rc.2.tgz",
+      "sha256": "752d56f6206fc7542797821feb06a9d8ed0a3560e4e5808a7eabe2f62dc4ae54"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-tool-worktree",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-tool-worktree-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-tool-worktree-0.2.1-rc.2.tgz",
+      "sha256": "8fe0b454317c03fcecdfea4e42eb0abc141786769520a5eeb821f8acbe62a718"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-translator",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-translator-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-translator-0.2.1-rc.2.tgz",
+      "sha256": "c52a444f18e6e363662b5f6930afe6db88968fb29e4606647c1d8f4f4ae7f772"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-voice-input-bundle",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-voice-input-bundle-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-voice-input-bundle-0.2.1-rc.2.tgz",
+      "sha256": "79232823a4105ffa238895c22df80489508a26ecf74d312f2e10b7f17d643734"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-webworker-packer",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-webworker-packer-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-webworker-packer-0.2.1-rc.2.tgz",
+      "sha256": "3f2b33ed9ffb9f06da8882a99b2be83dcbfe6ca9693abab17151359ff0079877"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-webworker-runtime",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-webworker-runtime-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-webworker-runtime-0.2.1-rc.2.tgz",
+      "sha256": "572bf85d7ee18a1cef2b11923b6c086ad284781a417b33fbefb9fee8533bf2e8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-experimental-worktree",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-experimental-worktree-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-experimental-worktree-0.2.1-rc.2.tgz",
+      "sha256": "fd8903b1e01648a2c0cef9262a7c56e39d923c4a71912152ae6c7ebf037259b7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-file-reference",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-file-reference-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-file-reference-0.2.1-rc.2.tgz",
+      "sha256": "5f81a3fb12c6a952f918b9266f30adcd45911839c013e08759a898a89f946e6b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-file-reference-local",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-file-reference-local-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-file-reference-local-0.2.1-rc.2.tgz",
+      "sha256": "2f1c2947e0ceb4e5cb4752806e7f8c9a57231851b93397ecf36ca9d54f048187"
+    },
+    {
+      "name": "@deepseek-ai/dsh-fs",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-fs-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-fs-0.2.1-rc.2.tgz",
+      "sha256": "696d56652271087766faf69449a6e7b92030d0dd89410543a1189e0e7b23a6a2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-fs-local",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-fs-local-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-fs-local-0.2.1-rc.2.tgz",
+      "sha256": "01e64e0d7d96fdc5e3d587437c42d686cdfbcb2cecfdb851ac4d5d08445a722d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-fs-observation-policy",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-fs-observation-policy-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-fs-observation-policy-0.2.1-rc.2.tgz",
+      "sha256": "e5d6efb49b79caafb7b1e838ea7d4930337f7228b3fe460c91c0b1ca249d65e4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-fs-sandbox",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-fs-sandbox-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-fs-sandbox-0.2.1-rc.2.tgz",
+      "sha256": "355559c191ce865101fb0a9975165ed9f9c517fd061e64d6ac8052f60035ba92"
+    },
+    {
+      "name": "@deepseek-ai/dsh-fs-ssh",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-fs-ssh-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-fs-ssh-0.2.1-rc.2.tgz",
+      "sha256": "f8612ce2863f8f530e384e41e675f5cba05e265cd27770807868fce0ef547ab4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-goal",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-goal-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-goal-0.2.1-rc.2.tgz",
+      "sha256": "0ca1313a006b0b6dba7dd09919378030671f9438320479a26d58616bd9d40588"
+    },
+    {
+      "name": "@deepseek-ai/dsh-goal-round-driver",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-goal-round-driver-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-goal-round-driver-0.2.1-rc.2.tgz",
+      "sha256": "12299514448510bb158d7cf5a0167cd6a3770f8e88e731567afb98b4e870afab"
+    },
+    {
+      "name": "@deepseek-ai/dsh-harness-dev-context",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-harness-dev-context-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-harness-dev-context-0.2.1-rc.2.tgz",
+      "sha256": "388bb222de0fcfcc50363fc9aebe49c183fa002024185fc4bbdeb6aeb0d744f3"
+    },
+    {
+      "name": "@deepseek-ai/dsh-headless",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-headless-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-headless-0.2.1-rc.2.tgz",
+      "sha256": "1d009937bbdd5c90bb9547310c233edba6bf8969d75eb75142330b6f60a8e222"
+    },
+    {
+      "name": "@deepseek-ai/dsh-hmr",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-hmr-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-hmr-0.2.1-rc.2.tgz",
+      "sha256": "83922fc946ce5daacd64a76933b6683c6326658d42e8771d69236b973d4ab397"
+    },
+    {
+      "name": "@deepseek-ai/dsh-home-paths",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-home-paths-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-home-paths-0.2.1-rc.2.tgz",
+      "sha256": "6e561f955449ee7c9ab0b4257cc3a857f042ff2533ef4eb0ee9257b78d4e501b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-hook-protocol",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-hook-protocol-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-hook-protocol-0.2.1-rc.2.tgz",
+      "sha256": "b6dd1d85cd52a715cec1aa181ada3a9d4e5e7b20f03cfcf2fa3cc135740a0b8f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-hooks-claude-code",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-hooks-claude-code-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-hooks-claude-code-0.2.1-rc.2.tgz",
+      "sha256": "496c0fa8b63a52655f5ba865b0f985e14159805e87e9f662033c00a6dc29fe53"
+    },
+    {
+      "name": "@deepseek-ai/dsh-hooks-codex",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-hooks-codex-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-hooks-codex-0.2.1-rc.2.tgz",
+      "sha256": "fcc34b4587371723b856a7484c187acf051c27ccfc7fed142de134ca3d2777fb"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-directory-picker",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-host-directory-picker-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-host-directory-picker-0.2.1-rc.2.tgz",
+      "sha256": "3af5d95c08487294ba109eb31c7a0eb04dc16596da50bf087a57e7e44f7e2ecb"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-directory-picker-auto",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-host-directory-picker-auto-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-host-directory-picker-auto-0.2.1-rc.2.tgz",
+      "sha256": "407a6e73b6776bfc34496d8811cc282756823f45bee563934ba41d49f17d4bf9"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-directory-picker-browse",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-host-directory-picker-browse-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-host-directory-picker-browse-0.2.1-rc.2.tgz",
+      "sha256": "dbbdb7b5616fb65aeb88daaf59f64df3ed2e469112ff8ffb81f3f31f592f4db6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-directory-picker-native",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-host-directory-picker-native-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-host-directory-picker-native-0.2.1-rc.2.tgz",
+      "sha256": "a90ed958aea2b9957db69fd3543497022807c43656ddfd5d88de3160ff7bbcbf"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-frontend-static",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-host-frontend-static-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-host-frontend-static-0.2.1-rc.2.tgz",
+      "sha256": "a2c7dca4c53a4229a69aa1a90b22266e2c023aaa866bace642c541777ef41912"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-open-in-app",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-host-open-in-app-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-host-open-in-app-0.2.1-rc.2.tgz",
+      "sha256": "2fa4484dc84f6b312f5d3ed504f4aeffd41b34f35655c3725d7e87149e37f0c7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-plugin-inventory",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-host-plugin-inventory-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-host-plugin-inventory-0.2.1-rc.2.tgz",
+      "sha256": "6e530c58fa224dcbb789e73d491437223564ffee500664c73ef2c0b57d75ddc3"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-product-telemetry-otel",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-host-product-telemetry-otel-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-host-product-telemetry-otel-0.2.1-rc.2.tgz",
+      "sha256": "07f56b41a2ca62a43468c9bb3313c5466e8863ea1461aeaaf7a93d510bf520cc"
+    },
+    {
+      "name": "@deepseek-ai/dsh-host-webserver",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-host-webserver-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-host-webserver-0.2.1-rc.2.tgz",
+      "sha256": "079359f2352fa9b91d780ab05f221bfc8f9f8292ddbd8c5ae013925a6b7ecde6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-http-proxy",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-http-proxy-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-http-proxy-0.2.1-rc.2.tgz",
+      "sha256": "2bda54639c9bd0ac9b9c7dcff25cbbc8fd76fb7fc02449fc6897f930a245bcd6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-jobs",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-jobs-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-jobs-0.2.1-rc.2.tgz",
+      "sha256": "2943c91ea06d38171f2523faa7b201fb4bd752475b0e9e5b81733125ffe53f4b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-jobs-local",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-jobs-local-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-jobs-local-0.2.1-rc.2.tgz",
+      "sha256": "371484bf2a284cb32acd55606847b86050f4e9aed477d36b70072ea801c9b75c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-launch-environment",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-launch-environment-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-launch-environment-0.2.1-rc.2.tgz",
+      "sha256": "2d0676ba483d1d79abab44c329323a9be9052b967a4d9ca604e86bcebc501dd3"
+    },
+    {
+      "name": "@deepseek-ai/dsh-lazy-require",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-lazy-require-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-lazy-require-0.2.1-rc.2.tgz",
+      "sha256": "981cbecfb8150e4f35c6921d5f8d0648d6f6257001f4102ef54c8e6e926a3661"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-llm-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-llm-0.2.1-rc.2.tgz",
+      "sha256": "e11d71579e71741d146217ebdb48658b90ba45837e821215c72d1da78d2c8c3d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-deepseek",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-llm-deepseek-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-llm-deepseek-0.2.1-rc.2.tgz",
+      "sha256": "df3eb2bdc6624380f7c941372dc5baf1fd11aabe74a34f515fc3cb8e0ee956a6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-deepseek-account",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-llm-deepseek-account-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-llm-deepseek-account-0.2.1-rc.2.tgz",
+      "sha256": "e8a5861db705e6b102aaed0cf91afe8226b2cb449e15a29a1e24923904992a96"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-deepseek-api-key",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-llm-deepseek-api-key-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-llm-deepseek-api-key-0.2.1-rc.2.tgz",
+      "sha256": "f281608bac85641d26d6b0ff48f48bc187c3b608341b78cedeebc8c2c3d40b6f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-mock-server",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-llm-mock-server-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-llm-mock-server-0.2.1-rc.2.tgz",
+      "sha256": "9586970f353fbcb6be44d56d0e4a432038b58d50e9cac2aad1bd80080e59c4ff"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-pi-ai",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-llm-pi-ai-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-llm-pi-ai-0.2.1-rc.2.tgz",
+      "sha256": "47657808e0e6f23a1a97261e9923184177484df6b83a23af4557b822aef7bdb5"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-replay",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-llm-replay-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-llm-replay-0.2.1-rc.2.tgz",
+      "sha256": "97aec537cfbfb4201698cf8b1efb3120d4b8970b81383e96912aeb3bdc0540c8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm-retry",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-llm-retry-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-llm-retry-0.2.1-rc.2.tgz",
+      "sha256": "150b520116fc9719d047bcd19c1f738ed3b0acca93392cc0cb5dd176f2f0c496"
+    },
+    {
+      "name": "@deepseek-ai/dsh-loader-smoke",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-loader-smoke-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-loader-smoke-0.2.1-rc.2.tgz",
+      "sha256": "9fcb5ae20f99f65d1b001b59d7dbf7f96877dc8dee4e8a3ae5c4ee8d8e4df29b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-lsp",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-lsp-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-lsp-0.2.1-rc.2.tgz",
+      "sha256": "3b765f9e7527253c405dd2c65ac0487f696f4d7dbee57266fd16b74ef8b8093f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-lsp-stdio",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-lsp-stdio-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-lsp-stdio-0.2.1-rc.2.tgz",
+      "sha256": "65449f15e35926dda61ad8561c56ab728d2e3c8f13aea6533bbeadd596d0cd9e"
+    },
+    {
+      "name": "@deepseek-ai/dsh-mcp-client",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-mcp-client-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-mcp-client-0.2.1-rc.2.tgz",
+      "sha256": "71ce746b538822af1264a8ad6d7f1a2a8b574214c4feb860d36239dd6c943319"
+    },
+    {
+      "name": "@deepseek-ai/dsh-mcp-resources",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-mcp-resources-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-mcp-resources-0.2.1-rc.2.tgz",
+      "sha256": "becda9f53d086b9b2346f5bf8b341c53704eac1599538f3d2ac65d47006c0a7a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-message-feedback",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-message-feedback-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-message-feedback-0.2.1-rc.2.tgz",
+      "sha256": "079e0a1995046b82b96c2bb2b670d5dd722fba3fe5d15c871921180809e70820"
+    },
+    {
+      "name": "@deepseek-ai/dsh-native-command",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-native-command-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-native-command-0.2.1-rc.2.tgz",
+      "sha256": "2dd4729cd32ec188a22f6d81d4191b0b93f5f95a75db40134f794f7cf80bb1e7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-office-to-pdf",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-office-to-pdf-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-office-to-pdf-0.2.1-rc.2.tgz",
+      "sha256": "41a00c97e987981f6d763bf902adfee09a9196b5dcb99164548819b76db2588e"
+    },
+    {
+      "name": "@deepseek-ai/dsh-otel",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-otel-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-otel-0.2.1-rc.2.tgz",
+      "sha256": "ba0e3dcc219c7fc490c252cef0ee25740e516a1ad354769d88edaff58a72378d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-output-retention",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-output-retention-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-output-retention-0.2.1-rc.2.tgz",
+      "sha256": "aad1c44d577a821daf38455220f201f968b8efd05719f1b30dc0bea4b640670b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-package-manifest",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-package-manifest-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-package-manifest-0.2.1-rc.2.tgz",
+      "sha256": "fb2ba40d2dd7e0d6a719bd1516713afbd3002fcf88fc0ae5606ee222296fbfec"
+    },
+    {
+      "name": "@deepseek-ai/dsh-permission-presets",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-permission-presets-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-permission-presets-0.2.1-rc.2.tgz",
+      "sha256": "2277a874f7606c94aea4494c9c781cdb0b2054e22b1d9cb8acb4224920cb67f7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-persona",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-persona-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-persona-0.2.1-rc.2.tgz",
+      "sha256": "9f513d0a0ec22fe425f10f13c5cfc846bcad3e73e3eb219a560c5ac534b4e1c5"
+    },
+    {
+      "name": "@deepseek-ai/dsh-plan-mode",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-plan-mode-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-plan-mode-0.2.1-rc.2.tgz",
+      "sha256": "a32eadad154c6486f360f20e1047d95669183fdc7ff4a11ea683537328d01e10"
+    },
+    {
+      "name": "@deepseek-ai/dsh-plugin-manager",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-plugin-manager-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-plugin-manager-0.2.1-rc.2.tgz",
+      "sha256": "39bdb549f063e99e74df43e57b035a4c0a16c2f271dccb680deadcf3d8e6ee85"
+    },
+    {
+      "name": "@deepseek-ai/dsh-plugin-market",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-plugin-market-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-plugin-market-0.2.1-rc.2.tgz",
+      "sha256": "6587a5f3268a46ee7f29fc69ccbba06f2137bf035408520f232b41a119566c63"
+    },
+    {
+      "name": "@deepseek-ai/dsh-plugin-market-index",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-plugin-market-index-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-plugin-market-index-0.2.1-rc.2.tgz",
+      "sha256": "a3fa9a9dfdb86e25f651d852c5cacd1c47af1f6a4aa65975a76df084a4ca4b75"
+    },
+    {
+      "name": "@deepseek-ai/dsh-plugin-package-inventory-deepseek",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-plugin-package-inventory-deepseek-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-plugin-package-inventory-deepseek-0.2.1-rc.2.tgz",
+      "sha256": "0fa8c893dc340847d6f7e87639925337d6de25f6aa5cbd8db68b23427806819b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-principal-access",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-principal-access-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-principal-access-0.2.1-rc.2.tgz",
+      "sha256": "c42e3d735e4d6f4230fd80fe5576748fa693e38e0fab3d139e9b7bc42a86b28a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-ptc-runtime",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-ptc-runtime-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-ptc-runtime-0.2.1-rc.2.tgz",
+      "sha256": "eeb8e735a6c52065438b5c25f055c4371096175c05557e2b82e77da9ae249aac"
+    },
+    {
+      "name": "@deepseek-ai/dsh-ptc-runtime-node",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-ptc-runtime-node-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-ptc-runtime-node-0.2.1-rc.2.tgz",
+      "sha256": "a7c96cc388e4ebd9ce95c7a477bd12a626b6a7ea3104bd0aeb461bb3cfba028f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-pwsh-local",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-pwsh-local-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-pwsh-local-0.2.1-rc.2.tgz",
+      "sha256": "16aa3870709be85afc71118be84df6b304abdec99f3a18bbab5c8f34b7ed56f8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-pwsh-sandbox",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-pwsh-sandbox-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-pwsh-sandbox-0.2.1-rc.2.tgz",
+      "sha256": "55b266fd46dd0454e503fb29c680ef44baa738c54ddc0462e81e9821fd284115"
+    },
+    {
+      "name": "@deepseek-ai/dsh-remote-mock",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-remote-mock-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-remote-mock-0.2.1-rc.2.tgz",
+      "sha256": "44c8b6add6bfdfc9a3d93a7051344687b43e60463032c23954ee9ce7a3e2537e"
+    },
+    {
+      "name": "@deepseek-ai/dsh-repeat-tool-reminder",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-repeat-tool-reminder-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-repeat-tool-reminder-0.2.1-rc.2.tgz",
+      "sha256": "14783db54a37e0acee9a92cbaefe662bd7c0c2579dc0f0d13aa2d9c6c7a5e584"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sandbox",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-sandbox-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-sandbox-0.2.1-rc.2.tgz",
+      "sha256": "a55d41200cb281a2bd137667bd591a9f66010932f9502cf060b37d490a98bfc7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sandbox-local",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-sandbox-local-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-sandbox-local-0.2.1-rc.2.tgz",
+      "sha256": "eb77e9411277d8d17f077c1d139b1327dcf1fbd97114ffd7f4634b5e1c87dfd7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sandbox-policy",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-sandbox-policy-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-sandbox-policy-0.2.1-rc.2.tgz",
+      "sha256": "eb235d79398a5abbdd3b080a69cb7db36be8b220253587d4657db676a7098558"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sandbox-ssh",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-sandbox-ssh-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-sandbox-ssh-0.2.1-rc.2.tgz",
+      "sha256": "d68edeadaf95317484ec38fbfead4c52ec1e0db080210fda0f070927af36e92c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sandbox-windows-acl",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-sandbox-windows-acl-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-sandbox-windows-acl-0.2.1-rc.2.tgz",
+      "sha256": "6b5644ce5df43af291d024282967ba759a5b714774d07563db4cd714271e0c40"
+    },
+    {
+      "name": "@deepseek-ai/dsh-schedule",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-schedule-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-schedule-0.2.1-rc.2.tgz",
+      "sha256": "e72b6012d418caa950e397495c587139f252cfa7c0ab871271741ca172b0cd5a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-scope",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-scope-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-scope-0.2.1-rc.2.tgz",
+      "sha256": "2b86066fdab9b5be1471f6c2b3dcb20219649828741f055e1ae89e240d762e4d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-app",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-sdk-app-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-sdk-app-0.2.1-rc.2.tgz",
+      "sha256": "b625c9646ebebdb7394ce8bef897cfc9737528928e336bcc3cc33277a5c5dbc3"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-client",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-sdk-client-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-sdk-client-0.2.1-rc.2.tgz",
+      "sha256": "20751dffeca7e4cfd1e6e89e8b349d592429f9a687073907af9c2a490073da02"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-jsonrpc-server",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-sdk-jsonrpc-server-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-sdk-jsonrpc-server-0.2.1-rc.2.tgz",
+      "sha256": "6ca581598229b73e72257e1e8bef06a3fbe9f504f695b4aeaa719736fa1ea8d9"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-minimal",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-sdk-minimal-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-sdk-minimal-0.2.1-rc.2.tgz",
+      "sha256": "465154c24e8c2889e92eabc557073a8dd49f044853d1cce306febf3f8e5f3ad6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-sdk-protocol",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-sdk-protocol-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-sdk-protocol-0.2.1-rc.2.tgz",
+      "sha256": "e36e5a2e420c98764ec19dece9aac2fce0f430150985c5135cbb6a7d4c652d03"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-0.2.1-rc.2.tgz",
+      "sha256": "30778880e7939b7c0037b0328fd84148315c06cd6b1423255ffddb2166bb63e4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-checkpoint-policy",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-checkpoint-policy-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-checkpoint-policy-0.2.1-rc.2.tgz",
+      "sha256": "dd1e039dcb19343530ea0dfb22b48d3a2b1f93fe2465a9446a44e2f401784c8b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-format",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-format-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-format-0.2.1-rc.2.tgz",
+      "sha256": "990fce08ae5bffc87251e0335649d709d38f7fec8e9d1dca98f75c70aa90b6c6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-format-catalog",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-format-catalog-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-format-catalog-0.2.1-rc.2.tgz",
+      "sha256": "f40cfe4b0ea881834902a83792f66a4a2df3a910eb8d0a7e1e8d55a09b400083"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-format-v0-to-v1",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-format-v0-to-v1-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-format-v0-to-v1-0.2.1-rc.2.tgz",
+      "sha256": "a646aa20d2fdb4c1b0c0280309fc46a023b57b723c011aa88d3c0b5672ce9334"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-format-v1-to-v2",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-format-v1-to-v2-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-format-v1-to-v2-0.2.1-rc.2.tgz",
+      "sha256": "b57e9a2f1b57115b4dd46de809a73ad4d851ef4fa91027a1007a03fb1799fe24"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-format-v2-to-v3",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-format-v2-to-v3-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-format-v2-to-v3-0.2.1-rc.2.tgz",
+      "sha256": "4ce9f4ea5da41726fcc923da15d50d8e6708b301b47a39d9ac2c9f22c0a0f206"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-format-v3-to-v4",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-format-v3-to-v4-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-format-v3-to-v4-0.2.1-rc.2.tgz",
+      "sha256": "1bdad45548715b30acf15bfe484c4e2b686f942215133c86c7bbfb74a06e5a77"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-log-deepseek",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-log-deepseek-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-log-deepseek-0.2.1-rc.2.tgz",
+      "sha256": "aae957301dfa60a0b02135b2b25a11d1d074b5ab46b6ca8318cc79466d723cfc"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-log-export",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-log-export-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-log-export-0.2.1-rc.2.tgz",
+      "sha256": "79e62d719fe3d1e1c2d4e27996e77d9558684b365b29cf3e2fcd6c31b6289574"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-persistence",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-persistence-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-persistence-0.2.1-rc.2.tgz",
+      "sha256": "85d9b969cfa35133fa714917d2569986b71fa5151a97323dee4d3c2311b2ea11"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-persistence-jsonl",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-persistence-jsonl-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-persistence-jsonl-0.2.1-rc.2.tgz",
+      "sha256": "14229435ad497f22de2a448172a9a64e874d6b0b64b880cd66c9256d9124256b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-projection",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-projection-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-projection-0.2.1-rc.2.tgz",
+      "sha256": "c61bda302551f75bf48e64d5bb7b12191d31929b77d963f33dcbafe56a4b8851"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-projection-cache",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-projection-cache-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-projection-cache-0.2.1-rc.2.tgz",
+      "sha256": "1e00a89baae9ac559c029f9a9f73efcf5ab5941bb934735a953250c69d20f7da"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-query",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-query-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-query-0.2.1-rc.2.tgz",
+      "sha256": "32bf03ab6ce3f71434ea8512a9f094d06bf23da9a6b4bc8546958d4f80a10f9f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-query-sqlite",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-query-sqlite-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-query-sqlite-0.2.1-rc.2.tgz",
+      "sha256": "0ba2c88ddd745f8a6a3cf43097757889ae4c479273f14a1cd641bf4a86109303"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-reference",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-reference-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-reference-0.2.1-rc.2.tgz",
+      "sha256": "695d61de40e1af04f9313fdad7ea01ebc403e40f9b7eaccc2e5df7cdd9f83e12"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-snapshot",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-snapshot-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-snapshot-0.2.1-rc.2.tgz",
+      "sha256": "89a008937f728144dffaf854a1df6e3659fc00579697dfc2d92a693ca4a6176c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-stats",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-stats-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-stats-0.2.1-rc.2.tgz",
+      "sha256": "9a3ce411636d1c7cc34f724a0f0c6541189ed9c474c47fffb01bffc3d55f5383"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-telemetry",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-telemetry-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-telemetry-0.2.1-rc.2.tgz",
+      "sha256": "d4f94dd1bad5becbadde210227d073aa5b2eceb56bd8f36ac7b489adbcca32b1"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-telemetry-otel",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-telemetry-otel-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-telemetry-otel-0.2.1-rc.2.tgz",
+      "sha256": "c11b7d111b646f8a4289aff17b2f6901ac523222c8d82f6f522bf9330ca3c568"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-title",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-title-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-title-0.2.1-rc.2.tgz",
+      "sha256": "ff100e40a990f2d762b2abd5bda72cf5c6822817d63a2a74dd8a1f0d1b8018b2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-title-all-prompts-llm",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-title-all-prompts-llm-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-title-all-prompts-llm-0.2.1-rc.2.tgz",
+      "sha256": "67784020f4255b055065ebebfda136912d02ef6a3aeb04d8c6616e496d71ffdb"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-title-first-prompt-llm",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-title-first-prompt-llm-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-title-first-prompt-llm-0.2.1-rc.2.tgz",
+      "sha256": "4222db4d676deb5e8b130b0b045ea1ba6fc1f8d7bbab696d28bb51b9952cc3fa"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-title-llm",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-title-llm-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-title-llm-0.2.1-rc.2.tgz",
+      "sha256": "1b1e569691a2d5c50648d6b971b54f5cab4ef1031eb75babd7000fa1451d4f3f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-turn-outline",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-session-turn-outline-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-session-turn-outline-0.2.1-rc.2.tgz",
+      "sha256": "94f0fbc4e3e43af466c82f5531a1efc20344759513f1d6371e0a41ec7aeca4d4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-settings",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-settings-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-settings-0.2.1-rc.2.tgz",
+      "sha256": "deff68e969f93e946472ac6facfe1831603ca7d6732b6d7400ecfbf3d7611c70"
+    },
+    {
+      "name": "@deepseek-ai/dsh-shell",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-shell-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-shell-0.2.1-rc.2.tgz",
+      "sha256": "267b248b7b006acf26541759a8b643a07bf8235569a2be9a424ff5dcedecbcb9"
+    },
+    {
+      "name": "@deepseek-ai/dsh-shell-env",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-shell-env-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-shell-env-0.2.1-rc.2.tgz",
+      "sha256": "9e0a5c557480fdda33dbcbcc4802551af1166db8f62a40f3e7dfdcf7da8bfedc"
+    },
+    {
+      "name": "@deepseek-ai/dsh-skill",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-skill-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-skill-0.2.1-rc.2.tgz",
+      "sha256": "50343d91f33c5b95d778a4069237b8e6c33e3b0013959ec469c241e5c41a2e25"
+    },
+    {
+      "name": "@deepseek-ai/dsh-skill-badge",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-skill-badge-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-skill-badge-0.2.1-rc.2.tgz",
+      "sha256": "2e3119a00c78bd07ba1d1ee5fa53262859c3ca20cce8d71878a9ce5bc8521b0f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-skill-filesystem",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-skill-filesystem-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-skill-filesystem-0.2.1-rc.2.tgz",
+      "sha256": "18cc3277f230459fad90e97c007d88926edf82bdf135cbd2279721b85046a4b1"
+    },
+    {
+      "name": "@deepseek-ai/dsh-skill-office",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-skill-office-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-skill-office-0.2.1-rc.2.tgz",
+      "sha256": "a65c5d6b75d2be30b136a71a8b6e36dba2055a4cacc13c7a78b0719fa0be020d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-spill",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-spill-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-spill-0.2.1-rc.2.tgz",
+      "sha256": "7aa9535e010f8f0d17a9136ec3e29f08c9e65a20916cd6793bfaf6a5c7ff977a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-spill-local",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-spill-local-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-spill-local-0.2.1-rc.2.tgz",
+      "sha256": "84e072b018bead205880bef0c12cc825f2e4f513c923be5a22cfa0b1983e710b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-spill-policy",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-spill-policy-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-spill-policy-0.2.1-rc.2.tgz",
+      "sha256": "986b98982ff588380dcb5c8e70077a2cf15d15c81422bc3a6521daadc4204f79"
+    },
+    {
+      "name": "@deepseek-ai/dsh-ssh",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-ssh-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-ssh-0.2.1-rc.2.tgz",
+      "sha256": "bdae80c889766d10f658ad2bb939ac1619188d10e55d50b167a3177765298d51"
+    },
+    {
+      "name": "@deepseek-ai/dsh-storage",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-storage-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-storage-0.2.1-rc.2.tgz",
+      "sha256": "e686d541fa680a865fa95818dc6fa469a59e8c6e3ea6e1cbe3af439a2878ef8f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-storage-domain",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-storage-domain-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-storage-domain-0.2.1-rc.2.tgz",
+      "sha256": "99a94616fdc80f336c3485c830ee29750765e6ff736a0bd4caf3a31e436af2d0"
+    },
+    {
+      "name": "@deepseek-ai/dsh-storage-json",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-storage-json-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-storage-json-0.2.1-rc.2.tgz",
+      "sha256": "6e8b45fd5f172c307105fdcee0ad6c11114b2ad97a458b6b5a9f65c01b76c421"
+    },
+    {
+      "name": "@deepseek-ai/dsh-storage-sqlite",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-storage-sqlite-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-storage-sqlite-0.2.1-rc.2.tgz",
+      "sha256": "f9e840b362f30407ff2d1a87975fdadfbcac49c1e4b74d0c64e15957480e362d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-subagent-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-subagent-0.2.1-rc.2.tgz",
+      "sha256": "9f35c4ae75a24c65c07eb1d9561039160d0cca9b409366faf87c7f656f137bef"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-acp",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-subagent-acp-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-subagent-acp-0.2.1-rc.2.tgz",
+      "sha256": "83a81646f00158666c59a054622c87967a3b9eaea3970a9c25763ddbb9c0631c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-claude-code",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-subagent-claude-code-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-subagent-claude-code-0.2.1-rc.2.tgz",
+      "sha256": "edd2d69c9a948645b71546804c63cfc1075f6a4bab5a82d1e1f910175e6f28ab"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-codex",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-subagent-codex-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-subagent-codex-0.2.1-rc.2.tgz",
+      "sha256": "bb3be6f4a7d8740aabfa9f60b87c87bb143e2477961824c7d3e5d9011ad8e177"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-dsh-sdk",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-subagent-dsh-sdk-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-subagent-dsh-sdk-0.2.1-rc.2.tgz",
+      "sha256": "5c2f35a318566e1c366e3522d0b7b6f351cdbc6eee7c9122dd2724949fdbec49"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-fork-in-process",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-subagent-fork-in-process-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-subagent-fork-in-process-0.2.1-rc.2.tgz",
+      "sha256": "a888b03ee21ce53cf87b16a53bd66022aca42acc281ddd1e6816a0834a58901f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subagent-spawn-in-process",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-subagent-spawn-in-process-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-subagent-spawn-in-process-0.2.1-rc.2.tgz",
+      "sha256": "0a639ceb2c930a839769fe086cb987e986df38191e0c1dbf1291ae6ef81e2150"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subprocess",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-subprocess-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-subprocess-0.2.1-rc.2.tgz",
+      "sha256": "bafbde087e371b84c94d9057f8eff6dd806dfbe8914b5f479c92194da9d476b0"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subprocess-local",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-subprocess-local-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-subprocess-local-0.2.1-rc.2.tgz",
+      "sha256": "1d104a3f43df0f833bafca52ed9c8237d80bd9232de6e8dfb5e9a4af04c036f9"
+    },
+    {
+      "name": "@deepseek-ai/dsh-subprocess-ssh",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-subprocess-ssh-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-subprocess-ssh-0.2.1-rc.2.tgz",
+      "sha256": "aa97773cbf7960373b5e9aa49abcc3eb576522a89d15de8e88916461a499bcb4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-system-prompt",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-system-prompt-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-system-prompt-0.2.1-rc.2.tgz",
+      "sha256": "2bfb0cd024f5d051effdbabf3bcadabf371313801803df426612faeba5751088"
+    },
+    {
+      "name": "@deepseek-ai/dsh-terminal",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-terminal-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-terminal-0.2.1-rc.2.tgz",
+      "sha256": "d39f007428575f2b377df2e7f1297eb2914079cac3e4c82c3f88743162903d54"
+    },
+    {
+      "name": "@deepseek-ai/dsh-terminal-bash",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-terminal-bash-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-terminal-bash-0.2.1-rc.2.tgz",
+      "sha256": "02656e1b7f8aeadec0a98e5ef7c14d8e39f7110cad2ecc4054bb89380754398f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-time-context",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-time-context-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-time-context-0.2.1-rc.2.tgz",
+      "sha256": "93fa335f0738d094c2188bdce45ea14fdf5297929db37ee117e42e3b7b6cafc8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-timeout",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-timeout-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-timeout-0.2.1-rc.2.tgz",
+      "sha256": "b581840c857e606ee8fb5ade1a06f0ac7b1909a32e46e270834ac4f8e3092a16"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tmux-context",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tmux-context-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tmux-context-0.2.1-rc.2.tgz",
+      "sha256": "b51b58edf2713af2fff5083c52ff493363c9fde4d4f87fa9e062eeadd28d78d1"
+    },
+    {
+      "name": "@deepseek-ai/dsh-token-meter",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-token-meter-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-token-meter-0.2.1-rc.2.tgz",
+      "sha256": "6a9dcc48c609bb13db2cb35f59402a88a98e7c649c2fbe43ea7459796639af92"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-ask-user",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-ask-user-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-ask-user-0.2.1-rc.2.tgz",
+      "sha256": "dc7e12c30168adcfdefaafad972894de550d4f92866c468d761c7e6b9769476c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-bash",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-bash-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-bash-0.2.1-rc.2.tgz",
+      "sha256": "eb701cf3d38df7eb203979265cb0a7b64aec355887c51b24ca8436891616ab53"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-bash-persistent",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-bash-persistent-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-bash-persistent-0.2.1-rc.2.tgz",
+      "sha256": "6420a1c278732b076964c935ff2931d9815bca2fdb76e5cd476609cd2b436ae7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-call-timeout-policy",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-call-timeout-policy-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-call-timeout-policy-0.2.1-rc.2.tgz",
+      "sha256": "5f5b77c8eeb8b0f5fed31320e6f6c15e44d6864d0e94bc1faa3fb917b7a9b4e6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-cordis",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-cordis-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-cordis-0.2.1-rc.2.tgz",
+      "sha256": "49020d2bb8cf4a4a47325d590940fe306de08570b55cf3e3fc02155e69eea639"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-fs",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-fs-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-fs-0.2.1-rc.2.tgz",
+      "sha256": "1d5806d88704ebcd4303fdbd881db975657e8c823614275f9a58fddc83f84cb6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-fs-search",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-fs-search-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-fs-search-0.2.1-rc.2.tgz",
+      "sha256": "8be8ef077e1ce92e03dc141f654c354ee8436d0504fcedaeade90b7cbc502c3d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-goal",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-goal-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-goal-0.2.1-rc.2.tgz",
+      "sha256": "4fc1ec60074bd3b429dc1906eb37f906f8613b47342593cb1a45ad841b3c861c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-jobs",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-jobs-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-jobs-0.2.1-rc.2.tgz",
+      "sha256": "51d74d49acf7f7c73cc7c8c781ff9ad8750a3850aa740782d2978c01835ae96b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-lsp",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-lsp-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-lsp-0.2.1-rc.2.tgz",
+      "sha256": "20404b62475087caa9a94e297a6f9708bceae1445fdd68943e4dad7c94cac085"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-present",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-present-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-present-0.2.1-rc.2.tgz",
+      "sha256": "3e17812fcbd9f212bb5da0e07fbad781dc10c0aca5522f434ec1d5e44a946eaf"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-pwsh",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-pwsh-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-pwsh-0.2.1-rc.2.tgz",
+      "sha256": "6036bffbde9577e456c63e018fbd864cc3109c223d7359ae947d3ea729b895e2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-pwsh-persistent",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-pwsh-persistent-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-pwsh-persistent-0.2.1-rc.2.tgz",
+      "sha256": "fed903df5fa5ce6f495ea385a7377d6cc22169cecefe7095e46c5212ce6f86a7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-ralph",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-ralph-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-ralph-0.2.1-rc.2.tgz",
+      "sha256": "a2a9dc2409486de7d3c0567029bd9e8da8ca89ca1e28d814112ff808f5c8fd93"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-schedule",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-schedule-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-schedule-0.2.1-rc.2.tgz",
+      "sha256": "fc6ddc09a8b648e96bfa2ccbc25ce01b8629552c361612c8ab4aba761f63a1e1"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-session-query",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-session-query-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-session-query-0.2.1-rc.2.tgz",
+      "sha256": "a79d3529a4df7cace0e5809a98815567fc7c69caedd28c9c731dd37917d2a149"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-skill",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-skill-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-skill-0.2.1-rc.2.tgz",
+      "sha256": "e2cf6f87b5e7c3d66bf9ce567799c6667c818cd89297cff2c3e42eb9f974554a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-str-replace-editor",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-str-replace-editor-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-str-replace-editor-0.2.1-rc.2.tgz",
+      "sha256": "a8f902aed20fc2296214c55d5f5e5307cde752a195f4f8d68c6a79eff9d74c8e"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-subagent-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-subagent-0.2.1-rc.2.tgz",
+      "sha256": "a1abdffb410dfb557a41e64bec83346a1da5b66a3f45c30ef29d4f66b9816a2c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-subagent-control",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-subagent-control-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-subagent-control-0.2.1-rc.2.tgz",
+      "sha256": "cd87f098d75ced72ec6ac6fa563d238adb2c6b1fc1fc27f2d251ba330707a839"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-terminal",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-terminal-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-terminal-0.2.1-rc.2.tgz",
+      "sha256": "d4606b5325bfd2224e7d3bd814f271f711c5a3ad427c98a46d643fd9140a4245"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-todo",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-todo-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-todo-0.2.1-rc.2.tgz",
+      "sha256": "b5533f67e148ea9f0b06170a1f7202d74a1215957a10d637888e2c95b707f7d4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-web",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-web-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-web-0.2.1-rc.2.tgz",
+      "sha256": "1c21549869f44f05373f39a17e12d978628bb2f338f3904eefb53cd5cf6369d2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-workflow",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-workflow-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-workflow-0.2.1-rc.2.tgz",
+      "sha256": "9f9d8225f304d6aecc983d25c2de838b5e934efabd1482daaf119133d7341835"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-working-directory",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-working-directory-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-working-directory-0.2.1-rc.2.tgz",
+      "sha256": "762ed53f6541889d3e11e33d4f8b89fa654357b768efc643bb6dbf2c115c10cc"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tool-workspace-dependencies",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tool-workspace-dependencies-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tool-workspace-dependencies-0.2.1-rc.2.tgz",
+      "sha256": "38e1b4320688d1995f9dba3e86dbed812da0eba93626d1f17d4b0d1b099b3e1a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-tools",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-tools-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-tools-0.2.1-rc.2.tgz",
+      "sha256": "4c93b43567504f17d8b94576f880da76f1385d1057045b0ec6203f6094aabf4a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-typert-generator",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-typert-generator-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-typert-generator-0.2.1-rc.2.tgz",
+      "sha256": "bb484b55623f5c295ea5166cb15a54e3f0583e505cc8fe644ac9fdd41363a2d8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-typert-loader",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-typert-loader-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-typert-loader-0.2.1-rc.2.tgz",
+      "sha256": "dabd24905aa5c89bb1aae49d3498572e8d29fac2c4cd1b753c5e3840df797404"
+    },
+    {
+      "name": "@deepseek-ai/dsh-typert-protocol",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-typert-protocol-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-typert-protocol-0.2.1-rc.2.tgz",
+      "sha256": "c3818ad66d398d224f8da0c9e4e6f4d2639bcb8ab0aed5c9c28d60a6727f8a78"
+    },
+    {
+      "name": "@deepseek-ai/dsh-typert-registry",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-typert-registry-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-typert-registry-0.2.1-rc.2.tgz",
+      "sha256": "5144e1ad0567af98a6133285fdbb6de7358025422b7c8d13581abc7fb186eef0"
+    },
+    {
+      "name": "@deepseek-ai/dsh-user-approval",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-user-approval-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-user-approval-0.2.1-rc.2.tgz",
+      "sha256": "4ed5133ee4bda3bb5756a0067aff4f0e661a9d8e674da1d8b3b82d7d494fe5e3"
+    },
+    {
+      "name": "@deepseek-ai/dsh-user-questions",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-user-questions-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-user-questions-0.2.1-rc.2.tgz",
+      "sha256": "f51961135f2d725df0f2a56beda0f4cf62501112eef06b72f8684d983e112b0d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-util-code-language",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-util-code-language-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-util-code-language-0.2.1-rc.2.tgz",
+      "sha256": "d4f7b331eb282fde2cc224d0cc746d28cf50e12e5dd2bb8915eac880fcd2ddd9"
+    },
+    {
+      "name": "@deepseek-ai/dsh-util-crypto",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-util-crypto-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-util-crypto-0.2.1-rc.2.tgz",
+      "sha256": "72c64a765bb9fa5d111e40202e2a8772f88aed625e2017c07136a9f27b8421c8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-util-time",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-util-time-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-util-time-0.2.1-rc.2.tgz",
+      "sha256": "ba58f2fe5a79e29d621164e748a6b92d7a0a5e007f37eaa8cacaaee77e879e77"
+    },
+    {
+      "name": "@deepseek-ai/dsh-util-values",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-util-values-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-util-values-0.2.1-rc.2.tgz",
+      "sha256": "5f698657285508962fbd04308595255a50900d9a88c933c9833ca6ed10f0fba8"
+    },
+    {
+      "name": "@deepseek-ai/dsh-util-workspace-path",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-util-workspace-path-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-util-workspace-path-0.2.1-rc.2.tgz",
+      "sha256": "5243cc1af78cdd6c92f6cbfd5fba73b1ca0558051db1f7369b3458a60c489dfa"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-web-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-web-0.2.1-rc.2.tgz",
+      "sha256": "0140d2b07d3a7ad4685d628bbb36ee9b634863401b331cee15e986a5fd5690b0"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-app",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-web-app-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-web-app-0.2.1-rc.2.tgz",
+      "sha256": "febc62e4be10de205341e2174be50561e93dd427f7d80d142e723a35f9ac437a"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-deepseek-api",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-web-deepseek-api-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-web-deepseek-api-0.2.1-rc.2.tgz",
+      "sha256": "a49f165d3db1dbc1dff876e5662d366cfdc32f2dd51b36b74e8163bfde7a4bc9"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-fetch-http",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-web-fetch-http-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-web-fetch-http-0.2.1-rc.2.tgz",
+      "sha256": "656996d86667bac8e0e4cc20a59e9e699ea4770b37a7c0288f416bd915cc0d6d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-frontend",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-web-frontend-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-web-frontend-0.2.1-rc.2.tgz",
+      "sha256": "9767169d202685a5af2b90bf1b93d4121e8769f92e8fdc47c66b3b51f5c747a1"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-search-deepseek",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-web-search-deepseek-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-web-search-deepseek-0.2.1-rc.2.tgz",
+      "sha256": "efb6a0f2e66128b3fb77e5e0539c8ef0e7e8b52c45bc40412281e5fa5cc581cd"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-search-exa",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-web-search-exa-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-web-search-exa-0.2.1-rc.2.tgz",
+      "sha256": "1cabed7d88c21f5b8e0690767878ecab5cdb9f695fc2493b64cac618972ac7ba"
+    },
+    {
+      "name": "@deepseek-ai/dsh-web-search-perplexity",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-web-search-perplexity-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-web-search-perplexity-0.2.1-rc.2.tgz",
+      "sha256": "b35f268d923faf2826960bc3137eccb48925e4918a7d4c7c6f5ff3b22afa8d3b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-webhook",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-webhook-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-webhook-0.2.1-rc.2.tgz",
+      "sha256": "b05018c9c7343ede13583c5944aad488726c7b142b4ef6291ae1f66d4258e43b"
+    },
+    {
+      "name": "@deepseek-ai/dsh-webhook-github",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-webhook-github-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-webhook-github-0.2.1-rc.2.tgz",
+      "sha256": "7a20236471eab0f1c187fb9212819ac1c36d39db9260dba8b746691a7d5d91e4"
+    },
+    {
+      "name": "@deepseek-ai/dsh-win32-process",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-win32-process-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-win32-process-0.2.1-rc.2.tgz",
+      "sha256": "8b0458ab0da9b7523289e137a73d114a8231fc3fdfbab4f801971fa1d9267ea7"
+    },
+    {
+      "name": "@deepseek-ai/dsh-workflow",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-workflow-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-workflow-0.2.1-rc.2.tgz",
+      "sha256": "53c0e243b3afff6e105e3f51b692690ff16a0719d5aabf54cb2f61368e8df451"
+    },
+    {
+      "name": "@deepseek-ai/dsh-workflow-ptc",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-workflow-ptc-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-workflow-ptc-0.2.1-rc.2.tgz",
+      "sha256": "cba2e0ef0e96d4330cade282c77ac5dbaa511b22418099d1f5f7b4d6f738106c"
+    },
+    {
+      "name": "@deepseek-ai/dsh-working-directory",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-working-directory-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-working-directory-0.2.1-rc.2.tgz",
+      "sha256": "0509b5e0c5fa093500201f43e8a4f9967ad4f379117034c9b97f41a3e44ccb93"
+    },
+    {
+      "name": "@deepseek-ai/dsh-workspace",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-workspace-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-workspace-0.2.1-rc.2.tgz",
+      "sha256": "0ee2a5618c787af08e3e694ab7f5dc211a56e8319641659fcf59cfa0dd956df6"
+    },
+    {
+      "name": "@deepseek-ai/dsh-workspace-changes",
+      "version": "0.2.1-rc.2",
+      "file": "deepseek-ai-dsh-workspace-changes-0.2.1-rc.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-dsh-workspace-changes-0.2.1-rc.2.tgz",
+      "sha256": "5944e67bdec4e09b610d671315d8f965e4fef2c6fd9d81f3fc3ff37161d289eb"
+    },
+    {
+      "name": "@deepseek-ai/libreoffice-kit-wasm",
+      "version": "0.1.0",
+      "file": "libreoffice-kit-wasm-0.1.0.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260923-harness-rc1/artifacts/libreoffice-kit-wasm-0.1.0.tgz",
+      "sha256": "2f311cdb5826e4282de6e79938bf7e07de80aacfb7df9c7e4c2f4c7de7ac9157"
+    },
+    {
+      "name": "@deepseek-ai/node-addon-system",
+      "version": "0.1.2",
+      "file": "deepseek-ai-node-addon-system-0.1.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260911-080000-rc2-merged/artifacts/deepseek-ai-node-addon-system-0.1.2.tgz",
+      "sha256": "347a0bb0cb1ea1af6eb88f2b72eb3ee41cc7703093971e6b2a58fee19191c36e"
+    },
+    {
+      "name": "@deepseek-ai/schemastery",
+      "version": "3.18.5",
+      "file": "deepseek-ai-schemastery-3.18.5.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/deepseek-ai-schemastery-3.18.5.tgz",
+      "sha256": "18b39565d36a520ee5b6d3b89820aa0c3cb30e2e977d62c837439612ecf99882"
     },
     {
       "name": "@dsh-external/dsh-graded-mode",
@@ -25,10 +2510,10 @@
     },
     {
       "name": "@goodandready/dsh-subscriptions",
-      "version": "0.6.60-dsh.20261008.2",
-      "file": "goodandready-dsh-subscriptions-0.6.60-dsh.20261008.2.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/goodandready-dsh-subscriptions-0.6.60-dsh.20261008.2.tgz",
-      "sha256": "e36f9132eb8e618840315607b92fa554e9f04354efe3237da302bd53b6da01f0"
+      "version": "0.6.91-dsh.20261021.2",
+      "file": "goodandready-dsh-subscriptions-0.6.91-dsh.20261021.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/goodandready-dsh-subscriptions-0.6.91-dsh.20261021.2.tgz",
+      "sha256": "23a951c81e4915a9db2105bfe8f2580e43b324908a060c8d2e10e0011842a85f"
     },
     {
       "name": "@huanlin/dsh-plugin-better-sidebar-plugin-office",
@@ -36,6 +2521,13 @@
       "file": "huanlin-dsh-plugin-better-sidebar-plugin-office-0.2.0.tgz",
       "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260911-080000-rc2-merged/artifacts/huanlin-dsh-plugin-better-sidebar-plugin-office-0.2.0.tgz",
       "sha256": "9c768ddf730d9b55d64538b1126b0fd3a451bd40a445cfefbeb5f9690fbca261"
+    },
+    {
+      "name": "@linxin666/dsh-agents",
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-agents-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-agents-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "33e38ed1292e80f19e4821270a7a47038481cf99bb8ed78c437073c694a46432"
     },
     {
       "name": "@linxin666/dsh-client-ui-community-plugins",
@@ -46,17 +2538,17 @@
     },
     {
       "name": "@linxin666/dsh-client-ui-git-graph",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-client-ui-git-graph-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-client-ui-git-graph-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "94087016c6ffa89c2311eb72e0eb62e603a7af21951ab31c00fe46450bee2198"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-client-ui-git-graph-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-client-ui-git-graph-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "c952c3c502f0f2663bb5afcc7ac7603827f6cdf1436da54b99a5bb333366648b"
     },
     {
       "name": "@linxin666/dsh-client-ui-market",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-client-ui-market-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-client-ui-market-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "55e738cb342f0796460119dffa45131145641cf39475974c135fbd1e26e03921"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-client-ui-market-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-client-ui-market-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "3a45caac24aebf323a94e9c3c2d5c055bce27a4f67c4915d5bd5e7c029e426f9"
     },
     {
       "name": "@linxin666/dsh-client-ui-model-capabilities",
@@ -67,10 +2559,10 @@
     },
     {
       "name": "@linxin666/dsh-client-ui-plugin-manager",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-client-ui-plugin-manager-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-client-ui-plugin-manager-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "5bfdcf8aa8ccdf0c5a018aa3de2209112d99bc518d62140b8560af4802181764"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-client-ui-plugin-manager-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-client-ui-plugin-manager-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "82bf985ded4acbf7ce0e68fe93d1b34167d6d5918c10447b2ffbd40a390cf566"
     },
     {
       "name": "@linxin666/dsh-client-ui-preset-center",
@@ -81,17 +2573,17 @@
     },
     {
       "name": "@linxin666/dsh-client-ui-session-id",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-client-ui-session-id-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-client-ui-session-id-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "b9f343135aaa70df358ca5869afa6622ae040c3f96415dbdd0c441f23d3d32c7"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-client-ui-session-id-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-client-ui-session-id-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "38aefbfdda386ea44d711b0f76a34da04796456f470ba9df69fede69d566db44"
     },
     {
       "name": "@linxin666/dsh-client-ui-skill-explorer",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-client-ui-skill-explorer-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-client-ui-skill-explorer-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "14192222dcdee92aab41eb93b0da6ff35e27f48f02c452ad25dd2f258197db7c"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-client-ui-skill-explorer-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-client-ui-skill-explorer-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "51e0836e6800736dbe821e04e1272bde07357aa5c4de3d63df29d4420b7d64fd"
     },
     {
       "name": "@linxin666/dsh-client-ui-skin-center",
@@ -102,38 +2594,38 @@
     },
     {
       "name": "@linxin666/dsh-client-ui-task-board",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-client-ui-task-board-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-client-ui-task-board-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "7b1982738d9e3029fcd065b0876f4a7cc15d87fe062a5104520f5bb6e5caa801"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-client-ui-task-board-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-client-ui-task-board-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "3b872dcb3bb7bda85d82a402b1f61a5cf86900f0624271976bf37f03d4a25611"
     },
     {
       "name": "@linxin666/dsh-client-ui-task-board-github",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-client-ui-task-board-github-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-client-ui-task-board-github-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "551adc9b94b147eaba7ed39bf8611a558903df2c3ceb9d185ac4f91a90ce9873"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-client-ui-task-board-github-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-client-ui-task-board-github-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "bae7e6417378365b290f76f3f70486b937667fd345bb7e8ded1629b366206c18"
     },
     {
       "name": "@linxin666/dsh-client-ui-web-ui-settings",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-client-ui-web-ui-settings-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-client-ui-web-ui-settings-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "99dc9e61dabe3b743898bfc60ff57ab9d8413eb212868d2d4865da46cf80f37c"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-client-ui-web-ui-settings-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-client-ui-web-ui-settings-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "7daec17a6079a2f3d08769facaefea56aa715c5ba7a648c2fd1d228f1b3c47a1"
     },
     {
       "name": "@linxin666/dsh-i18n",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-i18n-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-i18n-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "f5e046e03dfb4fce55ce6fcb0496d146e8e1bcaa945e13d610854c102d207abf"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-i18n-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-i18n-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "5cd0f88460b2ae0eefeb31faa30c846a0049f03b264d048a2c2e31798d8d42b8"
     },
     {
       "name": "@linxin666/dsh-liangshen",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-liangshen-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-liangshen-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "aee5b59e78b2cff975dde1ee77f3c9db3ceef0610a975adbb964a451804106e9"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-liangshen-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-liangshen-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "54396116a83478293993041d020ac276d92990c88f233dc85a7b5404e9e88bff"
     },
     {
       "name": "@linxin666/dsh-pet",
@@ -143,46 +2635,67 @@
       "sha256": "c4a8f6e435cc1f367e31d9a96c518bee635e811ab54ffbe250b98e5297a608e6"
     },
     {
+      "name": "@linxin666/dsh-remote-bridge",
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-remote-bridge-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-remote-bridge-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "94a29a6e9435542394ba005484b7a6924535e8fbee0ca16a62fc5f4256e01790"
+    },
+    {
       "name": "@linxin666/dsh-remote-web-ui",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-remote-web-ui-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-remote-web-ui-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "e74177b8671fd7f0aef5252a32ff433c62c454cc898a8934fb68b4db607a335e"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-remote-web-ui-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-remote-web-ui-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "a7438a964b593d4cb4ec045fd357e22eed699011343532335e53402d6ae945a2"
     },
     {
       "name": "@linxin666/dsh-session-archive",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-session-archive-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-session-archive-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "ce0453bd26850533047915b0eb99a6e8a0d7f1722418eace7a6b322c4ccf0fee"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-session-archive-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-session-archive-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "6521edd504dd39f0d335c7b3a051d024f5137f8967d47afef9f6ee501f0b2195"
     },
     {
       "name": "@linxin666/dsh-ssh",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-ssh-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-ssh-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "c680a86d93e72f186eb8f8b841035d21d6cdf9915648281b8dc5ddfe254e7b82"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-ssh-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-ssh-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "cd690dc8ec72438b84bce060bc7e6dfa5f801b234d1c15aa990228e1bc0203b1"
+    },
+    {
+      "name": "@linxin666/dsh-task-board-remote",
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-task-board-remote-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-task-board-remote-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "4edaec49069dd6008487c04da90bd732abc57d71fbd347a6c006d2fcb10efd9e"
     },
     {
       "name": "@linxin666/dsh-update",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-update-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-update-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "60e25d72b2d0eda214e1dcf5dfd4db368ef663684d2b1947f517208f4cb7cc26"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-update-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-update-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "6868531cec2c3d364f3cfd9911e39ca9f9bae8448a60969bdeff16b31b0f0b1a"
     },
     {
       "name": "@linxin666/dsh-usage",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-usage-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-usage-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "3fa4108212a47476731dbf262f8a8b5c7eb90fd765b63168bc6572d3d7c97e7f"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-usage-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-usage-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "c736669a5594f4d99615af7448aae10929410673e854b2eb230ba3364debec79"
     },
     {
       "name": "@linxin666/dsh-web-all",
-      "version": "0.4.5-dsh.20261008.1",
-      "file": "linxin666-dsh-web-all-0.4.5-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/linxin666-dsh-web-all-0.4.5-dsh.20261008.1.tgz",
-      "sha256": "02c2c4c6bbfa98c3ef950fa01b4eb42dae5b7982784c5aab4810e8cf89ff8963"
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-web-all-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-web-all-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "34e824f79cd19074133cd98fe68f1c5cd9642cb300a54b80d83e579159e5a8c9"
+    },
+    {
+      "name": "@linxin666/dsh-win-bash",
+      "version": "0.4.8-dsh.20261021.3",
+      "file": "linxin666-dsh-win-bash-0.4.8-dsh.20261021.3.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/linxin666-dsh-win-bash-0.4.8-dsh.20261021.3.tgz",
+      "sha256": "f31921f9c01b9ec8680005a7edbe094f24d4923001703c5080b0fc635f82b5f8"
     },
     {
       "name": "@wxg-prc-cpg/dsh-weknora",
@@ -207,150 +2720,157 @@
     },
     {
       "name": "dsh-better-sidebar",
-      "version": "0.24.1-dsh.20261008.1",
-      "file": "dsh-better-sidebar-0.24.1-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-better-sidebar-0.24.1-dsh.20261008.1.tgz",
-      "sha256": "a334ebe16053fb97483371861140534f86baab1a44f68581c5a0d2d33b3571ef"
+      "version": "0.28.0-dsh.20261021.1",
+      "file": "dsh-better-sidebar-0.28.0-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-better-sidebar-0.28.0-dsh.20261021.1.tgz",
+      "sha256": "388a712f23449cec30e6bd665bd12d8325ebffdda5458848df50db1a40731fc3"
     },
     {
       "name": "dsh-context",
-      "version": "0.65.0-dsh.20261008.1",
-      "file": "dsh-context-0.65.0-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-context-0.65.0-dsh.20261008.1.tgz",
-      "sha256": "8ceddc6c0200b5d24d15f8d4804aec6d1d6aa50a856cad50b49268969befd66f"
+      "version": "0.73.3-dsh.20261021.4",
+      "file": "dsh-context-0.73.3-dsh.20261021.4.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-context-0.73.3-dsh.20261021.4.tgz",
+      "sha256": "5339a9254812ecc65b1f22773435c14b588004b9eccbde8076c11813d9349de8"
     },
     {
       "name": "dsh-mcp-panel",
-      "version": "0.6.22-dsh.20261007.1",
-      "file": "dsh-mcp-panel-0.6.22-dsh.20261007.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mcp-panel-0.6.22-dsh.20261007.1.tgz",
-      "sha256": "05291e4549e2d5aa5a067db017668b582bf8053c4cabc0a12f634bc1aa307ddb"
+      "version": "0.6.29-dsh.20261021.1",
+      "file": "dsh-mcp-panel-0.6.29-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mcp-panel-0.6.29-dsh.20261021.1.tgz",
+      "sha256": "077b4c07fb275aa1fbea237a0545817ad41c9f8f333126098f892d211a2d9517"
     },
     {
       "name": "dsh-mnemon",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "a2aa1eeaf515a846e0c10e9964453a1a49ba8dc54c1d0fc5f21f1f9789ad1251"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "cdbf6b8a2db7572d18cb6389b82ab0f934dcd8aea90886cd45b2bbc0d48f2ebe"
     },
     {
       "name": "dsh-mnemon-provider-byterover",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-provider-byterover-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-provider-byterover-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "d6dee7a6725fc5ea713c7047e79882946aba0156582c33166f99751fbb3e9330"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-provider-byterover-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-provider-byterover-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "74a525d7bb70d0f0b9ca665c34d701946f2082ca709e67435e916d38e4e19002"
     },
     {
       "name": "dsh-mnemon-provider-hindsight",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-provider-hindsight-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-provider-hindsight-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "1d8a7d99cfbdd5c50bbc9b245667e92a241fd48c429c33ba8c8f155c46a961b0"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-provider-hindsight-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-provider-hindsight-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "4af8cf6c47abe8fe39ac8173945378bc23856730efe65e4272fcdb0d62c825d4"
     },
     {
       "name": "dsh-mnemon-provider-holographic",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-provider-holographic-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-provider-holographic-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "3de80613e669f6f09e9b9de84ce85eb2ab9f943c6ee8e240906ed2c18804ff9a"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-provider-holographic-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-provider-holographic-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "e244cf036207ee26da3167c3a783b0e1dc92d91571ccf531423fd572a632c22a"
     },
     {
       "name": "dsh-mnemon-provider-honcho",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-provider-honcho-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-provider-honcho-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "5a7f3141a574e0ade27d8605dedb949dacce70f961ddd1ca56f2966d3c800de0"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-provider-honcho-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-provider-honcho-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "67a8ded64becc117ebc634c292e6eac92630d20daa9fd1ebf82c204090e6eee1"
     },
     {
       "name": "dsh-mnemon-provider-mem0",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-provider-mem0-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-provider-mem0-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "70b945ddf273c3e80b37aee13ac2634c84a4afb5e0631581be2d81a2fee5ac48"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-provider-mem0-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-provider-mem0-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "30ad5cd1bcb5bd43ea9d3e609a7b8900a85b114c4e79961a591c33bd05564c85"
     },
     {
       "name": "dsh-mnemon-provider-mnemon-native",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-provider-mnemon-native-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-provider-mnemon-native-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "630a287b0037f0f8d17cba110c0b1a330961f01525f5e6da5435c6d08b64323c"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-provider-mnemon-native-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-provider-mnemon-native-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "ecad21ee54c191386c33ca6ced769678843ca179040afc91e9ae50b292c1c344"
     },
     {
       "name": "dsh-mnemon-provider-openviking",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-provider-openviking-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-provider-openviking-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "77270ba9b345b71633e33ddc48a5772a944732334b3b7e0eb73ab42e2b2e62f2"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-provider-openviking-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-provider-openviking-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "4047812cf6e7da316a6d9530677e47fba707e086f6db4d6d2db40df17668fd78"
     },
     {
       "name": "dsh-mnemon-provider-retaindb",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-provider-retaindb-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-provider-retaindb-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "6c63d1e7b43f5bd2512772041c2d7cd95200096487525918fe96fa1e897d8954"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-provider-retaindb-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-provider-retaindb-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "e49323eaacd52640b423073b98f8c17f8e81f3ab17e5d824d5f9d7aaf3910367"
     },
     {
       "name": "dsh-mnemon-provider-supermemory",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-provider-supermemory-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-provider-supermemory-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "030104694c6c97864c297fd7b43606e7fb1fdcd824390aff40c927bf790cc05a"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-provider-supermemory-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-provider-supermemory-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "e1fa2e5df5601ba95fa786922e8443b12a5595e68ad4750bc1fe21b9d53dc81a"
     },
     {
       "name": "dsh-mnemon-source-documents",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-source-documents-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-source-documents-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "f1e69442f61ce8f14d0f95fc4151aee5fb68d6cdf50a041afdb925b86f2bb72c"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-source-documents-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-source-documents-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "a3a9e6207a9dc41a11b64f784613bf3ab4c822072921b0b5326b77c05c97d255"
     },
     {
       "name": "dsh-mnemon-source-memory-spaces",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-source-memory-spaces-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-source-memory-spaces-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "763619d7bcd1fcff513b8c51cf556830e9af1f6f832b81003e22648272e6a9cd"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-source-memory-spaces-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-source-memory-spaces-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "d2102289ce8cc64ceb97964cdc93130f4cd48e9e4526641b6a860b13ec9b8300"
     },
     {
       "name": "dsh-mnemon-source-runtime",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-source-runtime-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-source-runtime-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "dd502a7f8223b1fb7416df3acf783972adf81b6123e95ed25c99fe16ad43a988"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-source-runtime-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-source-runtime-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "c26d9c5e00a8bdc1a865cf4e6a72fe70892d27c443abf36268b7d2b83fee11ff"
+    },
+    {
+      "name": "dsh-mnemon-source-skills",
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-source-skills-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-source-skills-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "5962c05ecd7b158116abfd95372a604c535fcb66c8072fdf4abd210ea8b51158"
     },
     {
       "name": "dsh-mnemon-strategy-auto-capture",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-strategy-auto-capture-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-strategy-auto-capture-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "8d7b7a7080ca45ff78c95057fd9fd79ed7b1ca4fb92ec96b45c0cede083e5713"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-strategy-auto-capture-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-strategy-auto-capture-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "44ee601558064add454f9d48ac846b5fdd186a87b2d454ea2ff45ab49fa508db"
     },
     {
       "name": "dsh-mnemon-strategy-default-three-tier",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-strategy-default-three-tier-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-strategy-default-three-tier-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "00cd3e90a902037ec916a712b4005c685f25f44e19fdbd4f1a8f8a33080bc1cb"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-strategy-default-three-tier-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-strategy-default-three-tier-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "70174c4dc132e653fd10dc94e9fda6d80cccb20dac020842ace3f9f555dd8870"
     },
     {
       "name": "dsh-mnemon-strategy-general",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-strategy-general-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-strategy-general-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "a97745b6662c4b129fa92be6d56e5892433efaecb8d335c90c290ea0dbeb0ba2"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-strategy-general-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-strategy-general-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "d700a7d6c134bfe1d46319c486db5625024fe865d042ac3fe1b09ebc83006236"
     },
     {
       "name": "dsh-mnemon-strategy-light-context",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-strategy-light-context-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-strategy-light-context-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "0970ccff266699bee410cbdd13c2a457cea59f810b24e63156417074da4469d9"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-strategy-light-context-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-strategy-light-context-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "6c1cd5ba488f97ddc1e279c32f78a4ceb178f49312a327e055e8411211d514a9"
     },
     {
       "name": "dsh-mnemon-strategy-scoped",
-      "version": "0.5.24-dsh.20261008.1",
-      "file": "dsh-mnemon-strategy-scoped-0.5.24-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-mnemon-strategy-scoped-0.5.24-dsh.20261008.1.tgz",
-      "sha256": "4c0f725dd106ac60fe2d216a7f3e09af930093e3980261a4d4f524226ebe329a"
+      "version": "0.5.34-dsh.20261021.1",
+      "file": "dsh-mnemon-strategy-scoped-0.5.34-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-mnemon-strategy-scoped-0.5.34-dsh.20261021.1.tgz",
+      "sha256": "34b4f955383f18b77af5971c638b79f2bdf4ee56a5fbab2e25961c32a83ea653"
     },
     {
       "name": "dsh-nas-webdav",
@@ -361,10 +2881,10 @@
     },
     {
       "name": "dsh-passwords",
-      "version": "2.7.7-dsh.20261008.1",
-      "file": "dsh-passwords-2.7.7-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-passwords-2.7.7-dsh.20261008.1.tgz",
-      "sha256": "2c5c10f8a97a5728699f9d1995b1b79cd64f0adc405d25f485b1b8f51abd92ff"
+      "version": "2.7.8-dsh.20261021.4",
+      "file": "dsh-passwords-2.7.8-dsh.20261021.4.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-passwords-2.7.8-dsh.20261021.4.tgz",
+      "sha256": "cf67e5a6abfc575e38ab7b606b786d88a7938ad372b8c465065d93cb5220a17b"
     },
     {
       "name": "dsh-plugin-mobile-gateway",
@@ -375,10 +2895,10 @@
     },
     {
       "name": "dsh-plugin-subscriptions",
-      "version": "0.9.8-dsh.20261008.1",
-      "file": "dsh-plugin-subscriptions-0.9.8-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-plugin-subscriptions-0.9.8-dsh.20261008.1.tgz",
-      "sha256": "b6773ef5d2b9fab767decbd01ac23564ef51efc3e6bdae392c6d6fe5cbb2bf23"
+      "version": "0.9.10-dsh.20261021.1",
+      "file": "dsh-plugin-subscriptions-0.9.10-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-plugin-subscriptions-0.9.10-dsh.20261021.1.tgz",
+      "sha256": "3c293fc1ca3ab8205248b9faf84c4c7607027a29366daf70cbd96d6c8214af3d"
     },
     {
       "name": "dsh-shandong-tizhi-brand",
@@ -389,10 +2909,10 @@
     },
     {
       "name": "dsh-sidebar-vscode",
-      "version": "0.3.3-dsh.20260928.1",
-      "file": "dsh-sidebar-vscode-0.3.3-dsh.20260928.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20260928-fork-audit-1057/artifacts/dsh-sidebar-vscode-0.3.3-dsh.20260928.1.tgz",
-      "sha256": "c3092de256bf80178bd5236d20a009ab332bd9f7ce5a80bea7d25a57f1104a05"
+      "version": "0.3.3-dsh.20261021.1",
+      "file": "dsh-sidebar-vscode-0.3.3-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-sidebar-vscode-0.3.3-dsh.20261021.1.tgz",
+      "sha256": "cee8d9f0266c6271fdc2504be974b58f6a630908df926c515963523968bfb855"
     },
     {
       "name": "dsh-spend",
@@ -403,31 +2923,10 @@
     },
     {
       "name": "dsh-web-tools",
-      "version": "0.4.0-dev.7-dsh.20261008.1",
-      "file": "dsh-web-tools-0.4.0-dev.7-dsh.20261008.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261006-fork-audit-1825-r3/artifacts/dsh-web-tools-0.4.0-dev.7-dsh.20261008.1.tgz",
-      "sha256": "6cc08ee9ebcf9a6542c754bcad6c810c72a59b4b3dce96276e446b630577bf0d"
+      "version": "0.4.0-dev.7-dsh.20261021.1",
+      "file": "dsh-web-tools-0.4.0-dev.7-dsh.20261021.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-web-tools-0.4.0-dev.7-dsh.20261021.1.tgz",
+      "sha256": "eee87e4d86a25ad5f610df9d7215d68b5f3788000a670d693083331e864a3a8c"
     }
-  ],
-  "requiredConfig": {
-    "llm-subscriptions": {
-      "fastTier": false
-    }
-  },
-  "preservePackages": [],
-  "handoff": "20260910-plugin-pinning-handoff.md",
-  "release": "20261006-fork-audit-1825-r3",
-  "status": "deployed-verified",
-  "requiredEntries": [
-    {
-      "id": "mnemon-strategy-scoped",
-      "disabled": false
-    }
-  ],
-  "requiredFilesystemChecks": {
-    "serviceUser": "tzwl3",
-    "writableLinkParents": ".dsh-module-fallback/**",
-    "privateCredentials": "/home/tzwl3/.dsh/dsh-passwords.env: owner tzwl3, mode 0600"
-  },
-  "verifiedAt": "2026-10-09T00:40:48.616883+00:00"
+  ]
 }
