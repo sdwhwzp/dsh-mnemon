@@ -2874,10 +2874,10 @@
     },
     {
       "name": "dsh-better-sidebar",
-      "version": "0.28.0-dsh.20261021.1",
-      "file": "dsh-better-sidebar-0.28.0-dsh.20261021.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261021-fork-audit-0816-r7/artifacts/dsh-better-sidebar-0.28.0-dsh.20261021.1.tgz",
-      "sha256": "388a712f23449cec30e6bd665bd12d8325ebffdda5458848df50db1a40731fc3"
+      "version": "0.28.0-dsh.20261025.2",
+      "file": "dsh-better-sidebar-0.28.0-dsh.20261025.2.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261025-pdf-download-r2/artifacts/dsh-better-sidebar-0.28.0-dsh.20261025.2.tgz",
+      "sha256": "076d4efb02b4ea1a8f52583ee0a01f218fc8eee23d4d4bf85b2ad3f62d4f574b"
     },
     {
       "name": "dsh-context",
