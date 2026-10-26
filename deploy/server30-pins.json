@@ -3035,10 +3035,10 @@
     },
     {
       "name": "dsh-passwords",
-      "version": "2.7.8-dsh.20261025.1",
-      "file": "dsh-passwords-2.7.8-dsh.20261025.1.tgz",
-      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261025-fork-audit-0308/artifacts/dsh-passwords-2.7.8-dsh.20261025.1.tgz",
-      "sha256": "7e82cd97420d778c5b4a9511dbe2ea20dff5a60d309fbaf360e9bbb25f94bbe9"
+      "version": "2.7.8-dsh.20261026.1",
+      "file": "dsh-passwords-2.7.8-dsh.20261026.1.tgz",
+      "artifactPath": "/home/tzwl3/apps/dsh-plugins/releases/20261026-lhd-workspace-git-403/artifacts/dsh-passwords-2.7.8-dsh.20261026.1.tgz",
+      "sha256": "b802379ff61adea5a7ba8074ba8fa4fddc3e93aa264465f9112bb3e2bb3b98af"
     },
     {
       "name": "dsh-plugin-mobile-gateway",
