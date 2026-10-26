@@ -60,6 +60,7 @@ mnemon:
     highScoreThreshold: 0.6
     candidateMultiplier: 3
     maxMediumResults: 4
+    maxRankedResults: 4
     maxUnknownResults: 2
   routingGuidance: true
   lifecycleEnabled: true
@@ -111,7 +112,8 @@ mnemon:
 | `recallQuality.highScoreThreshold` | `0.6` | 0–1，高于低分阈值 | 保留结果达到此边界时标记为高相关度 |
 | `recallQuality.candidateMultiplier` | `3` | 1–5 | 在过滤前扩大各 Provider 候选请求，最多不超过服务的 50 条上限 |
 | `recallQuality.maxMediumResults` | `4` | 0–50 | `strict-v1` 在全部高相关度结果之后最多接纳的中相关度条数 |
-| `recallQuality.maxUnknownResults` | `2` | 0–50 | `strict-v1` 在有分数证据之后最多接纳的无 score 或未知量纲条数 |
+| `recallQuality.maxRankedResults` | `4` | 0–50 | `strict-v1` 最多接纳的 Provider 排名结果数；不表示标准化置信度，与中相关度结果按排名交错选择 |
+| `recallQuality.maxUnknownResults` | `2` | 0–50 | `strict-v1` 在有分数证据之后最多接纳的无 score 或未声明量纲条数 |
 | `routingGuidance` | `true` | boolean | 是否注册额外的分层路由 system section |
 | `lifecycleEnabled` | `true` | boolean | 是否启用 pre-step cue 和评分空闲审查 |
 | `recallMode` | `guided` | `guided` / `off` | 是否在每个会话注入一次可持续复用的按需 recall cue；不移除显式召回 |
@@ -153,6 +155,8 @@ mnemon:
 默认值保持已发布版本的 10240 / 4096 / 8192 行为。保存后会构建新的运行图，后续 Runtime 读取、写入、容量维护与 Mnemon Pack 校验统一使用这组上限。已有条目与 `memories.json` 格式不变。若把字节上限降低到当前用量以下，不会删除数据；Runtime 视图会显示超容状态，后续写入需要先压缩或重新提高上限。回滚只需删除该配置块或恢复默认值。
 
 存储字节上限计算条目正文和分隔符。模型快照中的重要性与时间跨度注释不占用存储容量，但会占用 Strategy 已有的投影字符预算；它们不增加排序、相关性过滤或独立配置。
+
+自动 Runtime Action（包括空闲复盘）只能保留或提高已有条目的重要度，不能降低；容量规划与压缩提交也遵循同一规则。替换回执会说明是否保留了原重要度。用户仍可在运行时记忆页面显式降低重要度，已有条目不会被自动重新分类。
 
 运行时记忆页面显示每个文件的已用大小与上限。
 
@@ -198,7 +202,11 @@ WebUI 从实时管理目录读取 Source 实例，新增 Source 无须修改前�
 
 ### 召回质量策略
 
-`strict-v1` 是面向 Agent 的安全默认值：仅对明确声明为 0–1 标准化相关度的 Provider，在正文进入 Agent 前移除非正分和低于阈值的结果；随后在请求上限内保留全部高相关度结果，默认最多保留 4 条中相关度结果和 2 条无 score 或未知量纲结果，不再用较弱证据补满 limit。`balanced-v1` 把低分结果放在主要证据之后，`exhaustive-v1` 为直接检查保留有限分数结果。超出声明范围的分数按未知量纲处理，不伪造成置信度。跨 Provider 排序继续使用倒数排名融合。
+`strict-v1` 的 0–1 阈值只适用于明确声明为标准化 `normalized-relevance` 相关度的 Provider。它移除非正分与低于阈值的标准化结果，优先保留高相关度结果，再按已有的融合排名交错接纳中相关度和 `ranked` 结果，分别受配额限制（默认各 4 条）；最后最多接纳 2 条无分数或未声明量纲的结果。请求的总条数上限始终有效，不用弱证据补满。`balanced-v1` 把低分结果放在主要证据之后，`exhaustive-v1` 为检查保留有限数值的结果。
+
+Hindsight 的加权最终排名分和 OpenViking 的原始相似度使用 `provider-native` 语义。有限分数按 Provider 返回顺序进入有配额的 `ranked` 档，即使大于 1 也不再降为 unknown，且不会生成 `normalizedScore`。此档只提供有序候选，不保证置信度。全局相关度阈值不能校准这些量纲；可调整 `maxRankedResults` 控制接纳量，设为 0 会关闭此档。跨 Provider 只融合排名，不比较原始分数大小；不通过钳制或每次查询的 min/max 转换把无关候选变成高相关度。
+
+声明标准化分数却返回大于 1 的 Provider 同样进入 `ranked`，原因记为 `out-of-range-score`，并通过 `source.quality.outOfRange` 诊断。`source.quality.ranked` 统计排名候选，`unscaled` 单独统计未声明量纲，`unscored` 统计缺失分数；非有限分数会被拒绝。Source 与相关 Provider 应一起升级：旧 Source 会安全地把新的 native 声明当作未知量纲，但仍沿用旧接纳上限。不修改已存记忆或凭据。
 
 这些是 Memory Spaces Source 自己维护的纯函数召回质量策略，配置只能选择已随该 Source 提供的策略 ID。内部注册函数不是公开插件 API；自定义检索实现应通过 Source/Provider 的公开契约接入。非法候选上限、决策或选择会回退到 `strict-v1`；配置未知 ID 会拒绝候选运行图。过滤计数通过结构化的 `source.quality` 返回，不会拼接进 Agent hint。
 
@@ -314,7 +322,7 @@ Memory Space 目录建立后，长期语义操作使用明确的记忆空间 ID�
 
 ## 后台任务 Agent 的模型路由
 
-整理名称与说明、Agent 查询、记忆系统与对话中的存入记忆和档案归档会创建一个无会话历史的独立顶层任务 Agent。它使用当前查看工作区作为 cwd；即使没有选中主 Agent session，也能落到左上角选定工作区。任务完成后 Agent 会被释放。DSH 保存它的会话时带着 DSH 给自身子代理的来源标记，侧栏和 ACP 会话列表都不会把它当作对话列出（[#435](https://github.com/omdsh-dev/dsh-mnemon/issues/435)）。
+整理名称与说明、Agent 查询、记忆系统与对话中的存入记忆和档案归档会创建一个不继承主对话历史的独立顶层任务 Agent。它使用当前查看工作区作为 cwd；即使没有选中主 Agent session，也能落到左上角选定工作区。任务完成后释放的是 Agent 实例，DSH 已保存的本地会话记录会保留；Mnemon 不自动删除这些记录。DSH 保存它的会话时带着 DSH 给自身子代理的来源标记，侧栏和 ACP 会话列表都不会把它当作对话列出（[#435](https://github.com/omdsh-dev/dsh-mnemon/issues/435)）。
 
 “分层策略”页面的“后台任务 → 任务 Agent 模型”为这些任务 Agent 与空闲审查 worker 提供三个选项：
 
@@ -340,7 +348,7 @@ DSH 的实时模型目录会报告各模型的输入模态，选择器为支持�
 
 | 键 | 默认值 | 范围 | 含义 |
 |---|---:|---|---|
-| `skills.evolution` | `false` | boolean | **自进化**：对话结束后在后台复盘，提出新建或改进技能的建议 |
+| `skills.evolution` | `false` | boolean | **自进化**：后台复盘并建议改进技能；会创建落盘的任务及子代理会话，Mnemon 不自动删除这些记录 |
 | `skills.autoBacktest` | `true` | boolean | **草案自动回测**：草案写好后用测试用例与当前版本对比 |
 | `skills.hints` | `true` | boolean | **对话提示**：在每个回合下方显示**本回合技能** |
 | `skills.sidebar` | `false` | boolean | **侧边栏入口**：技能管理单独显示在侧边栏，不再放在记忆系统里 |

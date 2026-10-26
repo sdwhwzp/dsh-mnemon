@@ -31,6 +31,23 @@ Following the DSH service/Slot pattern, the public extension point is a small co
 
 The engine, installed records, registry, generations and leases stay internal. Neither `extension-sdk`, `contracts` nor the Core plugin exports them. `MemorySourceRuntime` is intentionally public: it describes the callbacks **your Source implements**, not an engine handle. Definitions/factories are Host-side executable contracts; metadata, operation inputs and results are JSON-safe. This service boundary is not a sandbox for arbitrary JavaScript.
 
+## Workspace identity helpers
+
+Host-side tools can import `canonicalWorkspacePath` and `workspaceStorageId` from `dsh-mnemon/extension-sdk`. These are the same synchronous functions used by the built-in Host, not browser APIs:
+
+```ts
+import { resolve } from 'node:path'
+import { canonicalWorkspacePath, workspaceStorageId } from 'dsh-mnemon/extension-sdk'
+
+const workspace = resolve(process.argv[2] ?? '.')
+const canonical = canonicalWorkspacePath(workspace)
+const id = workspaceStorageId(workspace)
+```
+
+Both require an absolute path without NUL characters. Canonicalization resolves existing symlinks/junctions and retains not-yet-created descendants under their nearest existing ancestor. Filesystem errors other than a missing path propagate; a file cannot be an ancestor of a missing descendant. An existing file path retains its existing identity, so these helpers are not directory validators.
+
+`workspaceStorageId` returns the lowercase SHA-256 hex digest of the canonical path. In the built-in `storageScope: "workspaces"` layout it identifies the directory under `<central root>/workspaces/`. It depends on this machine's resolved path, not a portable project ID: moving a workspace can select a different ID. Neither helper creates, migrates or deletes files, discovers the configured storage root, or grants access to another Source. Per-component storage scope and migration remain separate features.
+
 ## Source lifecycle
 
 Define a `MemorySourceDefinition` with `defineMemorySource`. Its manifest declares API version, type id, package name, role, consistency and supported routes/actions. Its factory receives stable instance provenance and immutable configuration.
@@ -208,6 +225,8 @@ Use `mountMemorySpaceProvider` from the Source's `/testing` entry to test real c
 The Source itself authors the Provider Fibers. Core supplies no Provider factory registry and no second Context service. Each module owns truthful capabilities: a query-only backend must not fabricate browse results or graph edges.
 
 A Provider that declares `entities` feeds the Entities page. By default the Source builds each space's entity index from `list()`: return every memory up to the requested limit with its `entities`, and an entity's count is then the number of listed memories that carry it, the same memories the page lists. A Provider whose `list()` stops short of the whole space, such as at a service page size, or that cannot list, implements the optional `entityIndex(body, signal)` and returns `{ memories, complete }`: the memories that carry entities, and whether that is all of them. The page marks an incomplete index as partial. An entity Provider with neither listing nor `entityIndex` is shown as query-only; its memories reach the page only as related memories found by recall. The Source keeps one index per space while the space's `status()` statistics stay the same, so return statistics that change with every write.
+
+Declare calibrated 0–1 relevance as `normalized-relevance` in both the manifest and adapter. If scores only rank results within a Provider, declare `provider-native` in the manifest and `scoreSemantics: { kind: 'provider-native' }` in the adapter, returning candidates in their intended rank order. The Source admits a bounded `ranked` tier without inventing normalized confidence; missing semantics remain `unknown`. See [recall quality policies](../reference/configuration.md#recall-quality-policies).
 
 A Provider can also implement the optional `get(body, id, signal)`: the memory the space holds under that exact id, or `undefined` when it holds none, read without side effects. Forget, link and related-memory traversal then accept an id that the current View did not return, such as a memory the Agent wrote a moment ago or one named in a delegated request: the Source looks the id up in the spaces the View can read and acts only when exactly one holds it. Without `get`, such an id stays unusable until the View returns it as evidence, even with its space named: the Provider's own forget or link might not be bound to that space.
 

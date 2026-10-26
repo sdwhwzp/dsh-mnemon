@@ -11,7 +11,7 @@ import type {
   RememberRequest,
   SearchRequest,
 } from 'dsh-mnemon-source-memory-spaces/provider-sdk'
-import { CATEGORIES, NORMALIZED_RELEVANCE_SCORE, type MemoryProviderAdapter, type ProviderBodyStatus as ProviderSpaceStatus, type ProviderMemorySpace, type ProviderSearchResult } from 'dsh-mnemon-source-memory-spaces/provider-sdk'
+import { CATEGORIES, type MemoryProviderAdapter, type ProviderBodyStatus as ProviderSpaceStatus, type ProviderMemorySpace, type ProviderSearchResult } from 'dsh-mnemon-source-memory-spaces/provider-sdk'
 
 interface OpenVikingEnvelope {
   status?: string
@@ -129,7 +129,7 @@ function refused(error: unknown): boolean {
 
 export class OpenVikingProvider implements MemoryProviderAdapter {
   readonly id = 'openviking' as const
-  readonly scoreSemantics = NORMALIZED_RELEVANCE_SCORE
+  readonly scoreSemantics = Object.freeze({ kind: 'provider-native' as const })
   private readonly requestFetch: typeof fetch
   private readonly requestTimeoutMs: number
 
@@ -192,10 +192,23 @@ export class OpenVikingProvider implements MemoryProviderAdapter {
   }
 
   async search(body: MemorySpace, request: SearchRequest, signal?: AbortSignal): Promise<ProviderSearchResult> {
+    const keyword = request.mode === 'keyword'
+    signal?.throwIfAborted()
+    if (keyword && request.query.trim() === '') return { results: [] }
+    // Match the Source's 1..50 search budget, including for direct adapter callers.
+    const limit = keyword
+      ? Math.min(50, Math.max(1, Math.floor(number(request.limit) ?? 10)))
+      : request.limit
     const memoryRoot = await this.memoryRoot(body, signal)
-    const result = await this.request(body, '/api/v1/search/find', {
+    const result = await this.request(body, keyword ? '/api/v1/search/grep' : '/api/v1/search/find', {
       method: 'POST',
-      body: JSON.stringify({
+      body: JSON.stringify(keyword ? {
+        uri: memoryRoot,
+        // The public keyword mode accepts literal text, not caller-supplied regex.
+        pattern: request.query.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'),
+        case_insensitive: true,
+        node_limit: limit,
+      } : {
         query: request.query,
         target_uri: memoryRoot,
         context_type: ['memory'],
@@ -203,12 +216,17 @@ export class OpenVikingProvider implements MemoryProviderAdapter {
       }),
     }, { signal })
     const root = object(result)
-    const entries = Array.isArray(root?.memories) ? root.memories : []
+    if (keyword && !Array.isArray(root?.matches)) throw new Error('OpenViking keyword search did not return matches')
+    const values = keyword ? root?.matches : root?.memories
+    const entries = Array.isArray(values) ? values : []
+    const seen = new Set<string>()
     const matches = entries.flatMap((value): Insight[] => {
         const item = object(value)
         const uri = string(item?.uri)
         if (uri === undefined || !isMemoryFile(uri, memoryRoot)) return []
-        const score = number(item?.score)
+        if (keyword && seen.has(uri)) return []
+        seen.add(uri)
+        const score = keyword ? undefined : number(item?.score)
         return [{
           id: uri,
           externalUri: uri,
@@ -217,11 +235,11 @@ export class OpenVikingProvider implements MemoryProviderAdapter {
           source: 'external',
           ...(score === undefined ? {} : { score }),
         }]
-      }).slice(0, request.limit)
+      }).slice(0, limit)
     const { read, skipped } = await this.readAll(body, matches, signal)
     return {
       results: read,
-      ...(skipped === 0 ? {} : { hint: `${skipped} OpenViking ${skipped === 1 ? 'result' : 'results'} could not be read and ${skipped === 1 ? 'was' : 'were'} left out; the server's index can list a file it no longer holds.` }),
+      ...(skipped === 0 ? {} : { hint: `${skipped} OpenViking ${skipped === 1 ? 'result' : 'results'} could not be read and ${skipped === 1 ? 'was' : 'were'} left out; the server can list a file it no longer holds.` }),
     }
   }
 
@@ -288,15 +306,18 @@ export class OpenVikingProvider implements MemoryProviderAdapter {
     try {
       written = object(await this.request(body, '/api/v1/content/write', {
         method: 'POST',
-        // WriteContentRequest takes these fields alone and refuses any other with HTTP 400 (OpenViking 0.4.16, #353).
-        body: JSON.stringify({ uri, content: request.content, mode: 'create', wait: true, timeout: this.requestTimeoutMs / 1000 }),
+        // OpenViking 0.5.1 removed the server-side timeout field. Keep the common
+        // 0.4/0.5 request shape and bound the request with our HTTP deadline.
+        body: JSON.stringify({ uri, content: request.content, mode: 'create', wait: true }),
       }, { signal }))
     } catch (error) {
       if (refused(error)) throw new Error(`OpenViking refused the write at ${uri}; nothing was stored. ${error instanceof Error ? error.message : String(error)}`, { cause: error })
       throw new Error(`OpenViking write was not verified at ${uri}; remote content may remain. Inspect this URI before retrying. ${error instanceof Error ? error.message : String(error)}`, { cause: error })
     }
     try {
-      if (written?.uri !== uri || written.content_updated !== true || written.written_bytes !== writtenBytes
+      // Newer servers count their reserved metadata trailer too. Reject short
+      // writes here; the public readback below must still match the exact text.
+      if (written?.uri !== uri || written.content_updated !== true || (number(written.written_bytes) ?? -1) < writtenBytes
         || written.mode !== 'create' || written.context_type !== 'memory'
         || written.vector_status !== 'complete' || !['complete', 'skipped'].includes(String(written.semantic_status))
         || queueFailed(written.queue_status)) {

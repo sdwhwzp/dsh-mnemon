@@ -2,7 +2,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryCompositionRunner } from 'dsh-mnemon/testing'
 import { strategy } from './fixture.ts'
@@ -24,7 +24,7 @@ import { installSkillsMemoryUI, SkillsSourcePage } from '../src/client.ts'
 import { draftWithSkill, installSkillUseBridge, SKILL_USE_SLOT, SkillUseBridge } from '../src/client/use-skill.tsx'
 import { translate } from '../src/client/presentation.ts'
 import { compareRuns } from '../src/client/evolution-page.tsx'
-import type { BacktestRun, CaseResult, ReviewRecordInput } from '../src/contracts.ts'
+import type { BacktestRun, CaseResult, EvalCase, ReviewRecordInput, SkillSummary, TrashEntry } from '../src/contracts.ts'
 
 const t = translate('en')
 /** An accessible name made of these parts in order, however its markup spaces them. */
@@ -74,15 +74,75 @@ beforeEach(async () => {
 
 afterEach(async () => {
   cleanup()
+  vi.restoreAllMocks()
   await runner.dispose()
   rmSync(directory, { recursive: true, force: true })
 })
 
-function page(navigationInput?: { seed: string; nonce: number }) {
+function page(navigationInput: { seed: string; nonce: number } = { seed: 'skill:user-dsh:release-notes', nonce: 1 }) {
   return render(<SkillsSourcePage sourceTypeId="skills" sourceInstanceKey="source:skills" sourceInstances={[]} locale="en" writable management={management} {...(navigationInput === undefined ? {} : { navigationInput })} />)
 }
 
 describe('Skills page', () => {
+  it('restores a removed skill from the Trash and refreshes its count', async () => {
+    const skill = (await management.read('skill', { key: 'user-dsh:release-notes' })).value as unknown as SkillSummary
+    await mutate('skill-delete', { key: skill.key, expectedHash: skill.hash })
+    page()
+    fireEvent.click(await screen.findByRole('tab', { name: /^Trash/u }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore' }))
+    await screen.findByText('The Trash is empty')
+    expect(readFileSync(skillPath(), 'utf8')).toBe(SKILL)
+    expect((await management.read('trash-list', null)).value).toEqual([])
+  })
+
+  it('asks where to restore a legacy entry and does not choose a user root silently', async () => {
+    const trash = join(directory, 'data', 'skills', 'trash')
+    mkdirSync(trash, { recursive: true })
+    writeFileSync(join(trash, '2026-10-20T09-30-00-000Z-legacy.md'), SKILL.replaceAll('release-notes', 'legacy'))
+    page()
+    fireEvent.click(await screen.findByRole('tab', { name: /^Trash/u }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Restore legacy' })
+    expect((within(dialog).getByRole('button', { name: 'Restore' }) as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.click(within(dialog).getByRole('button', { name: /Location.*Choose a restore location/u }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'User · .agents' }))
+    await waitFor(() => expect((within(dialog).getByRole('button', { name: 'Restore' }) as HTMLButtonElement).disabled).toBe(false))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Restore' }))
+    await screen.findByText('The Trash is empty')
+    expect(readFileSync(join(directory, 'agents', 'skills', 'legacy.md'), 'utf8')).toContain('name: legacy')
+  })
+
+  it('requires an explicit replacement choice and keeps the displaced skill recoverable', async () => {
+    const skill = (await management.read('skill', { key: 'user-dsh:release-notes' })).value as unknown as SkillSummary
+    await mutate('skill-delete', { key: skill.key, expectedHash: skill.hash })
+    await mutate('skill-create', { name: 'release-notes', description: 'New version.' })
+    page()
+    fireEvent.click(await screen.findByRole('tab', { name: /^Trash/u }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Restore release-notes' })
+    expect((within(dialog).getByRole('button', { name: 'Restore' }) as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.click(await within(dialog).findByRole('checkbox'))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Restore' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(readFileSync(skillPath(), 'utf8')).toBe(SKILL)
+    expect((await management.read('trash-list', null)).value as unknown as TrashEntry[]).toHaveLength(1)
+  })
+
+  it('requires the skill name before permanent deletion and rejects unconfirmed RPC mutations', async () => {
+    const skill = (await management.read('skill', { key: 'user-dsh:release-notes' })).value as unknown as SkillSummary
+    await mutate('skill-delete', { key: skill.key, expectedHash: skill.hash })
+    const entries = (await management.read('trash-list', null)).value as unknown as TrashEntry[]
+    await expect(management.mutate('trash-purge', { id: entries[0]!.id }, { confirmed: false } as never)).rejects.toThrow(/confirm/iu)
+    page()
+    fireEvent.click(await screen.findByRole('tab', { name: /^Trash/u }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete for good' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Delete release-notes for good?' })
+    expect((within(dialog).getByRole('button', { name: 'Delete for good' }) as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.change(within(dialog).getByRole('textbox'), { target: { value: 'release-notes' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete for good' }))
+    await screen.findByText('The Trash is empty')
+  })
+
   it('offers to turn self-evolution on where it is off, and opens its settings', async () => {
     const replace = vi.fn(async () => undefined)
     const onOpenSettings = vi.fn()
@@ -116,6 +176,40 @@ describe('Skills page', () => {
     fireEvent.click(await screen.findByRole('button', { name: named(t('versions.title'), '3') }))
     expect(await screen.findByText(t('versions.reason.invocation'))).not.toBeNull()
     expect(screen.getByText(t('versions.reason.original'))).not.toBeNull()
+  })
+
+  it('refreshes stale cards once more when the overview finishes, and again on focus (#448)', async () => {
+    await mutate('review-record', review())
+    const [suggestion] = (await management.read('suggestions', null)).value as Array<{ id: string }>
+    await mutate('suggestion-status', { id: suggestion!.id, status: 'drafting' })
+    const oldList = await management.read('suggestions', null)
+    const oldDetail = await management.read('suggestion', { id: suggestion!.id })
+    const stale = new Set<string>()
+    const watched = new Proxy(management, {
+      get: (target, key, receiver) => key === 'read'
+        ? (operation: string, input: unknown) => {
+            if (stale.delete(operation)) return Promise.resolve(operation === 'suggestions' ? oldList : oldDetail)
+            return target.read(operation as never, input as never)
+          }
+        : Reflect.get(target, key, receiver),
+    })
+    const intervals = vi.spyOn(globalThis, 'setInterval')
+    const { unmount } = render(<SkillsSourcePage sourceTypeId="skills" sourceInstanceKey="source:skills" sourceInstances={[]} locale="en" writable management={watched} navigationInput={{ seed: `suggestion:${suggestion!.id}`, nonce: 1 }} />)
+    await screen.findByText(t('evolution.drafting'))
+    await waitFor(() => expect(intervals.mock.calls.some(([, delay]) => delay === 3_000)).toBe(true))
+    const poll = intervals.mock.calls.find(([, delay]) => delay === 3_000)![0] as () => void
+    await mutate('draft-record', { suggestionId: suggestion!.id, skillName: 'release-notes', content: SKILL + '\n2. Group by component\n', notes: 'Finished in the background', changes: [], guidance: [] })
+    // The card requests saw the old ledger; the independent overview sees completion.
+    stale.add('suggestions'); stale.add('suggestion')
+    act(() => poll())
+    await screen.findByText('Finished in the background')
+    expect(screen.queryByText(t('evolution.drafting'))).toBeNull()
+    // Another writer changes the idle page. Returning to the window refreshes it too.
+    await mutate('suggestion-dismiss', { id: suggestion!.id })
+    fireEvent.focus(window)
+    await waitFor(() => expect(screen.queryByText('Finished in the background')).toBeNull())
+    unmount()
+    intervals.mockRestore()
   })
 
   it('shows a suggestion with its evidence folded, then reviews and adopts its draft', async () => {
@@ -199,9 +293,37 @@ describe('Skills page', () => {
     fireEvent.change(within(dialog).getByLabelText(t('tests.caseTitle')), { target: { value: 'Breaking first' } })
     fireEvent.change(within(dialog).getByLabelText(t('tests.prompt')), { target: { value: 'Notes with a breaking change' } })
     fireEvent.change(within(dialog).getByPlaceholderText(t('tests.checkPlaceholder')), { target: { value: 'Breaking change listed first' } })
+    fireEvent.click(within(dialog).getByRole('checkbox', { name: t('tests.requiresVision') }))
     fireEvent.click(within(dialog).getByRole('button', { name: t('common.save') }))
     expect(await screen.findByText('Breaking first')).not.toBeNull()
     expect((await management.read('cases', { skill: 'release-notes' })).value).toHaveLength(2)
+    expect((await management.read('cases', { skill: 'release-notes' })).value).toEqual(expect.arrayContaining([expect.objectContaining({ title: 'Breaking first', requiresVision: true })]))
+    expect(screen.getByText(t('tests.requiresVision'))).not.toBeNull()
+  })
+
+  it.each([false, true])('shows image-dependent cases as unmeasured, separately from execution errors (mixed=%s)', async mixed => {
+    const vision = await mutate('case-save', { case: { skillName: 'release-notes', title: 'Read a screenshot', prompt: 'Read the number in the image', requiresVision: true, checks: [{ text: 'The number is 7', must: true }] } }) as unknown as EvalCase
+    const text = await mutate('case-save', { case: { skillName: 'release-notes', title: 'Text', prompt: 'Write notes', checks: [{ text: 'Has notes', must: true }] } }) as unknown as EvalCase
+    const failed = await mutate('case-save', { case: { skillName: 'release-notes', title: 'Broken', prompt: 'Write notes', checks: [{ text: 'Has notes', must: true }] } }) as unknown as EvalCase
+    const run = await mutate('run-start', { skillName: 'release-notes', target: { kind: 'current' }, caseIds: mixed ? [vision.id, text.id, failed.id] : [vision.id] }) as unknown as BacktestRun
+    await mutate('run-progress', { id: run.id, result: { caseId: vision.id, title: vision.title, verdict: 'error', score: 0, unmeasuredReason: 'requires-vision', checks: [], steps: [], answer: '', error: 'Persisted English explanation' } })
+    if (mixed) {
+      await mutate('run-progress', { id: run.id, result: { caseId: text.id, title: text.title, verdict: 'pass', score: 1, checks: [], steps: [], answer: 'Notes' } })
+      await mutate('run-progress', { id: run.id, result: { caseId: failed.id, title: failed.title, verdict: 'error', score: 0, checks: [], steps: [], answer: '', error: 'Model unavailable' } })
+    }
+    await mutate('run-finish', { id: run.id, status: 'completed' })
+    render(<SkillsSourcePage sourceTypeId="skills" sourceInstanceKey="source:skills" sourceInstances={[]} locale="en" writable={false} management={management} navigationInput={{ seed: 'name:release-notes', nonce: 1 }} />)
+    fireEvent.click(await screen.findByRole('button', { name: named(t('tests.title'), t('tests.count', { count: 3 })) }))
+    const summary = mixed ? [t('tests.score', { score: '100' }), t('tests.unmeasured', { count: 1 }), t('tests.errors', { count: 1 })].join(' · ') : t('tests.unmeasured', { count: 1 })
+    fireEvent.click(await screen.findByRole('button', { name: new RegExp(summary.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'), 'u') }))
+    expect(await screen.findByText(t('run.verdict.unmeasured'))).not.toBeNull()
+    expect(screen.getByText(t('run.requiresVision'))).not.toBeNull()
+    expect(screen.queryByText('Persisted English explanation')).toBeNull()
+    expect(screen.queryByText('0')).toBeNull()
+    expect((screen.getByRole('button', { name: t('tests.add') }) as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole('switch', { name: t('tests.enabled', { title: vision.title }) }) as HTMLButtonElement).disabled).toBe(true)
+    if (mixed) expect(screen.getByText('Model unavailable')).not.toBeNull()
+    else expect(screen.queryByText(t('run.verdict.error'))).toBeNull()
   })
 
   it('marks only the copy DSH loads as waiting for an improvement, not the one it shadows', async () => {
@@ -330,6 +452,9 @@ describe('Skills page', () => {
     const baseline = run('current', [result('a', 'fail', 0.5), result('b', 'pass', 1)])
     expect(compareRuns(baseline, run('draft', [result('a', 'pass', 1), result('b', 'error', 0)]))).toEqual({ baseline: 0.5, candidate: 1, excluded: 1 })
     expect(compareRuns(baseline, run('draft', [result('a', 'error', 0), result('b', 'error', 0)]))).toEqual({ excluded: 2 })
+    const unmeasured = { ...result('b', 'error', 0), unmeasuredReason: 'requires-vision' as const }
+    expect(compareRuns(baseline, run('draft', [result('a', 'pass', 1), unmeasured]))).toEqual({ baseline: 0.5, candidate: 1, excluded: 1 })
+    expect(compareRuns(run('current', [result('b', 'pass', 1)]), run('draft', [unmeasured]))).toEqual({ excluded: 1 })
     expect(compareRuns(baseline, { ...run('draft', []), status: 'running' })).toEqual({ excluded: 0 })
   })
 

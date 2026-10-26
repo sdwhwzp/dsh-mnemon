@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
@@ -71,6 +72,10 @@ it('logs and projects each account memory through the real Harness Agent loop an
     await ctx.plugin(SessionReads)
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    if (process.env.DSH_SOURCE_ROOT !== undefined) {
+      // rc.3 composes its native executor separately; the registry SDK fixture predates that split.
+      await ctx.plugin(await import(pathToFileURL(join(process.env.DSH_SOURCE_ROOT, 'packages/core/tool-executor-native/lib/index.js')).href))
+    }
     await ctx.plugin(AgentRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
     await ctx.plugin(LocalFileSystem, { cwd: memory.workspace })
@@ -122,7 +127,10 @@ it('logs and projects each account memory through the real Harness Agent loop an
     }))
     await Promise.all(agents.map(agent => accounts.execute(agent as unknown as HostAgent, async () => {
       const run = await startSubagent(scoped.subagents, scoped.agents, 'spawn', { label: 'Account child', parent: scoped.agents.get(agent.id)!, prompt: [{ type: 'text', text: 'Search my private-token document.' }], signal: new AbortController().signal }, scoped)
-      try { expect(await run.result).toMatchObject({ stopReason: 'completed' }) } finally { await run.dispose() }
+      try {
+        const result = await run.result
+        expect(result, JSON.stringify(run.localAgent?.session.snapshotEvents(0).filter(event => event.type === 'turn/end'))).toMatchObject({ stopReason: 'completed' })
+      } finally { await run.dispose() }
     })))
     expect(children).toHaveLength(2)
     for (const child of children) {

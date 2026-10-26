@@ -74,6 +74,28 @@ If you prefer the command line, you can install with the command below and then 
 npx @deepseek-ai/dsh plugin --profile web add dsh-mnemon
 ```
 
+### Settings cannot save after manual installation
+
+The package's `cordis.patch.yml` is a **bundle layer**, loaded automatically when `dsh-mnemon` is enabled. It is not a template to copy into your profile. Copying its `insert` block creates a second `mnemon-bundle` and `mnemon` with the same IDs. Settings can then fail with `Configuration for "mnemon" is overridden by a home patch or command-line overlay`.
+
+For a profile with that duplicate insertion:
+
+1. Stop DSH and back up the affected profile's `cordis.patch.yml` and `package.json`.
+2. Check that `dsh.profile.bundles` in that profile's `package.json` includes `dsh-mnemon`. If it does not, install/enable the bundle using Plugins or the CLI above before applying this recovery.
+3. Preserve any custom values from the copied Mnemon entries in one top-level override per component ID, such as `- id: mnemon` or `- id: mnemon-source-skills`. Combine them with existing overrides deliberately: a `config` row replaces the complete config object, rather than merging one field at a time.
+4. Remove the copied **Mnemon insertion** from the profile patch. Keep unrelated entries, comments and overrides; if the `insert` block contains other plugins, keep those members. Remove an empty `insert` block.
+5. If a profile-level bundle enable override is needed, it is just the following top-level row; its children come from the package automatically:
+
+   ```yaml
+   - id: mnemon-bundle
+     name: dsh-mnemon/bundle
+     disabled: false
+   ```
+
+6. Restart DSH and save a setting, such as Skills → Self-evolution. It should survive another restart. Runtime memory, Documents, Memory Spaces and skill files are not moved or deleted by this patch repair.
+
+Removing only the nested `config` block does not remove duplicate IDs. The package's own nested defaults work with one bundle insertion and can stay. A genuine home-patch or command-line override is a separate case: change that owning layer instead of applying this duplicate-insertion recovery.
+
 ## 4. Check the installation
 
 Click **Memory System**. It opens on **Status**:
@@ -104,7 +126,7 @@ The **Plugins** page of the DeepSeek Harness desktop app works like the web page
 
 - The desktop app uses its own `desktop` profile. From DSH 0.2 the command line no longer manages that profile, so install and manage plugins on the app's Plugins page.
 - Desktop windows load from the app's own `dsh-app://app/` address. dsh-mnemon 0.5.18 and earlier treated them as remote pages, which made the Memory System and the plugin settings read only ([#310](https://github.com/omdsh-dev/dsh-mnemon/issues/310)). 0.5.19 fixes this; update dsh-mnemon, with no configuration change.
-- DSH's Plugins page cannot update an installed plugin. Update dsh-mnemon from **Memory System → Status → Check versions → Update**; [Version checks and updates](./operations.md#version-checks-and-updates) explains how it installs. dsh-mnemon 0.5.21 and earlier cannot do this in the desktop app, and on DSH 0.2.1 neither can 0.5.30 and earlier, whose update stops with `already-installed`: update from them once by uninstalling dsh-mnemon on the Plugins page and adding it again with **Add plugin**, typing the newest version Check versions shows, for example `dsh-mnemon@0.5.34`. Your memory data and settings stay.
+- DSH's Plugins page cannot update an installed plugin. Update dsh-mnemon from **Memory System → Status → Check versions → Update**; [Version checks and updates](./operations.md#version-checks-and-updates) explains how it installs. dsh-mnemon 0.5.21 and earlier cannot do this in the desktop app, and on DSH 0.2.1 neither can 0.5.30 and earlier, whose update stops with `already-installed`: update from them once by uninstalling dsh-mnemon on the Plugins page and adding it again with **Add plugin**, typing the newest version Check versions shows, for example `dsh-mnemon@0.5.35`. Your memory data and settings stay.
 - After updating dsh-mnemon in the desktop app, quit the app completely and open it again (`Cmd+Q` on macOS) so the new version loads. If an error appears after an update, see [Common problems](#common-problems).
 
 ## 7. Command line and Headless
@@ -237,7 +259,7 @@ mnemon:
 Before DSH installs a plugin, and each time it starts, it checks which DSH versions the plugin declares support for, and refuses a release that leaves its own version out. The screenshot shows DSH 0.2.0-rc.1 refusing dsh-mnemon 0.5.18, which declares DSH 0.1.7 only; [Compatibility and upgrades](../reference/compatibility.md) lists which releases each DSH takes.
 
 - Check which version npm has: `npm view dsh-mnemon version`.
-- For 24 hours after a release, pnpm does not pick the new version by default and installs an earlier one instead, which leads to this message. After two releases within a day it falls back further. Where DSH accepts that earlier release, **Add plugin** on DSH 0.2.1 says which version it installed, while DSH 0.2.0 shows no message, so check the version on Status. Click **Edit**, type the version as well, for example `dsh-mnemon@0.5.34` (use the version `npm view` shows), and click **Install**; on the command line, run `dsh plugin --profile web add dsh-mnemon@0.5.34`. Or retry after 24 hours.
+- For 24 hours after a release, pnpm does not pick the new version by default and installs an earlier one instead, which leads to this message. After two releases within a day it falls back further. Where DSH accepts that earlier release, **Add plugin** on DSH 0.2.1 says which version it installed, while DSH 0.2.0 shows no message, so check the version on Status. Click **Edit**, type the version as well, for example `dsh-mnemon@0.5.35` (use the version `npm view` shows), and click **Install**; on the command line, run `dsh plugin --profile web add dsh-mnemon@0.5.35`. Or retry after 24 hours.
 - A versioned install pins the profile to that version. To upgrade later, run `dsh plugin --profile web update --latest dsh-mnemon` once the next release is a day old; within that day, add the new version by name the same way.
 - Do not accept the risk for an older release with `allow-version` or similar: it really has not been verified on that DSH.
 

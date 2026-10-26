@@ -74,6 +74,28 @@ DSH 在 `http://127.0.0.1:3080` 启动，并自动在浏览器中打开一个带
 npx @deepseek-ai/dsh plugin --profile web add dsh-mnemon
 ```
 
+### 手动安装后设置无法保存
+
+包内的 `cordis.patch.yml` 是**随 bundle 自动加载的配置层**，启用 `dsh-mnemon` 后 DSH 会加载它。它不是需要复制到 Profile 的模板。再次复制其中的 `insert` 块，会产生 ID 相同的第二组 `mnemon-bundle` 和 `mnemon`，导致设置报错：`Configuration for "mnemon" is overridden by a home patch or command-line overlay`。
+
+如果 Profile 中存在这类重复插入：
+
+1. 停止 DSH，备份对应 Profile 的 `cordis.patch.yml` 和 `package.json`。
+2. 确认该 Profile 的 `package.json` 中 `dsh.profile.bundles` 已包含 `dsh-mnemon`；没有时，先通过插件页或上面的 CLI 安装并启用 bundle，再进行恢复。
+3. 将复制条目中自定义过的值保留到对应组件 ID 的一条顶层覆盖中，例如 `- id: mnemon` 或 `- id: mnemon-source-skills`。与已有覆盖逐项核对合并：`config` 覆盖的是完整对象，不是逐字段追加。
+4. 从 Profile patch 中移除复制的 **Mnemon 插入项**，保留其他插件、注释和覆盖。如果同一个 `insert` 块还有其他插件，只移除其中的 Mnemon 项；空的 `insert` 块也应移除。
+5. 如需在 Profile 中明确启用 bundle，只保留以下顶层行；子组件由包自动提供：
+
+   ```yaml
+   - id: mnemon-bundle
+     name: dsh-mnemon/bundle
+     disabled: false
+   ```
+
+6. 重启 DSH，保存一项设置（例如技能的自进化开关），再次重启后确认仍生效。此配置修复不会移动或删除运行时记忆、项目档案、记忆空间或技能文件。
+
+只删除嵌套的 `config` 块不能消除重复 ID。只有一次 bundle 插入时，包内嵌套的默认配置可以正常覆盖，无需删除。如果确实由 home patch 或命令行覆盖控制设置，应修改其所属配置层；不要套用这份针对重复插入的恢复步骤。
+
 ## 4. 确认安装成功
 
 点击**记忆系统**，默认打开**状态**页：
@@ -104,7 +126,7 @@ DeepSeek Harness 桌面版的**插件**页与网页相同：**插件 → 添加�
 
 - 桌面版使用它自己的 `desktop` profile。从 DSH 0.2 起，命令行不再管理这个 profile，请在桌面版的插件页中安装和管理插件。
 - 桌面版窗口从应用自己的 `dsh-app://app/` 地址加载。dsh-mnemon 0.5.18 及更早的版本会把它当成远程页面，于是记忆系统和插件设置变为只读（[#310](https://github.com/omdsh-dev/dsh-mnemon/issues/310)）。0.5.19 已修复，更新 dsh-mnemon 即可，不需要修改配置。
-- DSH 的插件页不能更新已安装的插件。请在**记忆系统 → 状态 → 检查版本 → 更新**中更新 dsh-mnemon，它如何安装新版本见[版本检查与更新](./operations.md#版本检查与更新)。dsh-mnemon 0.5.21 及更早的版本在桌面版中做不到这一点；在 DSH 0.2.1 上，0.5.30 及更早的版本也做不到，更新会停在 `already-installed`。从这些版本更新一次即可：在插件页**卸载** dsh-mnemon，再通过**添加插件**重新安装，输入检查版本显示的最新版本，例如 `dsh-mnemon@0.5.34`。记忆数据与设置都会保留。
+- DSH 的插件页不能更新已安装的插件。请在**记忆系统 → 状态 → 检查版本 → 更新**中更新 dsh-mnemon，它如何安装新版本见[版本检查与更新](./operations.md#版本检查与更新)。dsh-mnemon 0.5.21 及更早的版本在桌面版中做不到这一点；在 DSH 0.2.1 上，0.5.30 及更早的版本也做不到，更新会停在 `already-installed`。从这些版本更新一次即可：在插件页**卸载** dsh-mnemon，再通过**添加插件**重新安装，输入检查版本显示的最新版本，例如 `dsh-mnemon@0.5.35`。记忆数据与设置都会保留。
 - 在桌面版中更新 dsh-mnemon 后，完全退出应用再重新打开（macOS 上按 `Cmd+Q`），新版本才会加载。更新后出现报错时，处理方法见[常见问题](#常见问题)。
 
 ## 7. 命令行与 Headless
@@ -237,7 +259,7 @@ mnemon:
 DSH 在安装插件前，以及每次启动时，都会检查插件声明支持的 DSH 版本，不包含自身版本的插件会被拒绝。截图中是 DSH 0.2.0-rc.1 拒绝只声明支持 DSH 0.1.7 的 dsh-mnemon 0.5.18；各 DSH 接受哪些版本，见[兼容性与升级](../reference/compatibility.md)。
 
 - 先确认 npm 上的版本：`npm view dsh-mnemon version`。
-- 新版本发布后的 24 小时内，pnpm 默认不会选用刚发布的版本，会改装一个较早的版本，于是出现这个提示；一天内连续发布时会退得更早。DSH 接受这个较早的版本时，DSH 0.2.1 的**添加插件**会说明实际安装的版本，DSH 0.2.0 则没有提示，请在状态页核对版本号。此时点击**编辑**，输入带版本号的 `dsh-mnemon@0.5.34`（以 `npm view` 显示的版本为准），再点击**安装**；命令行为 `dsh plugin --profile web add dsh-mnemon@0.5.34`。也可以等 24 小时后重试。
+- 新版本发布后的 24 小时内，pnpm 默认不会选用刚发布的版本，会改装一个较早的版本，于是出现这个提示；一天内连续发布时会退得更早。DSH 接受这个较早的版本时，DSH 0.2.1 的**添加插件**会说明实际安装的版本，DSH 0.2.0 则没有提示，请在状态页核对版本号。此时点击**编辑**，输入带版本号的 `dsh-mnemon@0.5.35`（以 `npm view` 显示的版本为准），再点击**安装**；命令行为 `dsh plugin --profile web add dsh-mnemon@0.5.35`。也可以等 24 小时后重试。
 - 用带版本号的方式安装后，profile 会固定在这个版本。之后在新版本发布满一天后运行 `dsh plugin --profile web update --latest dsh-mnemon` 升级；一天之内同样带版本号安装新版本。
 - 不要为旧版本执行 `allow-version` 等“接受风险”的操作：旧版本确实没有在该 DSH 上验证过。
 

@@ -71,6 +71,11 @@ The UI offers safe merge, not “overwrite everything”:
 - Identical Document ID + hash is skipped; conflicting content receives a new ID.
 - Memory Spaces are compared by the memories and links they hold, never by the read counts a recall rewrites or the vectors filled in later. A link is the two memories it joins and its type: merging spaces or linking again rewrites its weight, note and time, and the same link with other values is still the same link, which keeps this machine's values. A weight or note changed on one machine therefore stays on that machine, and the branch holds the values of the machine that synced last. A memory's update time does not take part either: filling in its vector once the embedding service answers again, with **Fill in** in the embedding settings or `mnemon embed`, or keeping it from pruning with `mnemon gc --keep` moves that time without changing the memory. A space with the same ID takes in the memories only the incoming version holds, so two machines that both added memories end with one space holding both; this machine's own rows, read counts, read log and schema stay as they are. When a memory differs on the two sides, edited or forgotten on one of them, the incoming version is kept beside this one under a new ID, once, and its later versions move that copy on instead of adding another. A space with a new ID is skipped when one of the same name here already holds all its memories. This reads the databases with `node:sqlite` (Node 22.13, 23.4 or later); earlier Node, a database it cannot read, one with a virtual table, or one of more than 500,000 rows is compared by its bytes.
 
+If a merge of two valid MEMORY files exceeds the working-memory limit, Mnemon keeps higher-importance entries first, then newer entries (stable text ordering breaks ties). It preserves each excluded entry, including timestamps, branch scope and provenance, as a JSON record under `<dataDir>/runtime/archived/import-overflow/`. The import commits the archive and hot memory together; an archive write failure leaves the original data intact. Repeating the same merge reuses those records. Archival does not publish a deletion; explicit user removals still do.
+
+Sync and Safe import report the number saved to the local archive separately from the remote entries admitted to hot memory. Inspect the JSON files to recover selected entries through Runtime memory after freeing space or increasing its limit. Like the existing Runtime archive, this directory is local and is **not included in ZIP or Git payloads**; include it in a full offline backup. USER capacity and malformed or individually over-limit input files retain their existing validation.
+
+
 Import is governed by `writeEnabled` and is rejected in read-only deployments. A ZIP contains private memory—encrypt it, restrict access, and rehearse recovery. Provider credentials live in `state/memory-providers.json` with mode `0600`; they are excluded from ZIP. Saved credential values are not returned through management responses either. Protect the entire `state/` directory in the offline snapshot below if connections must be backed up.
 
 ![A verified backup preview before Safe import](../../assets/webui-v0.5.32/en/plugin-backup-preview.jpg)
@@ -112,6 +117,9 @@ Once connected, the row shows the repository, whether it answers and how it auth
 - **One repository per mirror.** The mirror names the repository it was filled from and is rebuilt for another one, and a branch the remote does not hold starts a new history. Switching to an empty repository, or syncing after the remote branch was deleted, never publishes earlier payloads there again.
 - **No machine overwrites another.** The branch is merged before every push, and a push Git refuses because another machine published meanwhile folds the branch in again and is tried once more. Only a second refusal is reported; syncing again resolves it.
 - **One copy per divergence.** A document that differs on the two sides is kept beside the local one under a new id, and merging the same version again, as a retried sync does, does not add a second copy. A memory space merges instead: the memories either side added join one space, and the read counts a recall writes never make a copy. Only a memory edited or forgotten on one side keeps the other version as one copy, which that side's later versions move on.
+
+New conflicting Memory Space copies are named `<original name> (import conflict <source fingerprint>)` and start **inactive**, so their memories do not automatically enter recall or write routing. Inspect the preserved copy in Memory Spaces and activate it explicitly when wanted. Repeated imports update the same copy without resetting a manual activation. Existing copies keep their names and activation settings; this change does not rewrite or delete stored memories.
+
 - **No stuck lock.** The sync lock records its owner, so a Host that stopped mid-operation does not leave every later sync refused: a lock whose process is gone is taken over at once, one an older version left without a record after 15 minutes, and any lock after an hour. The one-command credential files such a Host left behind are removed.
 - **An edit travels, not a copy.** A Project Document differs on the two sides only when both changed it since they last agreed.
   - After every merge and every publish, a machine records each Project Document's version as it and the branch then agree on it, and the commit they agreed at (`state/sync/base.json`). A version covers the text, title, description, archive and links, but not when the document was last read.
@@ -267,6 +275,7 @@ For authenticated remote clients, `remoteAccess: trusted-host` grants management
          highScoreThreshold: 0.6
          candidateMultiplier: 3
          maxMediumResults: 4
+         maxRankedResults: 4
          maxUnknownResults: 2
    ```
 

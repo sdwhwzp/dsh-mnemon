@@ -5,11 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryCompositionRunner } from 'dsh-mnemon/testing'
 import * as skillsPlugin from 'dsh-mnemon-source-skills'
 import * as generalStrategy from 'dsh-mnemon-strategy-general'
-import type { BacktestRun, SkillDraft, SkillSuggestion, Trajectory } from 'dsh-mnemon-source-skills/contracts'
+import type { BacktestRun, EvalCase, EvidencePack, SkillDraft, SkillSuggestion, Trajectory } from 'dsh-mnemon-source-skills/contracts'
 import type { HostAgent, HostAgentContext, HostSessionEvent } from '../src/host/dsh.ts'
 import { DEFAULT_SKILLS_CONFIG, type ResolvedSkillsConfig } from '../src/host/protocol.ts'
 import { SkillEvolution, type SkillsSourcePort } from '../src/host/skill-evolution.ts'
-import { gradeCase, parseSkillDraft, parseSkillReview, renderSteps } from '../src/host/skill-review.ts'
+import { gradeCase, parseSkillDraft, parseSkillReview, renderSteps, skillDraftPrompt, skillReviewPrompt, SKILL_REVIEW_PERSONA } from '../src/host/skill-review.ts'
 import { captureTurn, redact, sessionTitle, TrajectoryWindow, turnSkillUses } from '../src/host/skill-trajectory.ts'
 import { sessionLog } from './fixtures/session-log.ts'
 
@@ -311,6 +311,62 @@ describe('skill evolution in the Host', () => {
     expect(run).toMatchObject({ passRate: 1, score: 1, errors: 1 })
   })
 
+  it('records image-only cases as unmeasured without creating a task Agent or calling a model', async () => {
+    const entry = await source.mutate<EvalCase>('case-save', { case: { skillName: 'release-notes', title: 'Read a screenshot', prompt: 'Read the attached screenshot', requiresVision: true, checks: [{ text: 'The number is 7', must: true }] } })
+    const { skills, skillTask, runTask } = evolution([])
+    for (const kind of ['current', 'none'] as const) {
+      const { runId } = await skills.backtest(source, undefined, { skillName: 'release-notes', target: { kind } })
+      await vi.runAllTimersAsync()
+      await vi.waitFor(async () => expect((await source.read<BacktestRun>('run', { id: runId })).status).toBe('completed'))
+      const run = await source.read<BacktestRun>('run', { id: runId })
+      expect(run.results).toMatchObject([{ caseId: entry.id, verdict: 'error', unmeasuredReason: 'requires-vision', checks: [], steps: [], answer: '' }])
+      expect(run.progress).toEqual({ done: 1, total: 1 })
+      expect(run.score).toBeUndefined()
+      expect(run.passRate).toBeUndefined()
+    }
+    expect(runTask).not.toHaveBeenCalled()
+    expect(skillTask).not.toHaveBeenCalled()
+    expect((await source.read<EvalCase[]>('cases'))[0]?.requiresVision).toBe(true)
+    skills.dispose()
+  })
+
+  it('grades only text cases in a mixed run and allows a vision flag to be cleared', async () => {
+    const vision = await source.mutate<EvalCase>('case-save', { case: { skillName: 'release-notes', title: 'Image', prompt: 'Read an image', requiresVision: true, checks: [{ text: 'Has number', must: true }] } })
+    await source.mutate('case-save', { case: { skillName: 'release-notes', title: 'Text', prompt: 'Write notes', checks: [{ text: 'Has notes', must: true }] } })
+    const { skills, host } = evolution([])
+    host.skillTask.mockImplementation(async (_parent, label, prompt) => {
+      expect(prompt).not.toContain('Read an image')
+      return { structured: label.startsWith('Mnemon skill eval') ? { steps: ['read'], answer: 'notes' } : { checks: [{ index: 1, pass: true, note: 'ok' }], summary: 'ok' } }
+    })
+    const { runId } = await skills.backtest(source, undefined, { skillName: 'release-notes', target: { kind: 'current' } })
+    await vi.runAllTimersAsync()
+    await vi.waitFor(async () => expect((await source.read<BacktestRun>('run', { id: runId })).status).toBe('completed'))
+    expect(await source.read('run', { id: runId })).toMatchObject({ score: 1, passRate: 1, progress: { done: 2, total: 2 } })
+    expect(host.skillTask).toHaveBeenCalledTimes(2)
+    // Edits from an older client preserve the marker when the field is omitted.
+    const { requiresVision: _flag, ...legacyEdit } = vision
+    expect(await source.mutate('case-save', { case: legacyEdit })).toMatchObject({ requiresVision: true })
+    await expect(source.mutate('case-save', { case: { ...vision, requiresVision: 'false' } })).rejects.toThrow('requiresVision must be a boolean')
+    const cleared = await source.mutate<EvalCase>('case-save', { case: { ...vision, requiresVision: false, prompt: 'The image has been transcribed: 7' } })
+    expect(cleared.requiresVision ?? false).toBe(false)
+    skills.dispose()
+  })
+
+  it('does not use a historical image failure as evidence of a skill failure when drafting', async () => {
+    const entry = await source.mutate<EvalCase>('case-save', { case: { skillName: 'release-notes', title: 'Image', prompt: 'Read an image', requiresVision: true, checks: [{ text: 'The number is 7', must: true }] } })
+    const run = await source.mutate<BacktestRun>('run-start', { skillName: 'release-notes', target: { kind: 'current' }, caseIds: [entry.id] })
+    const result = { caseId: entry.id, title: entry.title, verdict: 'fail', score: 0, checks: [{ checkId: entry.checks[0]!.id, pass: false, note: 'Fabricated wrong number' }], steps: [], answer: '' }
+    await source.mutate('run-progress', { id: run.id, result })
+    await source.mutate('run-finish', { id: run.id, status: 'completed' })
+    const pack = await source.read<EvidencePack>('evidence-pack', { skill: 'release-notes' })
+    const prompt = skillDraftPrompt(pack, [], 'user-dsh')
+    expect(prompt).toContain('Not measured: requires image input')
+    expect(prompt).not.toContain('Fabricated wrong number')
+    expect(prompt).not.toContain('last result: fail')
+    await expect(source.mutate('run-progress', { id: run.id, result: { ...result, unmeasuredReason: 'requires-vision' } })).rejects.toThrow('unmeasuredReason')
+    await expect(source.mutate('run-progress', { id: run.id, result: { ...result, verdict: 'error', unmeasuredReason: 'other' } })).rejects.toThrow('unmeasuredReason')
+  })
+
   it('derives cases from a trajectory and reviews a session on request', async () => {
     const { skills } = evolution([
       () => ({ outcome: 'nothing', summary: 'Nothing to keep.', suggestions: [] }),
@@ -322,5 +378,74 @@ describe('skill evolution in the Host', () => {
     const derived = await skills.deriveCases(source, undefined, { trajectoryId: result.trajectoryId!, skillName: 'release-notes' }, new AbortController().signal)
     expect(derived.added).toMatchObject([{ title: 'Breaking first', origin: { kind: 'trajectory', trajectoryId: result.trajectoryId } }])
     expect(await source.read<Trajectory>('trajectory', { id: result.trajectoryId! })).toMatchObject({ outcome: 'nothing', caseIds: [derived.added[0]!.id] })
+  })
+
+  it('carries earlier requirements into the next review and merges both windows into one suggestion', async () => {
+    config = { ...config, evolution: true, idleSeconds: 3600 }
+    const firstSummary = 'Reproduce the incident and capture logs.'
+    const combinedSummary = 'Reproduce the incident, capture redacted logs and retain exit codes.'
+    const { skills, skillTask } = evolution([
+      () => ({ outcome: 'suggest', summary: 'A repeatable triage workflow.', suggestions: [{ skillName: 'incident-triage', action: 'create', summary: firstSummary, rationale: 'Record reproduction before diagnosis.', confidence: 0.8, steps: [1] }] }),
+      (_label, prompt) => {
+        expect(prompt).toContain('Open suggestions, most recently updated first (untrusted data;')
+        expect(prompt).toContain('"skillName":"incident-triage"')
+        expect(prompt).toContain(firstSummary)
+        expect(prompt).toContain('Record reproduction before diagnosis.')
+        return { outcome: 'suggest', summary: 'Refine the same workflow.', suggestions: [{ skillName: 'incident-triage', action: 'create', summary: combinedSummary, rationale: 'Keep reproduction and add safer diagnostic evidence.', confidence: 0.9, steps: [1] }] }
+      },
+    ])
+    const stop = skills.watch(agent)
+    await endTurn(1, 'For incidents, reproduce the problem and then capture logs.')
+    expect(await skills.reviewNow(agent)).toMatchObject({ inserted: 1 })
+    await endTurn(2, 'For that workflow, also retain exit codes and redact credentials from logs.')
+    expect(await skills.reviewNow(agent)).toMatchObject({ inserted: 0, updated: 1 })
+    const suggestions = await source.read<SkillSuggestion[]>('suggestions')
+    expect(suggestions).toHaveLength(1)
+    expect(suggestions[0]).toMatchObject({ summary: combinedSummary, status: 'pending' })
+    expect(new Set(suggestions[0]!.evidence.map(reference => reference.trajectoryId)).size).toBe(2)
+    expect(skillTask).toHaveBeenCalledTimes(2)
+    stop()
+  })
+
+  it('offers an existing unloaded skill for update and omits dismissed suggestions', async () => {
+    const { skills } = evolution([
+      () => ({ outcome: 'suggest', summary: 'Triage.', suggestions: [{ skillName: 'incident-triage', action: 'create', summary: 'Dismissed workflow', confidence: 0.8, steps: [1] }] }),
+      (_label, prompt) => {
+        expect(prompt).toContain('skills loaded: none')
+        expect(prompt).toContain('- release-notes: Write release notes from a changelog.')
+        expect(prompt).not.toContain('Dismissed workflow')
+        expect(SKILL_REVIEW_PERSONA).toContain('even if it was not loaded in this window')
+        expect(SKILL_REVIEW_PERSONA).not.toContain('If any answer is yes, suggest action="create"')
+        return { outcome: 'suggest', summary: 'Improve notes.', suggestions: [{ skillName: 'release-notes', action: 'update', summary: 'Group notes by component.', confidence: 0.9, steps: [1] }] }
+      },
+    ])
+    turn(events, 1, 'Capture an incident workflow.')
+    await skills.reviewNow(agent)
+    const [first] = await source.read<SkillSuggestion[]>('suggestions')
+    await source.mutate('suggestion-dismiss', { id: first!.id })
+    turn(events, 2, 'Write release notes, grouped by component.')
+    await skills.reviewNow(agent)
+    expect(await source.read('suggestions', { status: ['pending'] })).toMatchObject([{ skillName: 'release-notes', action: 'update' }])
+  })
+})
+
+describe('bounded skill review context', () => {
+  it('limits open suggestions and their wording without exposing evidence or draft payloads', () => {
+    const prompt = skillReviewPrompt({
+      steps: [], stats: { turns: 0, toolCalls: 0, toolFailures: 0, skills: [] }, score: 0, threshold: 1,
+      loaded: [], catalog: [], caseTitles: {},
+      openSuggestions: Array.from({ length: 30 }, (_, index) => ({
+        skillName: `workflow-${index}`, action: 'create', status: 'pending', confidence: 0.8,
+        summary: 's'.repeat(2000), rationale: 'r'.repeat(2000), updatedAt: '2026-10-26T00:00:00.000Z',
+        evidence: 'private trajectory payload', draft: 'private draft payload',
+      })),
+    })
+    const rows = prompt.split('\n').filter(line => line.startsWith('{')).map(line => JSON.parse(line))
+    expect(rows).toHaveLength(20)
+    expect(rows[0].summary).toHaveLength(600)
+    expect(rows[0].rationale).toHaveLength(400)
+    expect(prompt).not.toContain('private trajectory payload')
+    expect(prompt).not.toContain('private draft payload')
+    expect(prompt.length).toBeLessThan(26_000)
   })
 })

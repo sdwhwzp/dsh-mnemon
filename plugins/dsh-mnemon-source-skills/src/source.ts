@@ -61,6 +61,7 @@ function caseInput(value: MemoryJsonValue, skillName?: string): CaseInput {
       return { ...(typeof check.id === 'string' ? { id: check.id } : {}), text: text(check.text, 'check', 600)!, must: check.must === true }
     }),
     ...(typeof input.enabled === 'boolean' ? { enabled: input.enabled } : {}),
+    ...(input.requiresVision === undefined ? {} : { requiresVision: bool(input.requiresVision, 'requiresVision') }),
   }
 }
 
@@ -81,6 +82,8 @@ function caseResult(value: MemoryJsonValue): CaseResult {
   const input = record(value, 'result')
   const verdict = input.verdict
   if (verdict !== 'pass' && verdict !== 'fail' && verdict !== 'error') throw new Error('verdict must be pass, fail or error')
+  const unmeasuredReason = input.unmeasuredReason
+  if (unmeasuredReason !== undefined && (unmeasuredReason !== 'requires-vision' || verdict !== 'error')) throw new Error('unmeasuredReason requires requires-vision and an ungraded error verdict')
   const score = typeof input.score === 'number' && Number.isFinite(input.score) ? Math.min(1, Math.max(0, input.score)) : 0
   const checks = Array.isArray(input.checks) ? input.checks.slice(0, 8).map(item => {
     const check = record(item, 'check result')
@@ -92,6 +95,7 @@ function caseResult(value: MemoryJsonValue): CaseResult {
     answer: typeof input.answer === 'string' ? input.answer : '',
     ...(typeof input.summary === 'string' ? { summary: input.summary } : {}),
     ...(typeof input.error === 'string' ? { error: input.error } : {}),
+    ...(unmeasuredReason === undefined ? {} : { unmeasuredReason }),
   }
 }
 
@@ -280,6 +284,13 @@ export function createSkillsMemorySource(config: Config = {}): MemorySourceDefin
                 case 'market-preview': return service.marketPreview(text(fields.registryId, 'registryId', 80)!, text(fields.name, 'name', 300)!, request.signal)
                 case 'market-search': return service.searchMarket(root, text(fields.query, 'query', 200)!, request.signal)
                 case 'installs': return service.installs()
+                case 'trash':
+                case 'trash-list': return service.trashItems()
+                case 'trash-restore-preview': return service.previewTrashRestore(root, {
+                  id: text(fields.id, 'id', 300)!,
+                  ...(rootKind(fields.root) === undefined ? {} : { root: rootKind(fields.root)! }),
+                  ...(optionalText(fields.name, 'name', 64) === undefined ? {} : { name: optionalText(fields.name, 'name', 64)! }),
+                })
                 default: throw new Error('unsupported Skills read operation: ' + request.operation)
               }
             }
@@ -301,6 +312,15 @@ export function createSkillsMemorySource(config: Config = {}): MemorySourceDefin
               expectedHash: text(fields.expectedHash, 'expectedHash', 100)!,
             }); break
             case 'skill-delete': value = await service.deleteSkill(root, { key: text(fields.key, 'key', 200)!, expectedHash: text(fields.expectedHash, 'expectedHash', 100)! }); break
+            case 'trash-restore': value = await service.restoreTrash(root, {
+              id: text(fields.id, 'id', 300)!,
+              ...(rootKind(fields.root) === undefined ? {} : { root: rootKind(fields.root)! }),
+              ...(optionalText(fields.name, 'name', 64) === undefined ? {} : { name: optionalText(fields.name, 'name', 64)! }),
+              ...(fields.replace === true ? { replace: true } : {}),
+              ...(optionalText(fields.expectedHash, 'expectedHash', 100) === undefined ? {} : { expectedHash: optionalText(fields.expectedHash, 'expectedHash', 100)! }),
+            }); break
+            case 'trash-purge': value = await service.purgeTrash({ id: text(fields.id, 'id', 300)! }); break
+            case 'trash-empty': value = await service.emptyTrash(); break
             case 'version-restore': value = await service.restoreVersion(root, { key: text(fields.key, 'key', 200)!, versionId: text(fields.versionId, 'versionId', 100)!, expectedHash: text(fields.expectedHash, 'expectedHash', 100)! }); break
             case 'suggestion-dismiss': value = await service.dismissSuggestion(text(fields.id, 'id', 100)!); break
             case 'suggestion-status': {

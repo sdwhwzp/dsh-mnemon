@@ -313,6 +313,33 @@ describe('authenticated Mnemon account memory', () => {
 
 
 describe('account skills and backup ownership', () => {
+  it('keeps skill Trash restore, purge and empty operations inside the owning account', async () => {
+    const f = await fixture(true)
+    const first = f.live.forAgent(f.sessions[0]!).source('skills')
+    const second = f.live.forAgent(f.sessions[1]!).source('skills')
+    for (const [source, name] of [[first, 'alice-removed'], [second, 'bob-removed']] as const) {
+      const skill = await source.mutate<{ key: string; hash: string }>('skill-create', { name, description: 'Private skill', root: 'user-dsh' })
+      await source.mutate('skill-delete', { key: skill.key, expectedHash: skill.hash })
+    }
+    const [aliceEntry] = await first.read<Array<{ id: string; name: string }>>('trash-list')
+    const [bobEntry] = await second.read<Array<{ id: string; name: string }>>('trash-list')
+    expect(aliceEntry?.name).toBe('alice-removed')
+    expect(bobEntry?.name).toBe('bob-removed')
+    for (const operation of ['trash-restore', 'trash-purge']) {
+      await expect(second.mutate(operation, { id: aliceEntry!.id })).rejects.toThrow('not found')
+    }
+    await expect(second.read('trash-restore-preview', { id: aliceEntry!.id })).rejects.toThrow('not found')
+    await first.mutate('trash-restore', { id: aliceEntry!.id })
+    expect(JSON.stringify(await first.read('catalog'))).toContain('alice-removed')
+    expect(JSON.stringify(await second.read('catalog'))).not.toContain('alice-removed')
+    const scratch = await first.mutate<{ key: string; hash: string }>('skill-create', { name: 'alice-scratch', description: 'Private scratch', root: 'user-dsh' })
+    await first.mutate('skill-delete', { key: scratch.key, expectedHash: scratch.hash })
+    expect(await first.mutate('trash-empty', {})).toEqual({ purged: 1 })
+    expect(await second.read('trash-list')).toEqual([bobEntry])
+    await second.mutate('trash-purge', { id: bobEntry!.id })
+    expect(await second.read('trash-list')).toEqual([])
+  })
+
   it('isolates skill files and preferences despite a shared plugin directory override', async () => {
     const f = await fixture(true)
     const graphs = f.sessions.map(session => f.live.forAgent(session))

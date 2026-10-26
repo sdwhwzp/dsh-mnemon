@@ -892,8 +892,9 @@ export class MemorySpacesService {
       }
       const heterogeneous = new Set(spaces.map(body => body.provider.id)).size > 1
       if (heterogeneous) for (const candidate of candidates) candidate.insight.federatedScore = 1 / (60 + candidate.providerRank)
-      candidates.sort((left, right) => heterogeneous
-        ? (right.insight.federatedScore ?? 0) - (left.insight.federatedScore ?? 0) || left.bodyOrder - right.bodyOrder
+      const useProviderOrder = heterogeneous || candidates.some(candidate => candidate.scoreSemantics?.kind === 'provider-native')
+      candidates.sort((left, right) => useProviderOrder
+        ? left.providerRank - right.providerRank || left.bodyOrder - right.bodyOrder
         : (right.insight.score ?? 0) - (left.insight.score ?? 0))
       return { hints, quality: applyRecallQualityPolicy(preparedPolicy, candidates, qualityContext) }
     }
@@ -954,6 +955,8 @@ export class MemorySpacesService {
       }
       if (decision.reason === 'unscored') stats.unscored += 1
       if (decision.reason === 'unscaled-score') stats.unscaled += 1
+      if (decision.tier === 'ranked') stats.ranked = (stats.ranked ?? 0) + 1
+      if (decision.reason === 'out-of-range-score') stats.outOfRange = (stats.outOfRange ?? 0) + 1
     }
     for (const { candidate } of quality.selected) {
       const stats = qualityStats.get(candidate.memoryBodyId)
@@ -1672,7 +1675,8 @@ export class MemorySpacesService {
     // enough for the Host to archive any valid hot-memory entry byte-for-byte;
     // the UI remains at its existing 8,000-character limit.
     const content = required(request.content, 'content', 8 * 1024)
-    const importance = integer(request.importance, 3, 1, 5)
+    // Keep omission distinct from an explicit level so Provider defaults apply.
+    const importance = request.importance === undefined ? undefined : integer(request.importance, 3, 1, 5)
     const category = allowed(request.category, CATEGORIES, 'category') ?? 'general'
     const source = allowed(request.source, SOURCES, 'source') ?? 'user'
     const tags = commaList(request.tags, 'tags', 20)?.split(',')
@@ -1681,7 +1685,7 @@ export class MemorySpacesService {
       body,
       request: {
         content,
-        importance,
+        ...(importance === undefined ? {} : { importance }),
         category,
         source,
         memoryBodyId: body.id,
