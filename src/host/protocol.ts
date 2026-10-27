@@ -462,6 +462,10 @@ export type SkillsConfig = Partial<ResolvedSkillsConfig>
 export interface ResolvedSkillsConfig {
   /** Review finished conversations in the background and suggest new or better skills. */
   evolution: boolean
+  /** Allow reviews to suggest new skills. Existing suggestions remain actionable. */
+  allowCreate: boolean
+  /** Allow reviews to suggest changes to existing skills. */
+  allowUpdate: boolean
   /** Backtest a draft against the current version as soon as it is written. */
   autoBacktest: boolean
   /** The one-line skills bar under a finished turn. */
@@ -486,6 +490,8 @@ export interface ResolvedSkillsConfig {
 
 export const DEFAULT_SKILLS_CONFIG: Readonly<ResolvedSkillsConfig> = Object.freeze({
   evolution: false,
+  allowCreate: true,
+  allowUpdate: true,
   autoBacktest: true,
   hints: true,
   sidebar: false,
@@ -817,6 +823,8 @@ export interface MnemonPackTarget {
   root: string
   scope: StorageScopeKind
   defaultRoot: string
+  /** Optional on older Hosts; only a native DSH backend can open an OS chooser. */
+  nativeDirectoryPicker?: boolean
 }
 
 export interface MnemonPackExport {

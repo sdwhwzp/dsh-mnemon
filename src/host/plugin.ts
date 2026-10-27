@@ -11,6 +11,7 @@ import { SkillEvolution } from './skill-evolution.ts'
 import { DEFAULT_SKILLS_CONFIG, type ResolvedSkillsConfig } from './protocol.ts'
 import { skillsSourceFor } from './skill-source.ts'
 import { registerRpc } from './rpc.ts'
+import { hasNativeDirectoryPicker } from './directory-picker.ts'
 import { migrateLegacyDisplayMode, registerSettingsRpc } from './settings.ts'
 import { MnemonSubagentCoordinator } from './subagent.ts'
 import { registerTools } from './tools.ts'
@@ -220,7 +221,7 @@ export function apply(rawContext: unknown, rawConfig: MnemonConfig | LiveHostCon
       },
       pluginCommand: () => dshPluginCommand(ctx.get('profileContext')),
     })
-    const rpc = registerRpc(connection, runtime, lifecycle, versions, () => { if (accountSync !== undefined) accountSync.refresh(); else autoBackup!.refresh() })
+    const rpc = registerRpc(connection, runtime, lifecycle, versions, () => { if (accountSync !== undefined) accountSync.refresh(); else autoBackup!.refresh() }, () => hasNativeDirectoryPicker(ctx))
     const settings = registerSettingsRpc(connection, accounts?.settingsService(principal => runtime.reloadAccount(principal)) ?? hostSettings)
     const view = registerViewRpc(connection, runtime, extensions, memoryPlugins, lifecycle, pluginInstallation)
     if (Context.is(webContext)) {

@@ -1,9 +1,9 @@
 # dsh-mnemon 账号隔离融合
 
-- 原作者源：`https://github.com/omdsh-dev/dsh-mnemon.git`，`main`，同步基线 `600072a85863d3c16a04aea335696e60b3d5e4a4`。
+- 原作者源：`https://github.com/omdsh-dev/dsh-mnemon.git`，`main`，同步基线 `58fae98cd586d41e2ce9843c1593236936e0e9e5`。
 - 自有 fork：`https://github.com/sdwhwzp/dsh-mnemon.git`，上传地址 `git@github.com:sdwhwzp/dsh-mnemon.git`。
 - 当前融合分支：`dev`；`main` 跟随源分支。所有临时分支的提交必须可从 `dev` 到达后，才删除本地和自有远端临时分支。
-- 适配版本：`0.5.35-dsh.20261026.1`，19 个 Mnemon 包使用同一版本；账号行为验证使用本地 Harness `0.2.1-rc.3`；账号网关基线见 `deploy/server30-pins.json`。
+- 适配版本：`0.5.36-dsh.20261027.1`，19 个 Mnemon 包使用同一版本；账号行为验证使用本地 Harness `0.2.1-rc.3`；账号网关基线见 `deploy/server30-pins.json`。
 
 本 fork 保留原作者的三层记忆、工具、工作台与数据格式，增加可选的登录账号隔离，以及可选的共享记忆层：设置 `sharedMemoryDir` 后所有账号共读一个记忆空间，只有 `role=admin` 的账号可写，目录与写权限均由 Host 指派。配置与使用限制见 [账号部署](docs/zh-CN/guides/accounts.md)。未设置 `accountDataDir` 时仍使用原作者的单用户存储规则；未设置 `sharedMemoryDir` 时共享条目自动停用。
 
@@ -50,3 +50,5 @@ pnpm run verify:docs
 评审隔离测试使用 Harness 0.2.1-rc.3 的 Node PTC 服务及独立文件系统、子进程和沙箱提供者。测试仅创建临时账号与工作区，等待 Host 卸载后清理。
 
 Successful independent artifact checks release their temporary installation immediately unless `--keep` is set; failed installations remain available for diagnosis. This bounds disk use across the nineteen plugin checks.
+
+The native storage picker and directory migration remain available for single-user Hosts. Account deployments retain Host-managed storage roots and reject account settings that change those roots; source suggestion switches stay account-local.
