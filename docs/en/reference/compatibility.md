@@ -9,7 +9,7 @@ The Starter pins a tested combination of official plugins. The table records ver
 | DSH | `0.2.1-rc.2`, `0.2.1-rc.3`, `0.2.0-rc.2` | 0.2.1-rc.2 remains the pinned development baseline. CI also runs every root test against installed 0.2.0-rc.2 and 0.2.1-rc.3 packages. See [DSH 0.2.0 and 0.2.1](#dsh-020-and-021) for version differences; the supported range also admits 0.2.1-rc.1. |
 | Node.js | `22.19` and `24` | Source CI and packed-artifact CI respectively; development requires `^22.19.0 \|\| >=24.0.0` |
 | Node.js 20 | Public package imports only | Does not establish that the DSH Host runs on Node 20 |
-| Mnemon Native CLI | `0.2.9` | Opt-in tests against a real CLI and disposable data; install the CLI separately |
+| Mnemon Native CLI | `0.2.9`; embedding model checks require `0.2.13+` | Opt-in tests against a real CLI and disposable data; install the CLI separately. Older versions retain their other commands, but Test status asks for an upgrade because their availability fields only establish provider reachability |
 | Third-party Providers | Adapter contracts and fixtures | Does not establish live cloud-account conformance or upstream availability |
 
 DSH 0.2.1-rc.3 fetches the official API-key model directory over the network. The task Agent model selector allows that Provider up to six seconds, covering DSH's default five-second request budget; other Providers retain their three-second bound. This changes directory loading only, not model selection, inference timeouts or saved configuration.

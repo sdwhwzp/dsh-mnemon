@@ -283,8 +283,29 @@ describe('MnemonSettingsCard', () => {
     render(spaces(scope, { rpc: { call }, isLoopback: true } as ClientConnectionHandle))
     fireEvent.click(screen.getByRole('button', { name: '测试状态' }))
 
-    expect(await screen.findByText('嵌入服务可用 · qwen3-embedding:0.6b · 已嵌入 6/8（75%）')).toBeTruthy()
+    expect(await screen.findByText('嵌入模型可用 · qwen3-embedding:0.6b · 已嵌入 6/8（75%）')).toBeTruthy()
     expect(call).toHaveBeenCalledWith('/dsh-mnemon-read', 'embedding-status', {})
+  })
+
+  it.each([false, true])('never calls a missing model or an unchecked legacy CLI available (legacy=%s, #494)', async legacy => {
+    const scope = settingsScope({ status: 'ready' as const,
+      value: { storageScope: 'global' as const }, base: {}, user: {}, revision: 1, writable: true, mode: 'host' as const })
+    const message = 'Embedding model checks require Mnemon CLI 0.2.13 or newer. Update the configured CLI and test again.'
+    const call = vi.fn(async (channel: string, endpoint: string) => {
+      if (channel === '/dsh-mnemon-read' && endpoint === 'embedding-status') return legacy
+        ? { ok: false as const, error: { message } }
+        : { ok: true as const, value: { available: false, model: 'missing-model', protocol: 'ollama', totalInsights: 34, embedded: 34, coverage: '100%' } }
+      if (channel === '/dsh-mnemon-read' && endpoint === 'task-agent-models') return { ok: true as const, value: { groups: [], failures: [] } }
+      if (channel === '/dsh-mnemon-read' && endpoint === 'provider-services') return { ok: true as const, value: { providers: [], items: [], generatedAt: '' } }
+      if (channel === '/dsh-mnemon-pack' && endpoint === 'target') return { ok: true as const, value: { root: '/fixture', scope: 'global' as const } }
+      throw new Error(`unexpected ${channel} ${endpoint}`)
+    })
+    render(spaces(scope, { rpc: { call }, isLoopback: true } as ClientConnectionHandle))
+    fireEvent.click(screen.getByRole('button', { name: '测试状态' }))
+    expect(await screen.findByText(legacy ? `嵌入状态检查失败：${message}`
+      : '嵌入模型不可用 · missing-model · 协议 ollama · 已嵌入 34/34（100%）')).toBeTruthy()
+    expect(screen.queryByText(/嵌入(?:模型|服务)可用 ·/u)).toBeNull()
+    expect(screen.queryByRole('button', { name: /补齐/u })).toBeNull()
   })
 
   it('lists the vectors of each Mnemon Native space, so a full count for one never reads as all of them (#392)', async () => {
@@ -326,7 +347,7 @@ describe('MnemonSettingsCard', () => {
     expect(screen.getByText('尚未检查嵌入服务的连接与各 Mnemon Native 空间的覆盖率。')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: '测试状态' }))
 
-    expect(await screen.findByText('嵌入服务可用 · nomic-embed-text · 已嵌入 127/158（80%）')).toBeTruthy()
+    expect(await screen.findByText('嵌入模型可用 · nomic-embed-text · 已嵌入 127/158（80%）')).toBeTruthy()
     const rows = () => within(screen.getByRole('list', { name: '各 Mnemon Native 空间' })).getAllByRole('listitem')
     expect(rows().map(item => item.textContent)).toEqual([
       'Lumen 项目已嵌入 94/94（100%）',
@@ -350,7 +371,7 @@ describe('MnemonSettingsCard', () => {
     fill.resolve()
     // The counts are read again once the Host has filled the space in, and the line says what it did.
     expect((await screen.findByRole('status')).textContent).toBe('已为「工具实测」补齐 31 条向量。')
-    expect(await screen.findByText('嵌入服务可用 · nomic-embed-text · 已嵌入 158/158（100%）')).toBeTruthy()
+    expect(await screen.findByText('嵌入模型可用 · nomic-embed-text · 已嵌入 158/158（100%）')).toBeTruthy()
     expect(rows()[1]!.textContent).toBe('工具实测已嵌入 64/64（100%）')
     expect(screen.queryByRole('button', { name: /补齐「工具实测」的向量/u })).toBeNull()
     expect(call.mock.calls.filter(([, endpoint]) => endpoint === 'embedding-status')).toHaveLength(2)
@@ -385,7 +406,7 @@ describe('MnemonSettingsCard', () => {
     fireEvent.click(await screen.findByRole('button', { name: '补齐「工具实测」的向量' }))
     expect((await screen.findByRole('alert')).textContent).toBe('「工具实测」的向量没有补齐：Ollama embedding provider not available at http://127.0.0.1:11434')
     // The status read again finds the service down: no fill is offered, and the hint says when one will be.
-    expect(await screen.findByText('嵌入服务不可达 · nomic-embed-text · 已嵌入 33/64（51%）')).toBeTruthy()
+    expect(await screen.findByText('嵌入模型不可用 · nomic-embed-text · 已嵌入 33/64（51%）')).toBeTruthy()
     expect(screen.queryByRole('button', { name: '补齐「工具实测」的向量' })).toBeNull()
     expect(screen.getByText('没有向量的记忆不参与语义匹配；嵌入服务可用后，可以在这里补齐。')).toBeTruthy()
     // A new test starts clean.

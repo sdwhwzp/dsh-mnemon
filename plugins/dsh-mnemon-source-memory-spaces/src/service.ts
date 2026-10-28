@@ -365,13 +365,14 @@ export function mutationResultCommitted(result: unknown): boolean {
 }
 
 /** One `mnemon embed --status` answer, strictly validated. */
-function embeddingCounts(value: JsonValue): MnemonEmbeddingStatus {
+function embeddingCounts(value: JsonValue, requireModelProbe = false): MnemonEmbeddingStatus {
   const output = record(value)
-  // Mnemon ≥ 0.3.x reports `embedding_available`; `ollama_available` is the
-  // legacy alias kept for older binaries.
-  const available = output?.embedding_available ?? output?.ollama_available
+  // Since Mnemon 0.2.13, embedding_available verifies the selected model.
+  // ollama_available only reports provider reachability. Legacy fallback is
+  // useful for backfill counts, but must never certify a model in Test status.
+  const available = requireModelProbe ? output?.embedding_available : output?.embedding_available ?? output?.ollama_available
   const model = text(output?.model)?.trim()
-  // Mnemon ≥ 0.3.x may report the endpoint protocol it resolved; older binaries
+  // Mnemon may report the endpoint protocol it resolved; older binaries
   // omit the field, so a missing or malformed value is dropped instead of
   // failing the whole status probe.
   const protocol = text(output?.protocol)?.trim()
@@ -632,6 +633,16 @@ export class MemorySpacesService {
    * health of every space while another one lacked vectors (#392).
    */
   async embeddingStatus(signal?: AbortSignal): Promise<MnemonEmbeddingStatus> {
+    // Older binaries use both availability fields for reachability, so field
+    // presence alone cannot prove model usability. Recheck the actual command
+    // on each explicit test, including after an update or rollback in place.
+    const version = (await this.runner.runText(['--version'], { globalFlags: false, ...(signal === undefined ? {} : { signal }) })).trim()
+    const match = /^(?:mnemon version\s+)?v?(\d+)\.(\d+)\.(\d+)(?:\+[0-9A-Za-z.-]+)?$/u.exec(version)
+    const parts = match?.slice(1).map(Number)
+    if (parts === undefined || !parts.every(Number.isSafeInteger)
+      || !(parts[0]! > 0 || parts[1]! > 2 || (parts[1] === 2 && parts[2]! >= 13))) {
+      throw new Error('Embedding model checks require Mnemon CLI 0.2.13 or newer. Update the configured CLI and test again.')
+    }
     // Mnemon creates the Store it opens, so a space whose database is missing is not read.
     const native = this.memorySpaces.list().filter(body => this.isNativeSpace(body) && existsSync(body.dbPath))
     let runtime: MnemonEmbeddingStatus | undefined
@@ -639,7 +650,7 @@ export class MemorySpacesService {
     for (const body of native) {
       const space = { memoryBodyId: body.id, name: body.name, active: body.active }
       try {
-        const counts = embeddingCounts(await this.runner.runJson(['embed', '--status'], { store: body.id, database: body.dbPath, ...(signal === undefined ? {} : { signal }) }))
+        const counts = embeddingCounts(await this.runner.runJson(['embed', '--status'], { store: body.id, database: body.dbPath, ...(signal === undefined ? {} : { signal }) }), true)
         runtime ??= counts
         spaces.push({ ...space, totalInsights: counts.totalInsights, embedded: counts.embedded, coverage: coveragePercent(counts.embedded, counts.totalInsights) })
       } catch (error) {
@@ -661,7 +672,7 @@ export class MemorySpacesService {
   private async embeddingRuntime(signal?: AbortSignal): Promise<MnemonEmbeddingStatus> {
     const directory = mkdtempSync(join(tmpdir(), 'dsh-mnemon-embedding-'))
     try {
-      return embeddingCounts(await this.runner.runJson(['--data-dir', directory, 'embed', '--status'], { globalFlags: false, ...(signal === undefined ? {} : { signal }) }))
+      return embeddingCounts(await this.runner.runJson(['--data-dir', directory, 'embed', '--status'], { globalFlags: false, ...(signal === undefined ? {} : { signal }) }), true)
     } catch (error) {
       throw new Error(cliReason(error), { cause: error })
     } finally {

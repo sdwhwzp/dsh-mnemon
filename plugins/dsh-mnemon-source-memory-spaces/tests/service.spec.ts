@@ -347,24 +347,60 @@ describe('MemorySpacesService', () => {
     expect(service.statusSummary().version).toBeUndefined()
   })
 
+  it.each(['0.2.5', '0.2.12', '0.2.13-rc.1', 'dev', 'unrecognized'])('refuses to certify model usability with CLI %s (#494)', async version => {
+    const process = vi.fn<ProcessRunner>(async (_command, args) => ({
+      stdout: args.includes('--version') ? `mnemon version ${version}\n`
+        : JSON.stringify({ total_insights: 8, embedded: 8, coverage: '100%', embedding_available: true, ollama_available: true, model: 'missing-model' }),
+      stderr: '', exitCode: 0,
+    }))
+    const config = resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir: populatedDataDir() })
+    const runner = createRunner(config, process)
+    const service = createService(runner, config, createRegistry(runner, true))
+    await expect(service.embeddingStatus()).rejects.toThrow('Mnemon CLI 0.2.13 or newer')
+    expect(process.mock.calls.map(([, args]) => args)).toEqual([['--version']])
+  })
+
+  it('uses the model probe rather than endpoint reachability or stored vectors, and recovers after an update (#494)', async () => {
+    let version = '0.2.12'
+    let available = false
+    const process = vi.fn<ProcessRunner>(async (_command, args) => ({
+      stdout: args.includes('--version') ? `mnemon version ${version}\n`
+        : JSON.stringify({ total_insights: 8, embedded: 8, coverage: '100%', embedding_available: available, ollama_available: true, model: 'selected-model' }),
+      stderr: '', exitCode: 0,
+    }))
+    const config = resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir: populatedDataDir(), store: 'work' })
+    const runner = createRunner(config, process)
+    const service = createService(runner, config, createRegistry(runner, true))
+    await expect(service.embeddingStatus()).rejects.toThrow('Mnemon CLI 0.2.13 or newer')
+    version = '0.2.13'
+    await expect(service.embeddingStatus()).resolves.toMatchObject({ available: false, embedded: 8, coverage: '100%' })
+    available = true
+    await expect(service.embeddingStatus()).resolves.toMatchObject({ available: true, embedded: 8, coverage: '100%' })
+    version = '0.2.12'
+    await expect(service.embeddingStatus()).rejects.toThrow('Mnemon CLI 0.2.13 or newer')
+  })
+
   it('reports the effective Mnemon embedding connection and coverage with strict response validation', async () => {
     const valid = { total_insights: 8, embedded: 6, coverage: '75%', embedding_available: true, protocol: 'openai', model: 'qwen3-embedding:0.6b' }
     const legacy = { total_insights: 8, embedded: 6, coverage: '75%', ollama_available: true, model: 'qwen3-embedding:0.6b' }
     const invalid = [
-      { total_insights: 8, embedded: 6, coverage: '75%', ollama_available: true, model: 'x'.repeat(201) },
-      { ollama_available: true, embedded: 9, total_insights: 8 },
-      { total_insights: 8, embedded: 6, coverage: '101%', ollama_available: true, model: 'qwen3-embedding:0.6b' },
+      legacy,
+      { ...valid, embedding_available: null, ollama_available: true },
+      { ...valid, embedding_available: 'true', ollama_available: true },
+      { ...valid, model: 'x'.repeat(201) },
+      { ...valid, embedded: 9 },
+      { ...valid, coverage: '101%' },
     ]
     // An invalid answer fails the space, and then the runtime probe that stands in for it.
-    const outputs: unknown[] = [valid, legacy, ...invalid.flatMap(output => [output, output])]
-    const process = vi.fn<ProcessRunner>(async () => ({ stdout: JSON.stringify(outputs.shift()), stderr: '', exitCode: 0 }))
+    const outputs: unknown[] = [valid, ...invalid.flatMap(output => [output, output])]
+    const process = vi.fn<ProcessRunner>(async (_command, args) => ({ stdout: args.includes('--version') ? 'mnemon version 0.2.13' : JSON.stringify(outputs.shift()), stderr: '', exitCode: 0 }))
     const dataDir = populatedDataDir()
     const config = resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir, store: 'work' })
     const runner = createRunner(config, process)
     const service = createService(runner, config, createRegistry(runner, true))
 
     const spaces = [{ memoryBodyId: 'work', name: 'work', active: true, totalInsights: 8, embedded: 6, coverage: '75%' }]
-    // Mnemon ≥ 0.3.x reports `embedding_available` plus the resolved protocol.
+    // Mnemon 0.2.13 reports model usability independently of provider reachability.
     const expected = {
       available: true,
       model: 'qwen3-embedding:0.6b',
@@ -374,20 +410,10 @@ describe('MemorySpacesService', () => {
       coverage: '75%',
       spaces,
     }
-    // Legacy output carries no protocol, so the field stays absent.
-    const legacyExpected = {
-      available: true,
-      model: 'qwen3-embedding:0.6b',
-      totalInsights: 8,
-      embedded: 6,
-      coverage: '75%',
-      spaces,
-    }
     await expect(service.embeddingStatus()).resolves.toEqual(expected)
-    expect(process).toHaveBeenNthCalledWith(1, FAKE_CLI, [
+    expect(process).toHaveBeenNthCalledWith(2, FAKE_CLI, [
       '--data-dir', dataDir, '--store', 'work', 'embed', '--status',
     ], expect.anything())
-    await expect(service.embeddingStatus()).resolves.toEqual(legacyExpected)
     for (const _output of invalid) await expect(service.embeddingStatus()).rejects.toThrow('invalid response')
     expect(outputs).toEqual([])
   })
@@ -409,6 +435,7 @@ describe('MemorySpacesService', () => {
     }
     const usage = 'Error: open database: file is not a database\nUsage:\n  mnemon embed [id] [flags]\n\nFlags:\n      --all      backfill embeddings for all un-embedded insights\n'
     const process = vi.fn<ProcessRunner>(async (_command, args) => {
+      if (args.includes('--version')) return { stdout: 'mnemon version 0.2.13', stderr: '', exitCode: 0 }
       const store = args[args.indexOf('--store') + 1]!
       return store === 'broken' ? { stdout: '', stderr: usage, exitCode: 1 } : { stdout: JSON.stringify(counts[store]), stderr: '', exitCode: 0 }
     })
@@ -425,7 +452,7 @@ describe('MemorySpacesService', () => {
       ],
     })
     // Each space is counted by a call of its own, and one without a database is never read: the CLI would create its Store.
-    expect(process.mock.calls.map(([, args]) => args[args.indexOf('--store') + 1])).toEqual(['work', 'notes', 'broken'])
+    expect(process.mock.calls.filter(([, args]) => args.includes('--store')).map(([, args]) => args[args.indexOf('--store') + 1])).toEqual(['work', 'notes', 'broken'])
     expect(existsSync(join(dataDir, 'data', 'gone'))).toBe(false)
   })
 
@@ -436,6 +463,7 @@ describe('MemorySpacesService', () => {
     writeFileSync(join(dataDir, 'active'), 'ghost\n')
     const scratch: string[] = []
     const process = vi.fn<ProcessRunner>(async (_command, args) => {
+      if (args.includes('--version')) return { stdout: 'mnemon version 0.2.13', stderr: '', exitCode: 0 }
       scratch.push(args[1]!)
       expect(existsSync(args[1]!)).toBe(true)
       return { stdout: JSON.stringify({ total_insights: 0, embedded: 0, coverage: '0%', embedding_available: true, model: 'nomic-embed-text' }), stderr: '', exitCode: 0 }
@@ -444,7 +472,7 @@ describe('MemorySpacesService', () => {
     const runner = createRunner(config, process)
     const service = createService(runner, config, createRegistry(runner, true))
     await expect(service.embeddingStatus()).resolves.toEqual({ available: true, model: 'nomic-embed-text', totalInsights: 0, embedded: 0, coverage: '0%', spaces: [] })
-    expect(process.mock.calls.map(([, args]) => args)).toEqual([['--data-dir', scratch[0], 'embed', '--status']])
+    expect(process.mock.calls.map(([, args]) => args)).toEqual([['--version'], ['--data-dir', scratch[0], 'embed', '--status']])
     // Mnemon creates the Store it opens: the scratch directory goes again, and the data directory gains no Store.
     expect(scratch[0]!.startsWith(dataDir)).toBe(false)
     expect(existsSync(scratch[0]!)).toBe(false)
@@ -459,8 +487,8 @@ describe('MemorySpacesService', () => {
     writeFileSync(join(dataDir, 'data', '.dsh-memory-bodies.json'), JSON.stringify({ version: 1, bodies: ['work', 'notes'].map(id => ({
       id, name: id[0]!.toUpperCase() + id.slice(1), description: '', active: true, createdAt: at, updatedAt: at,
     })) }))
-    const process = vi.fn<ProcessRunner>(async () => ({
-      stdout: JSON.stringify({ total_insights: 2, embedded: 1, coverage: '50%', embedding_available: true, model: 'nomic-embed-text' }), stderr: '', exitCode: 0,
+    const process = vi.fn<ProcessRunner>(async (_command, args) => ({
+      stdout: args.includes('--version') ? 'mnemon version 0.2.13' : JSON.stringify({ total_insights: 2, embedded: 1, coverage: '50%', embedding_available: true, model: 'nomic-embed-text' }), stderr: '', exitCode: 0,
     }))
     const config = resolveMemorySpacesConfig({ cliPath: FAKE_CLI, dataDir, store: 'work' })
     const runner = createRunner(config, process)
@@ -477,7 +505,7 @@ describe('MemorySpacesService', () => {
     await expect(fill).rejects.toThrow('Memory Space Notes has no database')
     await expect(status).resolves.toMatchObject({ totalInsights: 2, embedded: 1, spaces: [expect.objectContaining({ memoryBodyId: 'work' })] })
     expect((await status).spaces).toHaveLength(1)
-    expect(process.mock.calls.map(([, args]) => args[args.indexOf('--store') + 1])).toEqual(['work'])
+    expect(process.mock.calls.filter(([, args]) => args.includes('--store')).map(([, args]) => args[args.indexOf('--store') + 1])).toEqual(['work'])
     expect(existsSync(join(dataDir, 'data', 'notes'))).toBe(false)
   })
 

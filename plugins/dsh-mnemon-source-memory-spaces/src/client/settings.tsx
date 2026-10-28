@@ -247,7 +247,7 @@ function NativeProviderCard(props: { activeScope: 'global' | 'workspace'; cliMis
   </details>
 }
 
-/** Reachability and coverage line; the protocol appears only when the Host reports one. */
+/** Selected-model usability and stored-vector coverage; the protocol appears only when the Host reports one. */
 function embeddingStatusText(t: Translate, status: MnemonEmbeddingStatus): string {
   const coverage = { embedded: status.embedded, total: status.totalInsights, coverage: status.coverage }
   return status.protocol === undefined

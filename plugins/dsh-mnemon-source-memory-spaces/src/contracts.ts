@@ -594,6 +594,7 @@ export interface ResolvedMnemonEmbeddingConfig {
 
 
 export interface MnemonEmbeddingStatus {
+  /** Whether Mnemon 0.2.13+ produced a nonempty probe vector with the selected model. */
   available: boolean
   model: string
   /** Protocol Mnemon resolved for the embedding endpoint; omitted when the CLI does not report one. */

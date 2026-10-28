@@ -2,25 +2,28 @@ import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
-import { COMPOSABLE_MEMORY_API_VERSION, type MemoryJsonValue } from 'dsh-mnemon/contracts'
-import {
-  defineMemoryPlugin, defineMemorySource, installMemory, memoryConfigurationDigest, createMemoryMutationReceipt,
-  memoryInputRecord, memoryInputText, truncateMemoryText,
-} from 'dsh-mnemon/extension-sdk'
+import type { MemoryJsonValue, MemoryPluginDescriptor } from 'dsh-mnemon/contracts'
 
 export const name = 'dsh-mnemon-source-external-notes'
 export const inject = ['mnemonMemory']
-export const memoryPlugin = defineMemoryPlugin({
+export const memoryPlugin = {
   packageName: name,
   label: { en: 'External notes', 'zh-CN': '外部笔记' },
   description: { en: 'A Source-owned file and management protocol.', 'zh-CN': '由 Source 自主管理的文件与协议。' },
   roles: ['source'],
   provides: [{ id: 'source' }, { id: 'source.notes' }],
-})
+} satisfies Omit<MemoryPluginDescriptor, 'apiVersion'>
 export interface Config { path: string }
 
 /** A deliberately small external Source: the file, protocol and snapshots are its own. */
-export function apply(ctx: Context, config: Config): void {
+export async function apply(ctx: Context, config: Config): Promise<void> {
+  // A bundle entry is still imported when Mnemon is uninstalled. Cordis calls
+  // apply only once mnemonMemory is present, so its SDK is loaded here too.
+  const { COMPOSABLE_MEMORY_API_VERSION } = await import('dsh-mnemon/contracts')
+  const {
+    defineMemoryPlugin, defineMemorySource, installMemory, memoryConfigurationDigest, createMemoryMutationReceipt,
+    memoryInputRecord, memoryInputText, truncateMemoryText,
+  } = await import('dsh-mnemon/extension-sdk')
   if (!isAbsolute(config.path)) throw new Error('notes path must be absolute')
   const path = config.path
   const read = () => existsSync(path) ? readFileSync(path, 'utf8') : ''
@@ -85,5 +88,5 @@ export function apply(ctx: Context, config: Config): void {
       }
     },
   })
-  installMemory(ctx, { plugin: memoryPlugin, sources: [definition] }, { effectiveDigest: memoryConfigurationDigest(config) })
+  installMemory(ctx, { plugin: defineMemoryPlugin(memoryPlugin), sources: [definition] }, { effectiveDigest: memoryConfigurationDigest(config) })
 }

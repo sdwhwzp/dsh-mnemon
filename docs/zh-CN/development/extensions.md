@@ -65,26 +65,27 @@ const id = workspaceStorageId(workspace)
 
 ```ts
 import type { Context } from '@deepseek-ai/cordis'
-import { defineMemoryPlugin, installMemory } from 'dsh-mnemon/extension-sdk'
-import { notesSource } from './source.js'
+import type { MemoryPluginDescriptor } from 'dsh-mnemon/contracts'
 
 export const name = 'dsh-mnemon-source-notes'
 export const inject = ['mnemonMemory']
-export const memoryPlugin = defineMemoryPlugin({
+export const memoryPlugin = {
   packageName: name,
   label: { en: 'Notes', 'zh-CN': '笔记' },
   description: { en: 'Durable personal notes.', 'zh-CN': '长期个人笔记。' },
   roles: ['source'],
   provides: [{ id: 'source' }, { id: 'source.durable-evidence' }],
-})
-export function apply(ctx: Context): void {
-  installMemory(ctx, { plugin: memoryPlugin, sources: [notesSource] })
+} satisfies Omit<MemoryPluginDescriptor, 'apiVersion'>
+export async function apply(ctx: Context): Promise<void> {
+  const { defineMemoryPlugin, installMemory } = await import('dsh-mnemon/extension-sdk')
+  const { notesSource } = await import('./source.js')
+  installMemory(ctx, { plugin: defineMemoryPlugin(memoryPlugin), sources: [notesSource] })
 }
 ```
 
 以上假定 `source.js` 导出定义；完整文件记忆示例见 [external-source.ts](../../../scripts/fixtures/plugin-consumer/src/external-source.ts)。Source 与 Strategy 是职责，不是强制分包/分仓。一个插件可以调用 `installMemory(ctx, { sources: [source], strategies: [strategy] })`，在同一 Fiber 下成批安装、一起卸载，保留不同的实例 key；仅在需要独立复用/替换时拆包。Strategy 仍需显式选择，随包提供不等于覆盖用户的选择。
 
-每个可组合插件都应导出一份 JSON 安全的 `memoryPlugin` 描述，并把同一个对象传给 `installMemory`。`roles` 只描述贡献职责，不产生两套插件类型；`provides` 与 `requires` 构成激活关系图。只有两个提供者确实不能同时参与时，才把能力标记为 `exclusive: true`。只声明硬依赖：能够真实降级或空操作的插件，不应强迫用户安装无关依赖。Core 会在运行 Source factory 前校验激活图，并且仍是唯一把图编译为一个 View 的组件。没有这份预发布描述的旧插件保持既有组合行为，但 Host 只能推断有限的身份与关系信息。
+每个可组合插件都应导出一份 JSON 安全的 `memoryPlugin` 描述，并把校验后的形式传给 `installMemory`。Host 在检查未激活 Entry 时也会校验这份纯数据描述。`roles` 只描述贡献职责，不产生两套插件类型；`provides` 与 `requires` 构成激活关系图。只有两个提供者确实不能同时参与时，才把能力标记为 `exclusive: true`。只声明硬依赖：能够真实降级或空操作的插件，不应强迫用户安装无关依赖。Core 会在运行 Source factory 前校验激活图，并且仍是唯一把图编译为一个 View 的组件。没有这份预发布描述的旧插件保持既有组合行为，但 Host 只能推断有限的身份与关系信息。
 
 Entry id 标识实例，type id 标识实现。不能剥掉 Loader 的 include 前缀。没有 Loader 身份的直接 `ctx.plugin()` 挂载，应传 `installMemory(..., { instanceId })`。路径和凭据归实例，不使用模块全局数据库或服务注册表。
 
@@ -150,6 +151,8 @@ export function apply(ctx) {
 状态卡片渲染在 `mnemon.component.status` 区域，同样以包名为键，在组件声明的名称下方显示 `<strong>` 中的一行要点与 `<p>` 中的一行说明。它接收 `component`、`language`，以及存在时记忆系统的 `sessionId` 与 `workspace`，并自行读取自己的 Source。无论是否提供内容，每个 Source 组件都有一张卡片：组件已关闭或其 Source 未运行时显示页面自己的说明，未提供内容时显示正在运行。标签页、卡片与页头都使用组件声明的名称。
 
 第三方插件仍走 DSH 原生 Profile/Loader 流程：用准确包名执行 `dsh plugin --profile <Profile> add <包名>@<版本> --save-exact`，检查其 `peerDependencies` 与 `dsh.bundle.patch`，重启后在 Profile 装配中明确激活。下载 npm 包本身不等于激活，Mnemon 也不会在当前进程热加载新代码。欢迎外部作者按本页契约贡献独立仓库；通用图形化管理会在接口和社区用例稳定后再评估，不是 v0.5 承诺。
+
+卸载 dsh-mnemon 后，第三方 bundle 行可能仍然安装着，因此入口必须能在 Mnemon 包缺席时加载：`name`、`inject`、`memoryPlugin` 保持为纯数据，模块顶层只使用类型导入，把 `dsh-mnemon/*` 的运行时导入延迟到 `apply()` 内。间接导入 SDK 的本地模块也要延迟，如上面的 `source.js`。声明 `inject: ['mnemonMemory']` 后，Cordis 会等待服务出现才调用 `apply`，服务消失时清理 Source 注册，服务恢复后重新激活。构建时将这些导入保留为 external，避免把运行时依赖提升到入口顶层。不要吞掉激活错误并伪装为注册成功；服务存在时 SDK 缺失或不兼容仍应报错。除了正常激活和清理，还要把构建入口放进没有 Mnemon 依赖的独立目录验证；外部消费方的 `absent-host.spec.ts` 覆盖这两条路径。
 
 <a id="默认三层扩展"></a>
 

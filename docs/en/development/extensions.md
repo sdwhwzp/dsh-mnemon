@@ -65,26 +65,27 @@ The complete `ComposableMemoryView` stays in the Host and composition tests, nev
 
 ```ts
 import type { Context } from '@deepseek-ai/cordis'
-import { defineMemoryPlugin, installMemory } from 'dsh-mnemon/extension-sdk'
-import { notesSource } from './source.js'
+import type { MemoryPluginDescriptor } from 'dsh-mnemon/contracts'
 
 export const name = 'dsh-mnemon-source-notes'
 export const inject = ['mnemonMemory']
-export const memoryPlugin = defineMemoryPlugin({
+export const memoryPlugin = {
   packageName: name,
   label: { en: 'Notes', 'zh-CN': '笔记' },
   description: { en: 'Durable personal notes.', 'zh-CN': '长期个人笔记。' },
   roles: ['source'],
   provides: [{ id: 'source' }, { id: 'source.durable-evidence' }],
-})
-export function apply(ctx: Context): void {
-  installMemory(ctx, { plugin: memoryPlugin, sources: [notesSource] })
+} satisfies Omit<MemoryPluginDescriptor, 'apiVersion'>
+export async function apply(ctx: Context): Promise<void> {
+  const { defineMemoryPlugin, installMemory } = await import('dsh-mnemon/extension-sdk')
+  const { notesSource } = await import('./source.js')
+  installMemory(ctx, { plugin: defineMemoryPlugin(memoryPlugin), sources: [notesSource] })
 }
 ```
 
 The example assumes `source.js` exports the definition. [external-source.ts](../../../scripts/fixtures/plugin-consumer/src/external-source.ts) implements the complete file-backed example. Source and Strategy are roles, not mandatory package/repository boundaries. One package can call `installMemory(ctx, { sources: [source], strategies: [strategy] })`: both contributions install and unload together under the same Fiber, retaining distinct instance keys. Split packages only for independent reuse or replacement. Strategy selection remains explicit; bundling one does not override the user's selected Strategy.
 
-Every composable plugin should export one JSON-safe `memoryPlugin` descriptor and pass the same object to `installMemory`. `roles` describe contributions; they do not create separate plugin classes. `provides` and `requires` form the activation graph. Mark a provided capability `exclusive: true` only when two providers cannot participate together. Declare only hard requirements: a plugin that can truthfully degrade or no-op must not force an unrelated dependency. Core validates the active graph before running Source factories, and remains the only component that compiles the graph into one View. Plugins without this prerelease descriptor keep their existing composition behavior, but the Host can infer only limited identity and relationship information.
+Every composable plugin should export one JSON-safe `memoryPlugin` descriptor and pass its validated form to `installMemory`. The Host also validates the plain descriptor when inspecting inactive Entries. `roles` describe contributions; they do not create separate plugin classes. `provides` and `requires` form the activation graph. Mark a provided capability `exclusive: true` only when two providers cannot participate together. Declare only hard requirements: a plugin that can truthfully degrade or no-op must not force an unrelated dependency. Core validates the active graph before running Source factories, and remains the only component that compiles the graph into one View. Plugins without this prerelease descriptor keep their existing composition behavior, but the Host can infer only limited identity and relationship information.
 
 An Entry id identifies an instance; type id identifies its implementation. Never strip Loader include prefixes. Direct `ctx.plugin()` mounts without Loader identity must supply `installMemory(..., { instanceId })`. Paths/credentials remain instance-owned. Do not use a module-global database or service registry.
 
@@ -150,6 +151,8 @@ dsh-mnemon keeps the settings of Memory Spaces, a shipped component whose settin
 The Status card renders in the `mnemon.component.status` region, keyed the same way, as a headline in `<strong>` and one line in `<p>` under the component's declared name. It receives `component`, `language`, and the Memory System's `sessionId` and `workspace` when there is one, and reads its own Source. Every Source component has a card whether or not it contributes one: a component that is off, or whose Source is not running, shows the page's own note instead, and one that contributed nothing shows that it runs. Tabs, the card and the header use the name the component declares.
 
 Third-party packages continue to use DSH's native Profile/Loader workflow. Install an exact package with `dsh plugin --profile <Profile> add <name>@<version> --save-exact`, verify its `peerDependencies` and `dsh.bundle.patch`, then activate it explicitly in Profile composition after restarting. Downloading an npm package is not activation, and Mnemon does not hot-load it into the current process. External standalone repositories following this guide are welcome; generic graphical management may be revisited after the contracts and community cases settle, but is not a v0.5 promise.
+
+A bundle row can remain installed after dsh-mnemon is removed. Its entry must therefore load without the Mnemon package: keep `name`, `inject` and `memoryPlugin` as plain data, use type-only imports at module scope, and defer runtime imports from `dsh-mnemon/*` to `apply()`. Defer local modules that import the SDK too, as `source.js` above does. With `inject: ['mnemonMemory']`, Cordis waits for the service before calling `apply`, disposes the Source registration when the service disappears, and reapplies when it returns. Keep these imports external in the build so bundling cannot hoist a runtime dependency into the entry. Do not catch activation errors and pretend registration succeeded; a missing or incompatible SDK while the service is present still needs a diagnostic. Verify the emitted entry in an isolated directory with no Mnemon dependency as well as normal activation and cleanup; the external consumer's `absent-host.spec.ts` covers both paths.
 
 <a id="default-three-tier-extensions"></a>
 

@@ -188,7 +188,7 @@ mnemon:
 
 Host 会复制正常进程环境，然后只在子进程中覆盖 `MNEMON_EMBED_ENDPOINT`、`MNEMON_EMBED_MODEL`、`MNEMON_EMBED_API_KEY` 与 `MNEMON_EMBED_PROTOCOL`（`protocol: auto` 时不注入协议变量，由 Mnemon 按 `/v1` 自动探测）；不会修改桌面会话、`launchctl`、shell 文件或 Mnemon 持久数据。保存后会切换到新的运行图，后续调用无需重启 DSH 即可使用新值。`enabled: false` 或省略 `embedding` 时，dsh-mnemon 不注入覆盖值，原有继承环境与 Mnemon 内建默认值保持不变。`MNEMON_EMBED_DIMENSIONS` 仍属于可通过 Host 环境继承的高级配置。
 
-Endpoint 必须是不含凭据、查询参数或片段的 HTTP(S) 绝对 URL。Mnemon 会把记忆与查询正文发给该服务；apiKey 与其他设置一样保存在 DSH 设置文件中，远程明文 HTTP 会暴露传输内容，请使用受信任的回环地址或 HTTPS。“测试状态”会针对当前默认 Store 执行实际生效的 `mnemon embed --status`，只报告嵌入服务可达性、模型、Mnemon 报告的解析协议与嵌入覆盖率，不会回填或改写记忆。有未保存编辑时必须先保存，避免把草稿值误报成已生效。
+Endpoint 必须是不含凭据、查询参数或片段的 HTTP(S) 绝对 URL。Mnemon 会把记忆与查询正文发给该服务；apiKey 与其他设置一样保存在 DSH 设置文件中，远程明文 HTTP 会暴露传输内容，请使用受信任的回环地址或 HTTPS。“测试状态”要求 Mnemon CLI 0.2.13 或更高版本，针对每个已有 Mnemon Native Store 执行实际生效的 `mnemon embed --status`，报告所选模型能否为合成探测文本生成非空向量、CLI 报告的解析协议与已有向量覆盖率，不会回填或改写记忆。旧版或无法识别的 CLI 会提示升级，不会显示检测成功；单独的 `ollama_available` 只能证明 Provider 可达。覆盖率 100% 描述的是已有向量，不代表当前模型可用，也不代表已有向量与当前模型兼容。合成探测不发送已有记忆，并遵循所配置 Provider 的正常计费和超时行为。有未保存编辑时必须先保存，避免把草稿值误报成已生效。
 
 ### 记忆来源开关
 
