@@ -152,6 +152,32 @@ describe('authenticated Mnemon account memory', () => {
     expect(await f.read('runtime-memory', {}, undefined, alice)).toMatchObject({ ok: false })
   })
 
+  it('filters inherited and conversation routes and refuses forbidden per-run skill models before work starts', async () => {
+    const f = await fixture()
+    const denied = { provider: 'codex', model: 'gpt-5.5' }
+    const allowed = { provider: 'codex', model: 'gpt-6-astra' }
+    const catalog = f.accounts.handler(async () => ({ ok: true, value: {
+      effective: { ...denied, source: 'fixed' }, defaultSelection: denied,
+      session: denied, inherited: { ...denied, source: 'dsh-default' }, groups: [], failures: [],
+    } }), 'read')
+    expect(await catalog('task-agent-models', {}, undefined, alice)).toEqual({ ok: true, value: { groups: [], failures: [] } })
+    const visible = f.accounts.handler(async () => ({ ok: true, value: {
+      session: allowed, inherited: { ...allowed, source: 'dsh-default' }, groups: [], failures: [],
+    } }), 'read')
+    expect(await visible('task-agent-models', {}, undefined, alice)).toMatchObject({ ok: true, value: {
+      session: allowed, inherited: { ...allowed, source: 'dsh-default' },
+    } })
+    const work = vi.fn(async () => ({ ok: true as const, value: null }))
+    const request = f.accounts.handler(work, 'write')
+    for (const operation of ['skill-draft', 'skill-backtest']) {
+      expect(await request('source-assistance', { operation, input: denied }, undefined, alice)).toMatchObject({ ok: false })
+      expect(await request('source-assistance', { operation, input: { provider: 'codex' } }, undefined, alice)).toMatchObject({ ok: false })
+    }
+    expect(work).not.toHaveBeenCalled()
+    expect(await request('source-assistance', { operation: 'skill-draft', input: allowed }, undefined, alice)).toMatchObject({ ok: true })
+    expect(work).toHaveBeenCalledTimes(1)
+  })
+
   it('keeps concurrent handlers in their initiating account after another account completes', async () => {
     const f = await fixture()
     let entered!: () => void, release!: () => void

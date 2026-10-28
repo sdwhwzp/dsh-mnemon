@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const restore = process.argv[2] === '--restore'
 const sourceInput = process.env.DSH_SOURCE_ROOT ?? (restore ? undefined : process.argv[2])
-const expectedVersion = process.env.DSH_SOURCE_VERSION ?? '0.1.7-rc.2'
+const expectedVersion = process.env.DSH_SOURCE_VERSION ?? '0.2.2-alpha.2'
 
 if (!restore && sourceInput === undefined) {
   throw new Error('Set DSH_SOURCE_ROOT or pass the DeepSeek Harness source checkout path.')
@@ -41,6 +41,8 @@ const links = new Map([
   ['@deepseek-ai/dsh-subagent-spawn-in-process', 'packages/subagent/subagent-spawn-in-process'],
   ['@deepseek-ai/dsh-system-prompt', 'packages/core/system-prompt'],
   ['@deepseek-ai/dsh-tools', 'packages/core/tools'],
+  ['@deepseek-ai/dsh-tool-executor-native', 'packages/core/tool-executor-native'],
+  ['@deepseek-ai/dsh-tool-executor-ptc', 'packages/core/tool-executor-ptc'],
 ])
 const restoreFile = join(root, 'node_modules', '.dsh-mnemon-dsh-source-links.json')
 

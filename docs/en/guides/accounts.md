@@ -12,6 +12,8 @@ Use the principal-enabled Harness `0.2.1-rc.2` fork with the matching account ga
 
 Account mode accepts only the bundled Runtime, Documents, Memory Spaces, Skills and Native provider. Other Sources, duplicate Source instances and other providers are rejected. Source configuration cannot override account directories. Administrators manage plugin installation, upgrades, storage, embedding credentials and provider connections. Accounts may edit their memory, retrieval limits, layer switches, task models and display preferences.
 
+The task model directory filters every reported route, including the conversation and inherited routes, through the account's model permissions. A model selected for one skill draft or backtest must pass the same check before that background work starts. Selection does not grant model access or bypass usage accounting.
+
 Without `accountDataDir`, upstream single-user behavior remains available. Existing global memory is never imported automatically or assigned to the first user; its owner may explicitly import a backup. Memory API isolation relies on the deployment's filesystem and command sandbox policies for direct disk access. Do not expose the account root as a user workspace.
 
 Skills use account-owned DSH and agent home directories, versions, review records and preferences. Project skills resolve only inside the authorized workspace. GitHub credentials and automatic-backup timers are keyed by the immutable account id; reloading preferences keeps each account’s own grant and schedule. Account backups require an HTTPS repository without credentials in its URL and never inherit Host Git credentials or `MNEMON_SYNC_TOKEN`.

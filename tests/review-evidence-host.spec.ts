@@ -1,3 +1,5 @@
+import * as PtcToolExecutor from '@deepseek-ai/dsh-tool-executor-ptc'
+import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
@@ -73,8 +75,8 @@ it.each(['native', 'ptc'].flatMap(mode => ['fork', 'spawn'].map(provider => ({ m
       }
       await ctx.plugin(ptc.default)
     }
-    // DSH 0.2.0 presents Code Mode beside the native tools; DSH 0.2.1 keeps the root native and each child in Code Mode.
-    await ctx.plugin(ToolRuntime, { mode: (mode === 'ptc' && !dsh021 ? 'both' : 'native') as 'native' })
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(NativeToolExecutor)
     await ctx.plugin(AgentRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
     await loadWorkingDirectory(ctx)
@@ -104,10 +106,10 @@ it.each(['native', 'ptc'].flatMap(mode => ['fork', 'spawn'].map(provider => ({ m
     }))
     // An independently composed plugin attaches its capability to EVERY Agent.
     // Such own-scope tools intentionally survive DSH's inherited-tool restrict().
-    ctx.on('agent/created', ({ agent }): undefined => {
+    ctx.on('agent/created', async ({ agent }): Promise<undefined> => {
       if (agent.session.header.origin === 'subagent') {
         children.push(agent)
-        if (mode === 'ptc') agent.ctx.tools.presentAs('ptc')
+        if (mode === 'ptc') await agent.ctx.plugin(PtcToolExecutor)
       }
       agent.ctx.tools.register({
         name: foreignTool, description: 'Read one complete synthetic overview chunk.',
@@ -115,6 +117,7 @@ it.each(['native', 'ptc'].flatMap(mode => ['fork', 'spawn'].map(provider => ({ m
         output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: String(value) }] },
         async execute(args) { executions.push(agent.id); return chunks[(args as { chunk: number }).chunk]! },
       })
+      return undefined
     })
     ctx.on('tools/result', (execution, result) => {
       if (execution.agent?.session.header.origin === 'subagent') {
@@ -167,9 +170,11 @@ it.each(['native', 'ptc'].flatMap(mode => ['fork', 'spawn'].map(provider => ({ m
     ])
     if (mode === 'ptc') expect(childReceipts.filter(receipt => receipt.name === 'run_code').map(receipt => receipt.isError)).toEqual([true, false, false])
     expect(coordinator.snapshot().reviews).toBe(1)
-    const parentResult = await ctx.tools.execute({ name: foreignTool, arguments: { chunk: 0 }, agent: parent,
-      callId: 'after-review' as ToolExecutionInput['callId'], signal: new AbortController().signal })
-    expect(parentResult.isError).toBe(false)
+    const parentResult = await ctx.tools.execute({
+      calls: [{ type: 'tool-call', id: 'after-review' as ToolExecutionInput['callId'], name: foreignTool, arguments: JSON.stringify({ chunk: 0 }) }],
+      agent: parent, signal: new AbortController().signal,
+    })
+    expect(parentResult.results[0]?.result.isError).toBe(false)
     expect(executions.filter(id => id === 'parent')).toHaveLength(6)
   } finally {
     stop?.()

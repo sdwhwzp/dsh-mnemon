@@ -1,3 +1,4 @@
+import * as NativeToolExecutor from '@deepseek-ai/dsh-tool-executor-native'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
@@ -73,7 +74,8 @@ it.skipIf(!dsh021)('refuses memory tools to a USER.md compaction child its conve
     // Resuming a finished child reads its Session through Session query, as in a profile.
     await ctx.plugin((await import(requireDsh.resolve('@deepseek-ai/dsh-session-query'))).default)
     await ctx.plugin(SystemPrompt)
-    await ctx.plugin(ToolRuntime, { mode: 'native' })
+    await ctx.plugin(ToolRuntime)
+  await ctx.plugin(NativeToolExecutor)
     await ctx.plugin(AgentRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
     await loadWorkingDirectory(ctx)

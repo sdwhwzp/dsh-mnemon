@@ -56,23 +56,24 @@
 
 /*
  * The fallback entry, used when the layout offers no native panel seat, copies
- * DSH's own panel row (dsh-client-ui-sidebar .panelRow, identical in 0.2.0-rc.2
- * and 0.2.1-rc.1) so it lines up with built-in and plugin rows (#318). The width
- * leaves the row's 2px side margins inside the sidebar column.
+ * DSH's panel row so labels and painted backgrounds line up with native rows.
+ * Fallbacks preserve spacing on hosts without the sidebar layout variables.
  */
 .entry {
   box-sizing: border-box;
   display: flex;
-  width: calc(100% - 4px);
+  width: 100%;
   min-height: 36px;
   align-items: center;
-  gap: 8px;
-  margin: 0 2px;
+  gap: var(--dsh-sidebar-label-gap, 8px);
+  margin: 0;
   border: none;
+  border-inline: var(--dsh-sidebar-paint-inset, 2px) solid transparent;
   border-radius: var(--dsw-radius-md);
-  padding: 7px 8px;
+  padding: 7px calc(var(--dsh-sidebar-row-padding, 10px) - var(--dsh-sidebar-paint-inset, 2px));
   color: var(--dsw-alias-label-primary);
   background: transparent;
+  background-clip: padding-box;
   font: inherit;
   line-height: 22px;
   text-align: left;
@@ -83,7 +84,7 @@
 /* Like the native row, hover and the open workspace share one highlight. */
 .entry:hover,
 .entry[data-active] {
-  background: var(--dsw-alias-interactive-bg-hover);
+  background-color: var(--dsw-alias-interactive-bg-hover);
 }
 
 .entry:focus-visible {

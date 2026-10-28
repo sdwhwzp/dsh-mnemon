@@ -203,15 +203,28 @@ export class MnemonAccounts {
         if (channel === 'viewWrite' || channel === '/dsh-mnemon-view-settings' || endpoint === 'version-update') throw new Error('Plugin installation is managed by the Host')
         const body = payload !== null && typeof payload === 'object' ? payload as Record<string, unknown> : {}
         if (body.operation === 'provider-service-update') throw new Error('Account memory uses the Host-managed Native provider')
+        if (endpoint === 'source-assistance' && (body.operation === 'skill-draft' || body.operation === 'skill-backtest')) {
+          const input = body.input !== null && typeof body.input === 'object' && !Array.isArray(body.input)
+            ? body.input as Record<string, unknown> : {}
+          if (input.provider !== undefined || input.model !== undefined) {
+            if (typeof input.provider !== 'string' || !input.provider.trim() || typeof input.model !== 'string' || !input.model.trim()) {
+              throw new Error('A task model needs both provider and model')
+            }
+            const access = this.ctx.get('principalAccess') as AccessProvider
+            if (!access.modelAllowed(principal, input.provider.trim(), input.model.trim())) throw new Error('This model is unavailable to the account')
+          }
+        }
         const result = await this.context.run(account, () => handler(endpoint, payload, signal, principal))
         if (result.ok && endpoint === 'task-agent-models') {
           const catalog = result.value as import('./protocol.ts').TaskAgentModelCatalog
           const access = this.ctx.get('principalAccess') as AccessProvider
           const allowed = (route: { provider: string; model: string }) => access.modelAllowed(principal, route.provider, route.model)
-          const { effective, defaultSelection, ...rest } = catalog
+          const { effective, defaultSelection, session, inherited, ...rest } = catalog
           return { ok: true, value: { ...rest,
             ...(effective === undefined || !allowed(effective) ? {} : { effective }),
             ...(defaultSelection === undefined || !allowed(defaultSelection) ? {} : { defaultSelection }),
+            ...(session === undefined || !allowed(session) ? {} : { session }),
+            ...(inherited === undefined || !allowed(inherited) ? {} : { inherited }),
             groups: catalog.groups.flatMap(group => {
               const models = group.models.filter(model => allowed({ provider: group.id, model: model.id }))
               return models.length === 0 ? [] : [{ ...group, models }]

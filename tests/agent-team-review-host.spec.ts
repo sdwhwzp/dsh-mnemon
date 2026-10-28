@@ -24,11 +24,11 @@ const hostRoot = profile === undefined
 it('runs guarded Team review against the published DSH cohort (issue 275)', async () => {
   const require = createRequire(join(hostRoot, 'package.json'))
   const load = async (name: string) => import(pathToFileURL(require.resolve(`@deepseek-ai/${name}`)).href)
-  const [cordis, agent, loop, llm, session, persistence, projection, query, subagent, fork, spawn, prompt, tools, team, teamTools, ptc] = await Promise.all([
+  const [cordis, agent, loop, llm, session, persistence, projection, query, subagent, fork, spawn, prompt, tools, team, teamTools, ptc, nativeExecutor, ptcExecutor] = await Promise.all([
     'cordis', 'dsh-agent', 'dsh-agent-loop', 'dsh-llm', 'dsh-session', 'dsh-session-persistence-jsonl',
     'dsh-session-projection', 'dsh-session-query-sqlite', 'dsh-subagent', 'dsh-subagent-fork-in-process',
     'dsh-subagent-spawn-in-process', 'dsh-system-prompt', 'dsh-tools', 'dsh-experimental-agent-team',
-    'dsh-experimental-tool-agent-team', 'dsh-ptc-runtime-node',
+    'dsh-experimental-tool-agent-team', 'dsh-ptc-runtime-node', 'dsh-tool-executor-native', 'dsh-tool-executor-ptc',
   ].map(load))
   // Every package of the cohort comes from the host's own release.
   const release = JSON.parse(readFileSync(require.resolve('@deepseek-ai/dsh/package.json'), 'utf8')).version as string
@@ -86,8 +86,8 @@ it('runs guarded Team review against the published DSH cohort (issue 275)', asyn
           await ctx.plugin(service.default, index === 0 ? { cwd: f.workspace } : index === 3 ? { mode: 'read-only', workspaceRoot: f.workspace } : {})
         }
         if (mode === 'ptc') await ctx.plugin(ptc.default)
-        // DSH 0.2.0 presents Code Mode beside the native tools; DSH 0.2.1 keeps the root native and each child in Code Mode.
-        await ctx.plugin(tools.default, { mode: mode === 'ptc' && !dsh021 ? 'both' : 'native' })
+        await ctx.plugin(tools.default)
+        await ctx.plugin(nativeExecutor)
         await ctx.plugin(agent.default)
         await ctx.plugin(loop.default, { agents: [] })
         await loadWorkingDirectory(ctx, require)
@@ -122,10 +122,11 @@ it('runs guarded Team review against the published DSH cohort (issue 275)', asyn
           const result = { action: 'added', summary: 'Committed the explicit synthetic project decision.', memoryBodyIds: [], documentIds: [] }
           return call(terminal, requestId === undefined ? result : { requestId, result })
         }))
-        ctx.on('agent/created', ({ agent: child }: { agent: any }) => {
-          if (child.session.header.origin !== 'subagent') return
+        ctx.on('agent/created', async ({ agent: child }: { agent: any }): Promise<undefined> => {
+          if (child.session.header.origin !== 'subagent') return undefined
           children.push(child)
-          if (mode === 'ptc') child.ctx.tools.presentAs('ptc')
+          if (mode === 'ptc') await child.ctx.plugin(ptcExecutor)
+          return undefined
         })
         ctx.on('tools/result', (execution: any, result: any) => {
           if (execution.agent?.session.header.origin === 'subagent') receipts.push({ name: execution.name, isError: result.isError })
@@ -169,9 +170,11 @@ it('runs guarded Team review against the published DSH cohort (issue 275)', asyn
           for (const child of children) expect(ctx.agents.get(child.id)).toBeUndefined()
         }
         if (teams === 'tools') {
-          const result = await parent.ctx.tools.execute({ name: 'team_task_create', arguments: { subject: 'Parent Teams remains available', description: 'Synthetic official Team preservation probe.' },
-            agent: parent, callId: 'team-preservation', signal: new AbortController().signal })
-          expect(result.isError).toBe(false)
+          const result = await parent.ctx.tools.execute({
+            calls: [{ type: 'tool-call', id: 'team-preservation', name: 'team_task_create', arguments: JSON.stringify({ subject: 'Parent Teams remains available', description: 'Synthetic official Team preservation probe.' }) }],
+            agent: parent, signal: new AbortController().signal,
+          })
+          expect(result.results[0]?.result.isError).toBe(false)
           expect(ctx.agentTeams.listTasks(parent)).toHaveLength(1)
         }
         reports.push({ provider, teams, mode, policy, strategyExtensions: ['scoped', 'light-context', 'auto-capture'], childCalls, children: children.length, cancelled, receipts })

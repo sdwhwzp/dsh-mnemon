@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { transform } from 'lightningcss'
 import { MEMORY_SETTINGS_CLASS_NAMES } from '../src/client/settings-controls.tsx'
 
 const sidebarCss = readFileSync(new URL('../src/client/MnemonSidebarView.module.css', import.meta.url), 'utf8')
@@ -9,11 +10,14 @@ const runtimeCss = readFileSync(new URL('../plugins/dsh-mnemon-source-runtime/pr
 const spacesCss = readFileSync(new URL('../plugins/dsh-mnemon-source-memory-spaces/presentation/sidebar.module.css', import.meta.url), 'utf8')
 
 const sidebarSurface = 'var(--dsw-alias-bg-overlay, var(--dsw-alias-bg-base))'
-// The pinned DSH sidebar; 0.2.0-rc.2 ships the same panel row rules.
+// The pinned DSH sidebar supplies the current layout variables.
 const dshSidebar = readFileSync(new URL('../node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js', import.meta.url), 'utf8')
 
 /** One rule's declarations, with minifier spellings normalized. */
 function declarations(rule: string): Map<string, string> {
+  // Compare equivalent shorthands after the same CSS compiler used by the bundle.
+  const canonical = transform({ filename: 'sidebar.css', code: Buffer.from(`a{${rule}}`), minify: true }).code.toString()
+  rule = canonical.slice(canonical.indexOf('{') + 1, canonical.lastIndexOf('}'))
   const spelled = (value: string) => value === '0 0' ? 'transparent' : value.replace(/,\s+/g, ',')
   return new Map(rule.split(';').map(part => part.trim()).filter(Boolean).map(part => {
     const colon = part.indexOf(':')
@@ -46,11 +50,15 @@ describe('Sidebar layout invariants', () => {
     const row = nativeRule('panelRow')
     const entry = declarations(/\.entry \{([^}]*)\}/.exec(workspaceCss)?.[1] ?? '')
     expect(row.size).toBeGreaterThan(10)
-    for (const [property, value] of row) expect(entry.get(property), property).toBe(value)
+    for (const [property, value] of row) {
+      // The older-host defaults do not replace the inherited native variables.
+      const actual = entry.get(property)?.replace(/var\((--dsh-sidebar-[\w-]+),\s*[\d.]+px\)/gu, 'var($1)')
+      expect(actual, property).toBe(value)
+    }
     // The same highlight for hover and the open workspace, with no bold active label.
-    expect(nativeRule('panelRow:hover').get('background')).toBe('var(--dsw-alias-interactive-bg-hover)')
+    expect(nativeRule('panelRow:hover').get('background-color')).toBe('var(--dsw-alias-interactive-bg-hover)')
     const highlight = declarations(/\.entry:hover,\n\.entry\[data-active\] \{([^}]*)\}/.exec(workspaceCss)?.[1] ?? '')
-    expect(highlight.get('background')).toBe('var(--dsw-alias-interactive-bg-hover)')
+    expect(highlight.get('background-color')).toBe('var(--dsw-alias-interactive-bg-hover)')
     expect(workspaceCss).not.toMatch(/\.entry[^{]*\{[^}]*font-weight/)
     expect(declarations(/\.entry:focus-visible \{([^}]*)\}/.exec(workspaceCss)?.[1] ?? '')).toEqual(nativeRule('panelRow:focus-visible'))
     // Glyphs follow the native slot: 16px in the wide sidebar and 18px on the rail, with no wider box.
