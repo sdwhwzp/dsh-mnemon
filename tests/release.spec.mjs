@@ -96,6 +96,19 @@ describe('selective, channel-safe official release', () => {
     ])
   })
 
+  it('requires exact peer pins within a fork release cohort', () => {
+    const version = '0.5.37-dsh.20261029.1'
+    const packages = fixture({ starterVersion: version, sourceVersion: version, providerVersion: version })
+    packages[1].manifest.peerDependencies['dsh-mnemon'] = version
+    packages[2].manifest.peerDependencies['dsh-mnemon-source-memory-spaces'] = version
+    expect(createReleasePlan(packages).composition).toHaveLength(3)
+    packages[2].manifest.peerDependencies['dsh-mnemon-source-memory-spaces'] = `^${version}`
+    expect(() => createReleasePlan(packages)).toThrow('must exactly pin the fork release cohort')
+    packages[2].manifest.version = '0.5.38-dsh.20261029.1'
+    packages[0].manifest.dependencies[packages[2].manifest.name] = packages[2].manifest.version
+    expect(() => createReleasePlan(packages)).toThrow('fork peers must use the same release cohort')
+  })
+
   it('requires the Starter snapshot to advance with a plugin and rejects incompatible internal ranges', () => {
     const packages = fixture({ starterVersion: '0.5.1' })
     const baseVersions = previousVersions(packages, { 'dsh-mnemon-provider-example': '0.5.0' })

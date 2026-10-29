@@ -29,8 +29,10 @@ if (options.has('--strategy-extensions') && options.get('--strategy-extensions')
 const extensionNames = STARTER_ENHANCEMENT_PACKAGES
 const extensionNameSet = new Set(extensionNames)
 const extensionsEnabled = options.has('--strategy-extensions')
+const defaultTimeoutMs = Number(process.env.MNEMON_E2E_TIMEOUT_MS ?? 30_000)
+if (!Number.isSafeInteger(defaultTimeoutMs) || defaultTimeoutMs <= 0) throw new Error('MNEMON_E2E_TIMEOUT_MS must be a positive integer')
 
-function run(args, { cwd = root, env = process.env, timeoutMs = 30_000 } = {}) {
+function run(args, { cwd = root, env = process.env, timeoutMs = defaultTimeoutMs } = {}) {
   return new Promise((resolveRun, reject) => {
     const child = spawn(process.execPath, [dshBin, ...args], {
       cwd,
@@ -56,7 +58,7 @@ function run(args, { cwd = root, env = process.env, timeoutMs = 30_000 } = {}) {
     child.on('close', (code, signal) => {
       clearTimeout(timeout)
       clearTimeout(forceKill)
-      if (timedOut) reject(new Error(`dsh Headless verification timed out after ${timeoutMs}ms`))
+      if (timedOut) reject(new Error(`dsh Headless verification (${args[0]}) timed out after ${timeoutMs}ms\n${stdout}\n${stderr}`))
       else resolveRun({ code, signal, stdout, stderr })
     })
   })

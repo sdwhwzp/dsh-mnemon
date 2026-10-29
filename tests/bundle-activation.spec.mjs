@@ -11,30 +11,31 @@ const profile = process.env.MNEMON_BUNDLE_TEST_PROFILE ?? fileURLToPath(new URL(
 // routes plugin packages through Node's search paths, NODE_PATH included, so
 // that path would reach this workspace's real plugins instead of the fixture's.
 const env = { ...process.env, NODE_PATH: undefined }
+const timeout = Number(process.env.MNEMON_BUNDLE_TEST_TIMEOUT_MS ?? 30_000)
 
 describe('published Starter activation contracts', () => {
   it('saves settings after removing a duplicate manual bundle insertion (#470)', async () => {
-    const { stdout } = await run(process.execPath, ['--expose-internals', fixture, profile, 'settings'], { env, timeout: 30_000 })
+    const { stdout } = await run(process.execPath, ['--expose-internals', fixture, profile, 'settings'], { env, timeout })
     expect(stdout).toContain('Config editor saved and reloaded Skills evolution with unique bundle/core IDs (#470).')
-  }, 30_000)
+  }, timeout)
 
   it('activates isolated transitive components after a cold start without the bundle selected', async () => {
-    const { stdout } = await run(process.execPath, ['--expose-internals', fixture, profile, 'manager', '--isolated'], { env, timeout: 30_000 })
+    const { stdout } = await run(process.execPath, ['--expose-internals', fixture, profile, 'manager', '--isolated'], { env, timeout })
     expect(stdout).toContain('"manager":true,"result":"passed"')
-  }, 30_000)
+  }, timeout)
 
   it('retains dependency routes of another bundle disabled since startup', async () => {
-    const { stdout } = await run(process.execPath, ['--expose-internals', fixture, profile, 'manager', '--isolated', '--other-bundle'], { env, timeout: 30_000 })
+    const { stdout } = await run(process.execPath, ['--expose-internals', fixture, profile, 'manager', '--isolated', '--other-bundle'], { env, timeout })
     expect(stdout).toContain('"manager":true,"result":"passed"')
-  }, 30_000)
+  }, timeout)
 
   it('retains the legacy mnemon gate and independent component choices on the pinned DSH', async () => {
-    const { stdout } = await run(process.execPath, ['--expose-internals', fixture], { env, timeout: 30_000 })
+    const { stdout } = await run(process.execPath, ['--expose-internals', fixture], { env, timeout })
     expect(stdout).toContain('"result":"passed"')
-  }, 30_000)
+  }, timeout)
 
   it('persists real component and bundle toggles without bypassing the core gate', async () => {
-    const { stdout } = await run(process.execPath, ['--expose-internals', fixture, profile, 'manager'], { env, timeout: 30_000 })
+    const { stdout } = await run(process.execPath, ['--expose-internals', fixture, profile, 'manager'], { env, timeout })
     expect(stdout).toContain('"manager":true,"result":"passed"')
-  }, 30_000)
+  }, timeout)
 })

@@ -183,7 +183,7 @@
 /* Keep the evolution inbox beside its detail while browsing long lists. */
 .skEvolutionSplit { height: max(320px, calc(100dvh - 320px)); min-height: 0; }
 .skEvolutionSplit > .skList,
-.skEvolutionSplit > .skPane { min-height: 0; overflow-y: auto; }
+.skEvolutionSplit > .skPane { min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
 .skEvolutionSplit > .skList > * { flex-shrink: 0; }
 
 .skListBar { display: flex; align-items: center; gap: 8px; padding: 10px; border-bottom: .5px solid var(--mn-line); }
@@ -581,7 +581,7 @@
   .skSplit { grid-template-columns: minmax(0, 1fr); }
   .skList { max-height: 360px; overflow-y: auto; }
   .skEvolutionSplit { height: auto; }
-  .skEvolutionSplit > .skPane { overflow: visible; }
+  .skEvolutionSplit > .skPane { overflow: visible; overscroll-behavior-y: auto; }
 }
 
 @media (max-width: 560px) {

@@ -96,8 +96,15 @@ export function createReleasePlan(packages, { tag, prerelease, baseVersions } = 
         assert(semver.satisfies(dependency.manifest.version, checkRange, { includePrerelease: true }),
           `${manifest.name}: ${field}.${name} does not accept ${dependency.manifest.version}`)
         if (field === 'peerDependencies') {
-          assert.notEqual(range, dependency.manifest.version,
-            `${manifest.name}: peerDependencies.${name} must declare a compatible range for independent releases`)
+          if (packageTag === 'dsh' && distTagForVersion(dependency.manifest.version) === 'dsh') {
+            assert.equal(manifest.version, dependency.manifest.version,
+              `${manifest.name}: fork peers must use the same release cohort`)
+            assert.equal(range, dependency.manifest.version,
+              `${manifest.name}: peerDependencies.${name} must exactly pin the fork release cohort`)
+          } else {
+            assert.notEqual(range, dependency.manifest.version,
+              `${manifest.name}: peerDependencies.${name} must declare a compatible range for independent releases`)
+          }
         }
       }
     }
