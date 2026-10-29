@@ -2,6 +2,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { URL as NodeURL } from 'node:url'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryCompositionRunner } from 'dsh-mnemon/testing'
@@ -22,7 +23,7 @@ vi.mock('dsh-mnemon/client', async () => {
 import * as plugin from '../src/index.ts'
 import { installSkillsMemoryUI, SkillsSourcePage } from '../src/client.ts'
 import { draftWithSkill, installSkillUseBridge, SKILL_USE_SLOT, SkillUseBridge } from '../src/client/use-skill.tsx'
-import { translate } from '../src/client/presentation.ts'
+import { css, translate } from '../src/client/presentation.ts'
 import { compareRuns } from '../src/client/evolution-page.tsx'
 import type { BacktestRun, CaseResult, EvalCase, ReviewRecordInput, SkillSummary, TrashEntry } from '../src/contracts.ts'
 
@@ -84,6 +85,38 @@ function page(navigationInput: { seed: string; nonce: number } = { seed: 'skill:
 }
 
 describe('Skills page', () => {
+  it.each([true, false])('keeps evolution lists and details independently scrollable (writable=%s)', async writable => {
+    for (let index = 1; index <= 10; index++) {
+      const input = review()
+      input.suggestions = [{ ...input.suggestions[0]!, skillName: `scroll-check-${index}`, action: 'create' }]
+      input.cases = []
+      await mutate('review-record', input)
+    }
+    // Apply the actual authored stylesheet to the module's runtime class names.
+    // JSDOM checks the scroll ownership; real browser evidence covers geometry.
+    const style = document.createElement('style')
+    style.textContent = readFileSync(new NodeURL('../presentation/page.module.css', import.meta.url), 'utf8')
+      .replace(/\.(sk[A-Za-z0-9]+)/gu, (selector, name: string) => css[name] === undefined ? selector : `.${css[name]}`)
+    document.head.append(style)
+    try {
+      const view = render(<SkillsSourcePage sourceTypeId="skills" sourceInstanceKey="source:skills" sourceInstances={[]} locale="en" writable={writable} management={management} navigationInput={{ seed: 'evolution:pending', nonce: 1 }} />)
+      const eighth = await screen.findByRole('button', { name: /scroll-check-8/u })
+      const list = screen.getByRole('complementary')
+      const pane = view.container.querySelector<HTMLElement>(`.${css.skPane}`)!
+      expect(getComputedStyle(list).overflowY).toBe('auto')
+      expect(getComputedStyle(pane).overflowY).toBe('auto')
+      list.scrollTop = 420
+      pane.scrollTop = 180
+      fireEvent.click(eighth)
+      await screen.findByRole('heading', { name: 'scroll-check-8' })
+      expect(list.scrollTop).toBe(420)
+      expect(view.container.querySelector<HTMLElement>(`.${css.skPane}`)!.scrollTop).toBe(0)
+      expect((screen.getByRole('button', { name: t('evolution.dismiss') }) as HTMLButtonElement).disabled).toBe(!writable)
+    } finally {
+      style.remove()
+    }
+  })
+
   it('restores a removed skill from the Trash and refreshes its count', async () => {
     const skill = (await management.read('skill', { key: 'user-dsh:release-notes' })).value as unknown as SkillSummary
     await mutate('skill-delete', { key: skill.key, expectedHash: skill.hash })

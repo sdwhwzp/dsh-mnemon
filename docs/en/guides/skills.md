@@ -44,6 +44,8 @@ When the name is already taken, choose another name, explicitly confirm replacem
 
 The page follows drafts and backtests while they run, refreshes the cards again when they finish, and reloads when you return to the window or tab.
 
+On wide screens, the Pending and Done lists scroll independently of the selected detail. Selecting another item opens its detail at the top while keeping your place in the list. Narrow screens keep the list above the detail.
+
 **Global model** chooses the model that writes and redrafts skills; **Selected model** overrides it for one suggestion. Clearing an override follows the global choice, and clearing both follows the task Agent. Automatic backtests started by draft generation use the draft's selected model. Choices survive a restart in `skills/preferences.json`; older versions ignore that optional file.
 
 **Pending** lists what waits for you: suggestions, and drafts written for a skill directly. **Done** keeps what was adopted, dismissed, expired or invalidated. **Evidence** lists the conversations reviews read. The sparkle button, **Review this conversation**, reviews the current conversation now instead of waiting for it to pause.

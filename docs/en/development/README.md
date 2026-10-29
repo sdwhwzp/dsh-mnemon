@@ -144,6 +144,8 @@ To serve the WebUI on another DSH release, install it with `npm install -g --pre
 
 ### Fixture options
 
+`--evolution-scroll` seeds ten synthetic skill suggestions, one with a long detail, to check independent scrolling and selection on wide and narrow screens. It calls no model.
+
 `pnpm e2e:serve` takes the options below, of two kinds:
 
 - **Setup options** change the profile, the model stub or how the WebUI runs: `--strategy-extensions`, `--live-model`, `--log-model-requests`, `--native-directory-picker`, `--plugin`, `--better-sidebar`, `--electron`, `--trusted-host`, `--remote-management`, `--without-mnemon-cli`, `--second-runtime`, `--review-failure`, `--runtime-archive` and `--archive-copies`. The last two also start a stand-in service on loopback, a Hindsight server and a slow embedding service.

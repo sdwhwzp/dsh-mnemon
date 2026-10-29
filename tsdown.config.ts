@@ -54,7 +54,9 @@ const client: UserConfig = {
     neverBundle: CLIENT_EXTERNALS,
     // Source presentation assets, and what the Starter still draws of Memory Spaces (src/client/memory-spaces-client.ts),
     // taken from the pinned version's source through the tsconfig path of its public client entry.
-    alwaysBundle: [/^dsh-mnemon-source-[^/]+\/presentation\//, /^dsh-mnemon-source-memory-spaces\/client$/],
+    alwaysBundle: [/^dsh-mnemon-source-[^/]+\/presentation\//, /^dsh-mnemon-source-memory-spaces\/client$/,
+      // Runtime settings share the Source's byte limits; DSH has no browser factory for its contracts entry.
+      /^dsh-mnemon-source-runtime\/contracts$/],
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ?? 'production'),

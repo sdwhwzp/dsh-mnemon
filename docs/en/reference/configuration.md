@@ -142,6 +142,8 @@ Every value is saved under the `mnemon` entry and applies live. The UI's `mnemon
 
 ### Runtime Memory budgets
 
+In **Plugins → dsh-mnemon → Runtime memory → Capacity limits**, set the user-profile and working-memory limits in bytes, then choose **Apply**. Each accepts an integer from 1 to 1048576; **Discard changes** restores the saved values. The defaults remain 4096 bytes (4 KiB) and 10240 bytes (10 KiB). This form preserves the separate maintenance-token budget.
+
 Long conversations can raise the two runtime memory byte limits and the bounded migration/compaction worker budget without patching generated package files:
 
 ```yaml

@@ -180,6 +180,12 @@
 .skList { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 6px; }
 .skPane { padding: clamp(16px, 2vw, 24px); overflow: hidden; }
 
+/* Keep the evolution inbox beside its detail while browsing long lists. */
+.skEvolutionSplit { height: max(320px, calc(100dvh - 320px)); min-height: 0; }
+.skEvolutionSplit > .skList,
+.skEvolutionSplit > .skPane { min-height: 0; overflow-y: auto; }
+.skEvolutionSplit > .skList > * { flex-shrink: 0; }
+
 .skListBar { display: flex; align-items: center; gap: 8px; padding: 10px; border-bottom: .5px solid var(--mn-line); }
 .skListBar > :first-child { min-width: 0; flex: 1; }
 .skListNote { margin: 0; padding: 18px 16px; color: var(--mn-faint); font-size: 12px; line-height: 18px; text-align: center; }
@@ -574,6 +580,8 @@
 @media (max-width: 860px) {
   .skSplit { grid-template-columns: minmax(0, 1fr); }
   .skList { max-height: 360px; overflow-y: auto; }
+  .skEvolutionSplit { height: auto; }
+  .skEvolutionSplit > .skPane { overflow: visible; }
 }
 
 @media (max-width: 560px) {

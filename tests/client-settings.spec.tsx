@@ -985,6 +985,82 @@ describe('MnemonSettingsCard', () => {
     expect(selector('用户画像范围').textContent).toBe('全局共享')
   })
 
+  it('stages Runtime capacities, preserves maintenance settings and reads saved values after reopening', async () => {
+    const saving = deferred<void>()
+    const mutate = vi.fn(() => saving.promise)
+    const scope = liveSettingsScope<Config>({ status: 'ready', value: { runtimeMemory: { maintenanceMaxTokens: 32768 } }, base: {}, user: {}, revision: 0, writable: true, mode: 'host' }, mutate)
+    const view = render(runtime(scope))
+    const user = screen.getByRole('spinbutton', { name: '用户画像上限（字节）' }) as HTMLInputElement
+    const memory = screen.getByRole('spinbutton', { name: '工作记忆上限（字节）' }) as HTMLInputElement
+    expect(user.value).toBe('4096')
+    expect(memory.value).toBe('10240')
+    fireEvent.change(user, { target: { value: '8192' } })
+    expect(mutate).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: '放弃修改' }))
+    expect(user.value).toBe('4096')
+    fireEvent.change(user, { target: { value: '8192' } })
+    fireEvent.change(memory, { target: { value: '20480' } })
+    fireEvent.click(apply())
+    expect(user.disabled).toBe(true)
+    expect(memory.disabled).toBe(true)
+    await act(async () => saving.resolve())
+    expect(mutate).toHaveBeenCalledWith([{ op: 'set', path: ['runtimeMemory'], value: { maintenanceMaxTokens: 32768, userLimitBytes: 8192, memoryLimitBytes: 20480 } }])
+    expect(screen.getByRole('status').textContent).toBe('已保存并实时生效')
+    view.unmount()
+    render(runtime(scope, {}, translateEn))
+    expect((screen.getByRole('spinbutton', { name: 'User profile limit (bytes)' }) as HTMLInputElement).value).toBe('8192')
+    expect((screen.getByRole('spinbutton', { name: 'Working memory limit (bytes)' }) as HTMLInputElement).value).toBe('20480')
+  })
+
+  it.each(['', '0', '-1', '1.5', '1048577'])('rejects the Runtime capacity %j without writing settings', value => {
+    const mutate = vi.fn(async () => {})
+    const scope = settingsScope<Config>({ status: 'ready', value: {}, base: {}, user: {}, revision: 0, writable: true, mode: 'host' }, mutate)
+    render(runtime(scope))
+    const user = screen.getByRole('spinbutton', { name: '用户画像上限（字节）' })
+    fireEvent.change(user, { target: { value } })
+    expect(user.getAttribute('aria-invalid')).toBe('true')
+    expect(screen.getByRole('alert').textContent).toContain('1–1048576')
+    expect(apply().disabled).toBe(true)
+    fireEvent.click(apply())
+    expect(mutate).not.toHaveBeenCalled()
+  })
+
+  it.each(['1', '1048576'])('accepts the Runtime byte boundary %s and keeps the other limit inherited', async value => {
+    const mutate = vi.fn(async () => {})
+    const scope = liveSettingsScope<Config>({ status: 'ready', value: {}, base: {}, user: {}, revision: 0, writable: true, mode: 'host' }, mutate)
+    render(runtime(scope))
+    fireEvent.change(screen.getByRole('spinbutton', { name: '用户画像上限（字节）' }), { target: { value } })
+    fireEvent.click(apply())
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith([{ op: 'set', path: ['runtimeMemory'], value: { userLimitBytes: Number(value) } }]))
+  })
+
+  it('keeps exact byte values and the draft when a Runtime capacity save is rejected, then allows retry', async () => {
+    const mutate = vi.fn(async () => {}).mockRejectedValueOnce(new Error('Synthetic write rejection'))
+    const scope = liveSettingsScope<Config>({ status: 'ready', value: { runtimeMemory: { userLimitBytes: 4097, memoryLimitBytes: 10241, maintenanceMaxTokens: 16384 } }, base: {}, user: {}, revision: 0, writable: true, mode: 'host' }, mutate)
+    render(runtime(scope))
+    const user = screen.getByRole('spinbutton', { name: '用户画像上限（字节）' }) as HTMLInputElement
+    expect(user.value).toBe('4097')
+    fireEvent.change(user, { target: { value: '8193' } })
+    fireEvent.click(apply())
+    expect((await screen.findByRole('alert')).textContent).toContain('Synthetic write rejection')
+    expect(user.value).toBe('8193')
+    expect(scope.snapshot.value?.runtimeMemory?.userLimitBytes).toBe(4097)
+    fireEvent.click(apply())
+    await screen.findByRole('status')
+    expect(scope.snapshot.value?.runtimeMemory).toEqual({ userLimitBytes: 8193, memoryLimitBytes: 10241, maintenanceMaxTokens: 16384 })
+  })
+
+  it.each([
+    { pageWritable: false, scopeWritable: true, status: 'ready' as const },
+    { pageWritable: true, scopeWritable: false, status: 'ready' as const },
+    { pageWritable: true, scopeWritable: true, status: 'loading' as const },
+  ])('disables Runtime capacity edits when unavailable: %j', ({ pageWritable, scopeWritable, status }) => {
+    const scope = settingsScope<Config>({ status, value: {}, base: {}, user: {}, revision: 0, writable: scopeWritable, mode: 'host' })
+    render(runtime(scope, { writable: pageWritable }))
+    for (const input of screen.getAllByRole('spinbutton')) expect((input as HTMLInputElement).disabled).toBe(true)
+    expect(screen.queryByRole('button', { name: '应用' })).toBeNull()
+  })
+
   it('uses the DSH-bound locale in the plugin configuration slot', () => {
     const snapshot = {
       status: 'ready' as const,

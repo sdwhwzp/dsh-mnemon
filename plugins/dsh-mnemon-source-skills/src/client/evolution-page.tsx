@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type JSX } from 'react'
 import { Button, DiffBlock, IconSparkleRegular, SegmentedControl, Tag } from '@deepseek-ai/dsh-client-ui-primitives'
-import { SelectField } from 'dsh-mnemon/client'
+import { appearanceClass, SelectField } from 'dsh-mnemon/client'
 import type { BacktestRun, DraftView, ModelRoute, SkillDraft, SkillRootKind, SkillSuggestion, SuggestionStatus, SuggestionView, Trajectory } from '../contracts.ts'
 import { modelOptionPick, modelOptionValue, useModelChoice } from './model-choice.tsx'
 import { css, points, relative, stamp, useT } from './presentation.ts'
@@ -108,12 +108,12 @@ export function EvolutionPage(props: { context: SkillsPageContext; location: Ski
   </div>
   return <>
     {modelBar}
-    <div className={css.skSplit}>
+    <div className={appearanceClass(css.skSplit, css.skEvolutionSplit)}>
     <aside className={css.skList}>
       {bar}
       {items.map(item => <ListItem key={item.id} item={item} selected={current?.id === item.id} onSelect={() => setSelected(item.id)} />)}
     </aside>
-    <div className={css.skPane}>
+    <div key={current?.id ?? filter} className={css.skPane}>
       {current === undefined
         ? filter === 'pending' && evolutionOff
           ? <Empty glyph="✧" title={t('evolution.off')} action={<>

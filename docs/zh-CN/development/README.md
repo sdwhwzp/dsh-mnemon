@@ -144,6 +144,8 @@ pnpm e2e:serve
 
 ### 夹具选项
 
+`--evolution-scroll` 生成十条合成技能建议，其中一条含长详情，用于验证宽屏和窄屏下的独立滚动与选择行为，不调用模型。
+
 `pnpm e2e:serve` 接受下列选项，分为两类：
 
 - **准备类选项**改动 profile、模型桩或 WebUI 的运行方式：`--strategy-extensions`、`--live-model`、`--log-model-requests`、`--native-directory-picker`、`--plugin`、`--better-sidebar`、`--electron`、`--trusted-host`、`--remote-management`、`--without-mnemon-cli`、`--second-runtime`、`--review-failure`、`--runtime-archive` 与 `--archive-copies`。最后两个还会在回环地址上启动替身服务：一个 Hindsight 服务和一个响应缓慢的嵌入服务。

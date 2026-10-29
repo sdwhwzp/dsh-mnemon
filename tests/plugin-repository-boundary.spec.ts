@@ -131,12 +131,15 @@ describe('standalone plugin repository boundary', () => {
   it('keeps component implementations out of the Starter client bundle', () => {
     // The client build bundles every import except React and the DSH primitives
     // (tsdown.config.ts), so a component package may reach it only as presentation
-    // assets or types. The one exception is what the Starter still draws of Memory
+    // assets or types. Runtime settings also read the Source's public capacity
+    // constants (no implementation), so the browser and Host use the same limits.
+    // The implementation exception is what the Starter still draws of Memory
     // Spaces, taken through one module from Memory Spaces' own public client entry:
     // its settings, as a fallback for a version that registers none, the Status
     // page's Provider marks and the Mnemon Native Provider's id. The package size
     // ceiling no longer guards this.
     const gateway = join(root, 'src/client/memory-spaces-client.ts')
+    const runtimeSettings = join(root, 'src/client/component-settings.tsx')
     const pending = [join(root, 'src/client/index.ts')]
     const visited = new Set<string>()
     const violations: string[] = []
@@ -151,7 +154,8 @@ describe('standalone plugin repository boundary', () => {
           if (inside(join(root, 'plugins'), target)) violations.push(`${relative(root, file)}: ${specifier}`)
           else if (/\.tsx?$/.test(target)) pending.push(target)
         } else if (/^dsh-mnemon-(?:source|provider|strategy)-/.test(specifier) && !/^dsh-mnemon-source-[^/]+\/presentation\//.test(specifier)
-          && !(file === gateway && specifier === 'dsh-mnemon-source-memory-spaces/client')) {
+          && !(file === gateway && specifier === 'dsh-mnemon-source-memory-spaces/client')
+          && !(file === runtimeSettings && specifier === 'dsh-mnemon-source-runtime/contracts')) {
           violations.push(`${relative(root, file)}: ${specifier}`)
         }
       }
@@ -160,6 +164,11 @@ describe('standalone plugin repository boundary', () => {
     expect(violations).toEqual([])
     expect(visited.has(gateway)).toBe(true)
     expect(imports(gateway)).toEqual([{ specifier: 'dsh-mnemon-source-memory-spaces/client', typeOnly: false }])
+    const runtimeImport = ts.createSourceFile(runtimeSettings, readFileSync(runtimeSettings, 'utf8'), ts.ScriptTarget.Latest, true).statements
+      .find(statement => ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier) && statement.moduleSpecifier.text === 'dsh-mnemon-source-runtime/contracts') as ts.ImportDeclaration
+    const bindings = runtimeImport.importClause?.namedBindings
+    expect(bindings !== undefined && ts.isNamedImports(bindings) ? bindings.elements.map(element => element.name.text).sort() : [])
+      .toEqual(['RUNTIME_MEMORY_LIMITS', 'RUNTIME_MEMORY_LIMIT_MAX_BYTES'])
   })
 
   for (const [entry, allowed] of [

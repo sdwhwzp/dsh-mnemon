@@ -194,7 +194,7 @@ On DSH 0.2.1, the **Plugins** page lists built-in plugin settings and experiment
 | Memory composition | Main strategy; one switch per memory source and enhancement | At once, to future turns |
 | Storage | Storage scope, data directory, backup and migration | Scope and directory with their **Apply**; ZIP import and export at once |
 | Interface | Memory System entry, turn memory bar, save to memory | At once |
-| Runtime memory's page | User profile scope | At once |
+| Runtime memory's page | User profile scope; capacity limits | Scope at once; capacities with **Apply** |
 | Memory Spaces' page | Memory providers and the Mnemon Native embedding | Switches at once; typed connections with **Apply** |
 | Layered strategy's page | Task Agent model and idle review | Choices at once; review limits with **Apply** |
 
@@ -220,7 +220,7 @@ The gear on a row, the gear beside **Main strategy**, and a component's name any
 
 ![Memory Spaces' page with Mnemon Native and the third-party Providers](../../assets/webui-v0.5.32/en/plugin-spaces.jpg)
 
-- **Runtime memory's page**: **User profile scope**. *Shared globally* combines a global `USER.md` with workspace or custom `MEMORY.md`, without moving either.
+- **Runtime memory's page**: **User profile scope** and **Capacity limits**. *Shared globally* combines a global `USER.md` with workspace or custom `MEMORY.md`, without moving either. Set each capacity in bytes and choose **Apply**, or **Discard changes** to restore the saved values. Lowering a limit does not delete existing entries; see [Runtime Memory budgets](../reference/configuration.md#runtime-memory-budgets).
 - **Memory Spaces' page**: the **Memory providers**. Mnemon Native comes first and, expanded, holds only its embedding settings. Every third-party Provider has its own switch and is off by default; its endpoint, key and fields appear once it is on. The Global or Workspace tag shows its effective scope. OpenViking's **User key owner (skip admin)** field selects one user namespace for keys without admin access; see [its limits](./memory-providers.md#operational-boundaries).
 - **Skills' page**, tagged **Experimental**: **Self-evolution**, and while it is on, independent **Suggest new skills** and **Suggest skill improvements** switches, **Backtest drafts** and the folded **Review parameters**; **In the conversation** for the line under each turn; **Sidebar entry**. Switches apply at once, the parameters with **Apply**; see the [Skills guide](./skills.md#settings).
 - **Layered strategy's page**: **Background tasks**. **Task Agent model** chooses the model of the task Agents behind Save to memory, Ask Agent, Tidy names and descriptions, smart selection for new spaces and document archiving, never of the main conversation: **Follow global**, **Follow the conversation** or **Custom**. [Configuration](../reference/configuration.md#background-task-agent-model-route) explains each choice. **Idle review**, **Write runtime memory**, its method and Agent Teams compatibility apply at once; **Review limits** apply with **Apply**. With **Write runtime memory** off, review only creates Documents. Review runs only after turns the Layered strategy composed; see [configuration](../reference/configuration.md#provider-requirements).

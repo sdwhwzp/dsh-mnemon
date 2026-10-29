@@ -1,5 +1,6 @@
 import { type ComponentProps, type JSX } from 'react'
 import { IconChevronDownOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { RUNTIME_MEMORY_LIMIT_MAX_BYTES, RUNTIME_MEMORY_LIMITS } from 'dsh-mnemon-source-runtime/contracts'
 import {
   DEFAULT_IDLE_REVIEW,
   type ClientConnectionHandle,
@@ -35,7 +36,7 @@ export interface ShippedSettingsServices {
 /**
  * Register the settings dsh-mnemon keeps for its shipped components, the way
  * an installed component registers its own: Runtime Memory carries where its
- * user profile lives, the Layered strategy the background tasks it drives.
+ * user profile lives and its capacities, the Layered strategy the background tasks it drives.
  * Memory Spaces brings its Providers and embedding itself. Its settings show
  * here, as a fallback, whenever its own client registers none: while it is
  * off, while its client loads, if that client fails, and beside a Memory
@@ -52,16 +53,37 @@ export function installShippedComponentSettings(ctx: MemoryComponentUIContext & 
   return () => { for (const dispose of disposers.reverse()) dispose() }
 }
 
-// ---- Runtime Memory: where its user profile lives ----
+// ---- Runtime Memory: user profile scope and file capacities ----
 
-/** Runtime Memory's own setting: whether USER.md follows the storage scope or is shared by every workspace. */
+const RUNTIME_LIMITS = ['userLimitBytes', 'memoryLimitBytes'] as const
+type RuntimeLimits = Record<typeof RUNTIME_LIMITS[number], string>
+
+function runtimeLimitValue(text: string): number | undefined {
+  if (text.trim() === '') return undefined
+  const value = Number(text)
+  return Number.isInteger(value) && value >= 1 && value <= RUNTIME_MEMORY_LIMIT_MAX_BYTES ? value : undefined
+}
+
+/** Runtime Memory's scope applies immediately; its byte limits wait for Apply. */
 export function RuntimeSettings(props: ShippedSettingsServices & { page: MemoryComponentSettingsProps }): JSX.Element {
   const { scope, page, t } = props
   const snapshot = useScope(scope)
   const saved: 'storage' | 'global' = snapshot.value?.runtimeUserScope === 'global' ? 'global' : 'storage'
   const profile = useLive(saved, async value => { await scope.mutate([{ op: 'set', path: ['runtimeUserScope'], value }]) })
   const disabled = !page.writable || snapshot.status === 'loading' || !snapshot.writable
-  return <section className={css.panelSection} aria-label={t('config.runtimeUserScopeTitle')}>
+  const configured = snapshot.value?.runtimeMemory
+  const savedLimits: RuntimeLimits = {
+    userLimitBytes: String(configured?.userLimitBytes ?? RUNTIME_MEMORY_LIMITS.user),
+    memoryLimitBytes: String(configured?.memoryLimitBytes ?? RUNTIME_MEMORY_LIMITS.memory),
+  }
+  const limits = useStaged(savedLimits, async draft => {
+    const changed = RUNTIME_LIMITS.filter(key => runtimeLimitValue(draft[key]) !== runtimeLimitValue(savedLimits[key]))
+    if (changed.length > 0) await scope.mutate([{ op: 'set', path: ['runtimeMemory'], value: {
+      ...configured, ...Object.fromEntries(changed.map(key => [key, runtimeLimitValue(draft[key])!])),
+    } }])
+  })
+  const invalid = RUNTIME_LIMITS.find(key => runtimeLimitValue(limits.draft[key]) === undefined)
+  return <><section className={css.panelSection} aria-label={t('config.runtimeUserScopeTitle')}>
     <div className={css.rows}>
       <SelectRow id="mnemon-runtime-user-scope" label={t('config.runtimeUserScopeTitle')} value={profile.value} disabled={disabled} onChange={profile.set} options={[
         { value: 'storage', label: t('config.runtimeUserScopeStorage'), detail: t('config.runtimeUserScopeStorageHint') },
@@ -70,6 +92,24 @@ export function RuntimeSettings(props: ShippedSettingsServices & { page: MemoryC
     </div>
     <WriteFailure error={profile.failed} t={t} />
   </section>
+  <section className={css.panelSection} aria-labelledby="mnemon-runtime-limits">
+    <div className={css.panelHeading}>
+      <h3 id="mnemon-runtime-limits">{t('config.runtimeLimitsTitle')}</h3>
+      <p id="mnemon-runtime-limits-hint">{t('config.runtimeLimitsHint', { user: RUNTIME_MEMORY_LIMITS.user / 1024, memory: RUNTIME_MEMORY_LIMITS.memory / 1024 })}</p>
+    </div>
+    <div className={css.fieldGrid}>
+      {RUNTIME_LIMITS.map(key => <label key={key}>{t(`config.runtime.${key}`)}
+        <input type="number" min="1" max={RUNTIME_MEMORY_LIMIT_MAX_BYTES} step="1" inputMode="numeric"
+          value={limits.draft[key]} disabled={disabled || limits.saving} aria-describedby="mnemon-runtime-limits-hint"
+          aria-invalid={runtimeLimitValue(limits.draft[key]) === undefined}
+          onChange={event => limits.edit({ [key]: event.target.value })} />
+      </label>)}
+    </div>
+    <PanelActions dirty={limits.dirty} saving={limits.saving} applied={limits.applied} failed={limits.failed} disabled={disabled} t={t}
+      note={t('config.runtimeLimitsApply')}
+      invalid={invalid === undefined ? null : t('config.runtimeLimitInvalid', { field: t(`config.runtime.${invalid}`), max: RUNTIME_MEMORY_LIMIT_MAX_BYTES })}
+      onDiscard={limits.discard} onApply={() => { void limits.apply() }} />
+  </section></>
 }
 
 // ---- Layered strategy: the background tasks it drives ----

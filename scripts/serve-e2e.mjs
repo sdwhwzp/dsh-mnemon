@@ -33,6 +33,7 @@ import { recallBudgetModel } from './fixtures/recall-budget-model.mjs'
 import { archiveCopiesLimitBytes, archiveCopiesPending, seedArchiveCopies } from './fixtures/archive-copies.mjs'
 import { fakeEmbeddingServer } from './fixtures/fake-embeddings.mjs'
 import { describeModelRequest } from './fixtures/model-request-log.mjs'
+import { seedEvolutionScroll } from './fixtures/evolution-scroll.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const flags = new Set(process.argv.slice(2))
@@ -60,6 +61,7 @@ for (const flag of flags) {
   if (flag === '--strict-template') continue
   if (flag === '--general-strategy') continue
   if (flag === '--second-runtime') continue
+  if (flag === '--evolution-scroll') continue
   if (flag === '--exact-id') continue
   if (flag === '--archive-copies') continue
   if (flag === '--save-action') continue
@@ -381,6 +383,7 @@ ${docsDemo === undefined ? '' : docsDemoTools}    - id: e2e-directory-picker
     await seedDocsDemo({ dataDir, workspace, language: 'zh-CN' })
     console.log('Recall budget seeded; send recall-budget-check.')
   }
+  if (flags.has('--evolution-scroll')) await seedEvolutionScroll({ dataDir, workspace, dshHome, agentsHome })
   console.log('Fixture: ' + fixture)
   console.log('Workspace: ' + workspace)
   console.log('Fixture PID: ' + process.pid + ' (SIGUSR2 restarts WebUI, retaining test data)')
